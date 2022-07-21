@@ -1,4 +1,4 @@
-name = "DFT-raMO"
+name = "DFTraMO"
 uuid = "90d47691-e9bb-4225-9ddc-87e73db60b62"
 authors = ["Amber Lim <xalim@wisc.edu>", "Brandon Flores <bsflores@wisc.edu>"]
 version = "0.1.0"
