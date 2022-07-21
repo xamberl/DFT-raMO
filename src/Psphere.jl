@@ -1,5 +1,3 @@
-using LinearAlgebra
-
 # Calculates Psphere from an xsf file, a list of coordinates, and a specified radii from the coordinates
 function DFTraMO_overlap(filename::String, originsite::Vector{Float64}, radius::Float64)
     # Opens xsf file
