@@ -7,7 +7,8 @@ The current version of DFT-raMO is a MATLAB script which can be run in the termi
 a MATLAB installation in order to run it.
 
 ## Psphere.jl
-A Julia script to batch-process raMOs from DFT-raMO in order to obtain Psphere, a metric describing the degree of localization of a raMO function.
+A Julia script to batch-process raMOs from DFT-raMO in order to obtain Psphere, a metric describing
+the degree of localization of a raMO function.
 
 ### Usage
 You will need the LinearAlgebra package. You can add this in the Julia package manager.
