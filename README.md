@@ -6,11 +6,20 @@ DFT-raMO and tools to support DFT-raMO, a Wannier-type analysis.
 The current version of DFT-raMO is a MATLAB script which can be run in the terminal. You'll need
 a MATLAB installation in order to run it.
 
-## Psphere.jl
-A Julia script to batch-process raMOs from DFT-raMO in order to obtain Psphere, a metric describing
-the degree of localization of a raMO function.
+# DFTraMO.jl
+A Julia package that performs the same DFT-raMO analysis, but with support for parallelization.
+This code can be adapted to run 
 
-### Usage
-You will need the LinearAlgebra package. You can add this in the Julia package manager.
-In the Julia REPL, run the Psphere.jl code to export the function with `include("Psphere.jl")`.
-Now you may use the `writePsphere` function in the REPL. Type `?writePsphere` to see inputs.
+This package also contains Psphere analysis, a tool to determine the degree of localization for
+reconstructed orbitals.
+
+## Usage
+This package is not currently registered in the Julia package registry, and is located in a private
+Git repo as of this writing. You'll need to clone the package from Git over SSH first:
+
+```bash
+[user@host]$ git clone git@github.com:xamberl/DFT-raMO
+```
+
+Then you can start a Julia instance, enter package mode (right bracket),  and use `activate 
+[clone directory]` to use and modify the package.
