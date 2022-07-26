@@ -1,4 +1,5 @@
-# Calculates Psphere from an xsf file, a list of coordinates, and a specified radii from the coordinates
+# Calculates Psphere from an xsf file, a list of coordinates, 
+# and a specified radii from the coordinates
 function DFTraMO_overlap(
     filename::AbstractString,
     originsite::AbstractVector{<:Real},
@@ -102,7 +103,8 @@ function DFTraMO_overlap(
     return (total_sphere_sum, total, total_sphere_sum/total)
 end
 
-# Reads a void list (format: string float float float) and exports their xyz coordinates as a matrix for DFTraMO_overlap()
+# Reads a void list (format: string float float float) and exports their xyz coordinates
+# as a matrix for DFTraMO_overlap()
 function readvoidlist(filename::AbstractString)
     f = open(filename)
     num_lines = countlines(f)
