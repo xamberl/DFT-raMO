@@ -17,9 +17,9 @@ function DFTraMO_overlap(
     end
     
     # Calculate length of cell vectors in angstroms
-    r_a = (primvec[1,:]'*primvec[1,:])^.5
-    r_b = (primvec[2,:]'*primvec[2,:])^.5
-    r_c = (primvec[3,:]'*primvec[3,:])^.5
+    r_a = norm(primvec[1,:]'*primvec[1,:])
+    r_b = norm(primvec[2,:]'*primvec[2,:])
+    r_c = norm(primvec[3,:]'*primvec[3,:])
     
     # Calculate volume
     vol = dot(cross(primvec[1,:],primvec[2,:]),primvec[3,:])
@@ -70,7 +70,7 @@ function DFTraMO_overlap(
                 # Transform grid index into Cartesian
                 grid_cart = ([x, y, z]./grid)'*primvec
                 # check if grid_cart is within sphere
-                if ((grid_cart[1]-origin[1])^2+(grid_cart[2]-origin[2])^2+(grid_cart[3]-origin[3])^2)^.5 <= radius
+                if norm(grid_cart - origin) <= radius
                     # Check if point is out of bounds. If so, use adjacent cell's value.
                     (i1, i2, i3) = (x, y, z)
                     if x < 1
