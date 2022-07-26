@@ -138,5 +138,3 @@ function writePsphere(start_xsf::Int64, end_xsf::Int64, xsf_prefix::String, xsf_
     end
     close(f)
 end
-
-export writePsphere
