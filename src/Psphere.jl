@@ -1,5 +1,9 @@
 # Calculates Psphere from an xsf file, a list of coordinates, and a specified radii from the coordinates
-function DFTraMO_overlap(filename::String, originsite::Vector{Float64}, radius::Float64)
+function DFTraMO_overlap(
+    filename::AbstractString,
+    originsite::AbstractVector{<:Real},
+    radius::Real
+)
     # Opens xsf file
     f = open(filename,"r")
     itr = eachline(f)
@@ -99,7 +103,7 @@ function DFTraMO_overlap(filename::String, originsite::Vector{Float64}, radius::
 end
 
 # Reads a void list (format: string float float float) and exports their xyz coordinates as a matrix for DFTraMO_overlap()
-function readvoidlist(filename::String)
+function readvoidlist(filename::AbstractString)
     f = open(filename)
     num_lines = countlines(f)
     seekstart(f)
@@ -112,7 +116,15 @@ function readvoidlist(filename::String)
 end
 
 """
-    writePsphere(start_xsf::Int64, end_xsf::Int64, xsf_prefix::String, xsf_suffix::String, voidlistfile::String, radius::Float64, outputfilename::String)
+    writePsphere(
+        start_xsf::Integer,
+        end_xsf::Integer,
+        xsf_prefix::AbstractString,
+        xsf_suffix::AbstractString,
+        voidlistfile::AbstractString,
+        radius::Real,
+        outputfilename::AbstractString
+    ) -> Nothing
 
 Computes and writes Psphere values for a set of DFT-raMO xsfs to a text file.
 
@@ -125,7 +137,15 @@ Computes and writes Psphere values for a set of DFT-raMO xsfs to a text file.
 - `radius`: in angstroms.
 - `outputfilename`: Filename for Psphere outputs.
 """
-function writePsphere(start_xsf::Int64, end_xsf::Int64, xsf_prefix::String, xsf_suffix::String, voidlistfile::String, radius::Float64, outputfilename::String)
+function writePsphere(
+    start_xsf::Integer,
+    end_xsf::Integer,
+    xsf_prefix::AbstractString,
+    xsf_suffix::AbstractString,
+    voidlistfile::AbstractString,
+    radius::Real,
+    outputfilename::AbstractString
+)
     voidlist = readvoidlist(voidlistfile)
     f = open(outputfilename,"w")
     write(f, string("Spherical DFTraMO overlaps with radius ", radius, "\n"))
