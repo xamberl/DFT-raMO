@@ -1,5 +1,10 @@
-# Calculates Psphere from an xsf file, a list of coordinates, and a specified radii from the coordinates
-function DFTraMO_overlap(filename::String, originsite::Vector{Float64}, radius::Float64)
+# Calculates Psphere from an xsf file, a list of coordinates, 
+# and a specified radii from the coordinates
+function DFTraMO_overlap(
+    filename::AbstractString,
+    originsite::AbstractVector{<:Real},
+    radius::Real
+)
     # Opens xsf file
     f = open(filename,"r")
     itr = eachline(f)
@@ -13,9 +18,9 @@ function DFTraMO_overlap(filename::String, originsite::Vector{Float64}, radius::
     end
     
     # Calculate length of cell vectors in angstroms
-    r_a = (primvec[1,:]'*primvec[1,:])^.5
-    r_b = (primvec[2,:]'*primvec[2,:])^.5
-    r_c = (primvec[3,:]'*primvec[3,:])^.5
+    r_a = norm(primvec[1,:]'*primvec[1,:])
+    r_b = norm(primvec[2,:]'*primvec[2,:])
+    r_c = norm(primvec[3,:]'*primvec[3,:])
     
     # Calculate volume
     vol = dot(cross(primvec[1,:],primvec[2,:]),primvec[3,:])
@@ -66,7 +71,7 @@ function DFTraMO_overlap(filename::String, originsite::Vector{Float64}, radius::
                 # Transform grid index into Cartesian
                 grid_cart = ([x, y, z]./grid)'*primvec
                 # check if grid_cart is within sphere
-                if ((grid_cart[1]-origin[1])^2+(grid_cart[2]-origin[2])^2+(grid_cart[3]-origin[3])^2)^.5 <= radius
+                if norm(grid_cart - origin) <= radius
                     # Check if point is out of bounds. If so, use adjacent cell's value.
                     (i1, i2, i3) = (x, y, z)
                     if x < 1
@@ -98,8 +103,9 @@ function DFTraMO_overlap(filename::String, originsite::Vector{Float64}, radius::
     return (total_sphere_sum, total, total_sphere_sum/total)
 end
 
-# Reads a void list (format: string float float float) and exports their xyz coordinates as a matrix for DFTraMO_overlap()
-function readvoidlist(filename::String)
+# Reads a void list (format: string float float float) and exports their xyz coordinates
+# as a matrix for DFTraMO_overlap()
+function readvoidlist(filename::AbstractString)
     f = open(filename)
     num_lines = countlines(f)
     seekstart(f)
@@ -112,7 +118,15 @@ function readvoidlist(filename::String)
 end
 
 """
-    writePsphere(start_xsf::Int64, end_xsf::Int64, xsf_prefix::String, xsf_suffix::String, voidlistfile::String, radius::Float64, outputfilename::String)
+    writePsphere(
+        start_xsf::Integer,
+        end_xsf::Integer,
+        xsf_prefix::AbstractString,
+        xsf_suffix::AbstractString,
+        voidlistfile::AbstractString,
+        radius::Real,
+        outputfilename::AbstractString
+    ) -> Nothing
 
 Computes and writes Psphere values for a set of DFT-raMO xsfs to a text file.
 
@@ -125,15 +139,33 @@ Computes and writes Psphere values for a set of DFT-raMO xsfs to a text file.
 - `radius`: in angstroms.
 - `outputfilename`: Filename for Psphere outputs.
 """
-function writePsphere(start_xsf::Int64, end_xsf::Int64, xsf_prefix::String, xsf_suffix::String, voidlistfile::String, radius::Float64, outputfilename::String)
+function writePsphere(
+    start_xsf::Integer,
+    end_xsf::Integer,
+    xsf_prefix::AbstractString,
+    xsf_suffix::AbstractString,
+    voidlistfile::AbstractString,
+    radius::Real,
+    outputfilename::AbstractString
+)
     voidlist = readvoidlist(voidlistfile)
     f = open(outputfilename,"w")
-    write(f, string("Spherical DFTraMO overlaps with radius ", radius, "\n"))
-    write(f,"integrated_sphere \t integrated_total_XSF \t sphere/total \t origin_coord\n")
+    println(f, string("Spherical DFTraMO overlaps with radius ", radius))
+    println(f,"integrated_sphere \tintegrated_total_XSF \tsphere/total \torigin_coord")
     count = 1
     for i in start_xsf:-2:end_xsf
-        (integrated_sphere, integrated_total, sph_total) = DFTraMO_overlap(string(xsf_prefix,i,xsf_suffix), voidlist[count,:], radius)
-        write(f, string(integrated_sphere, "\t", integrated_total, "\t", sph_total, "\t", voidlist[count,:], "\n"))
+        (integrated_sphere, integrated_total, sph_total) = DFTraMO_overlap(
+            string(xsf_prefix,i,xsf_suffix),
+            voidlist[count,:],
+            radius
+        )
+        println(f, string(
+                integrated_sphere, "\t",
+                integrated_total, "\t",
+                sph_total, "\t",
+                voidlist[count,:]
+            )
+        )
         count += 1
     end
     close(f)
