@@ -1,4 +1,5 @@
 # Initial script to read VASP inputs
+using Xtal
 
 # Transform WAVECAR to data [TBD!!!]
 
