@@ -7,7 +7,7 @@ using Xtal
 include("Psphere.jl")
 export writePsphere
 
-include("create_run.jl")
-export create_run
+include("inputs.jl")
+export create_run, extractVASP
 
 end
