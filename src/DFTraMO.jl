@@ -8,6 +8,6 @@ include("Psphere.jl")
 export writePsphere
 
 include("inputs.jl")
-export create_run, extract_VASP
+export create_run, extract_VASP, read_GCOEFF
 
 end
