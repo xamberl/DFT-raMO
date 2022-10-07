@@ -14,26 +14,17 @@ end
 extract_VASP
 
 Searches in the current directory for VASP files and extracts relevant information.
-    """
-    function extract_VASP()
-        # Read Fermi energy from OUTCAR
-        fermi = get_fermi("OUTCAR")
-        
-        # Get geometry from POSCAR and KPOINTS (WIP)
-        geo = readPOSCAR("POSCAR")
-        kpt = readKPOINTS("KPOINTS")
-        # Creates an AtomList{3} supercell from POSCAR and KPOINTS
-        super = supercell(geo.gen,kpt.grid)
-        
-        # Load in default number of atomic orbitals, number of electrons [WIP]
-        
-        # Prints info into a system.in file
-        #==open("system.in","w") do io
-            println(io,"fermi_energy ", fermi, "\nenergy_range -100:"," fermi")
-        end==#
-        return fermi, geo, kpt, super
-    end
-    
+"""
+function extract_VASP()
+    fermi = get_fermi("OUTCAR")    
+    geo = readPOSCAR("POSCAR")
+    kpt = readKPOINTS("KPOINTS")
+    wave = readWAVECAR("WAVECAR")
+    # Creates an AtomList{3} supercell from POSCAR and KPOINTS
+    super = supercell(geo.gen,kpt.grid)
+    return fermi, geo, kpt, super, wave
+end
+
     function read_GCOEFF(emin::Real, emax::Real)
         open("GCOEFF.txt","r") do io
             num_spin_states = parse(Int,readline(io))
