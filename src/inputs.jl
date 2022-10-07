@@ -11,30 +11,29 @@ function create_run(run_name::AbstractString)
 end
 
 """
-extract_VASP -> fermi::Float64, geo::Crystal{3}, kpt::KPointGrid{3}, super::AtomList{3}
+extract_VASP
 
-Searches in the current directory for VASP files (OUTCAR, POSCAR, KPOINTS).
-Returns the Fermi energy, crystal geometry, kpoint grid, and automatically generates a supercell.
-"""
+Searches in the current directory for VASP files and extracts relevant information.
+    """
     function extract_VASP()
         # Read Fermi energy from OUTCAR
         fermi = get_fermi("OUTCAR")
+        
         # Get geometry from POSCAR and KPOINTS (WIP)
         geo = readPOSCAR("POSCAR")
         kpt = readKPOINTS("KPOINTS")
         # Creates an AtomList{3} supercell from POSCAR and KPOINTS
         super = supercell(geo.gen,kpt.grid)
-        # Reads in wavefunction information from WAVECAR
-        wave = readWAVECAR("WAVECAR")
-        return fermi, geo, kpt, super, wave
+        
+        # Load in default number of atomic orbitals, number of electrons [WIP]
+        
+        # Prints info into a system.in file
+        #==open("system.in","w") do io
+            println(io,"fermi_energy ", fermi, "\nenergy_range -100:"," fermi")
+        end==#
+        return fermi, geo, kpt, super
     end
-
-    """
-    read_GCOEFF -> current_G, current_occ_coeff, kptlist
     
-    Searches in the current directory for GCOEFF.txt and extracts relevant information.
-    !!!(WORK IN PROGRESS)!!!... Use extract_VASP to read the WAVECAR for now
-    """
     function read_GCOEFF(emin::Real, emax::Real)
         open("GCOEFF.txt","r") do io
             num_spin_states = parse(Int,readline(io))
