@@ -35,7 +35,7 @@ Searches in the current directory for VASP files and extracts relevant informati
     end
     
     function read_GCOEFF(emin::Real, emax::Real)
-        open("gcoeff_head.txt","r") do io
+        open("GCOEFF.txt","r") do io
             num_spin_states = parse(Int,readline(io))
             num_kpt = parse(Int,readline(io))
             num_band = parse(Int,readline(io))
@@ -51,6 +51,9 @@ Searches in the current directory for VASP files and extracts relevant informati
             # Initialize containers
             num_occ_states = 0
             kptlist = Array{Vector{Float64}}(undef,0)
+            npw_temp = 0
+            current_G = Array{Vector{Int}}(undef,0)
+            current_occ_coeff = []
             # Loop through spin states, kpts, band
             for s in 1:num_spin_states
                 println("Reading spin state ", s)
@@ -78,23 +81,53 @@ Searches in the current directory for VASP files and extracts relevant informati
                             occ_states_k = occ_states_k + 1
                             num_occ_states = num_occ_states + 1
                             push!(kptlist,current_kpt)
-                            # Gets complex coefficient for occupied states, stored in
-                            # G = [Int Int Int], and occ_coeff[Complex]
-                            G = Array{Vector{Int}}(undef,0)
-                            occ_coeff = Array{Complex{Float64}}(undef,0)
+                            #temp_occ_coeff = Vector{Complex}(undef,0)
                             for p in 1:num_pw
+                                # Counter to keep track of which G we're at
+                                g_count = 1
                                 ln = split(readline(io))
-                                push!(G, parse.(Int,ln[1:3]))
-                                push!(occ_coeff, complex(parse(Float64,ln[5]),parse(Float64,ln[7])))
+                                # If the G value is unique, append it to G, and temp_occ_coeff
+                                if !(parse.(Int,ln[1:3]) in current_G)
+                                    npw_temp = npw_temp+1
+                                    push!(current_G, parse.(Int,ln[1:3]))
+                                    push!(current_occ_coeff, complex(parse(Float64,ln[5]),parse(Float64,ln[7])))
+                                # Otherwise, put it in the corresponding slot
+                                else
+                                    push!(current_occ_coeff, complex(parse(Float64,ln[5]),parse(Float64,ln[7])))
+                                end
                             end
                         else
                             for p in 1:num_pw
                                 readline(io)
                             end
                         end
-                        println("For K-point # ", k, ", Spin State ", s, ", found ", occ_states_k, " Occupied States.")
                     end
+                    println("For K-point # ", k, ", Spin State ", s, ", found ", occ_states_k, " Occupied States.")
                 end
             end
+            println("Total occupied states: ", num_occ_states," npw_temp: ", npw_temp)
+            return current_G, current_occ_coeff, kptlist
         end
     end
+
+# Repeated kpoints marked with 0; unrepeated marked with 1.
+function track_kpoint_repeating(kptlist::Vector{Vector{Float64}})
+    kpoint_repeating = zeros(Bool,length(kptlist))
+    kpoint_repeating[1] = 1
+    for i in 2:length(kptlist)
+        if kptlist[i] != kptlist[i-1]
+            kpoint_repeating[i] = 1
+        end
+    end
+    return kpoint_repeating
+end
+
+# Creates overlap matrix with occupied coefficients
+# If the kpoints are the same, they can overlap. Otherwise, they do not.
+function make_overlap_mat(occ_coeff, kpoint_repeating::Vector{Bool})
+    num_occ_states = length(kpoint_repeating)
+    S = zeros(num_occ_states,num_occ_states)
+    kpoint_zero = findall(x -> x == 0, kpoint_repeating)
+    S[kpoint_zero,kpoint_zero] = occ_coeff[:,kpoint_zero]'*occ_coeff[:,kpoint_zero]
+    return S
+end
