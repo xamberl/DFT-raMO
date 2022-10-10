@@ -113,12 +113,35 @@ function track_kpoint_repeating(kptlist::Vector{Vector{Float64}})
     return kpoint_repeating
 end
 
-# Creates overlap matrix with occupied coefficients
-# If the kpoints are the same, they can overlap. Otherwise, they do not.
-function make_overlap_mat(occ_coeff, kpoint_repeating::Vector{Bool})
-    num_occ_states = length(kpoint_repeating)
-    S = zeros(num_occ_states,num_occ_states)
-    kpoint_zero = findall(x -> x == 0, kpoint_repeating)
-    S[kpoint_zero,kpoint_zero] = occ_coeff[:,kpoint_zero]'*occ_coeff[:,kpoint_zero]
-    return S
+"""
+    read_eht_params(paramsfile::AbstractString) -> ehtParams 
+
+Reads an eHtuner parameter file and returns it as an ehtParams object.
+If argument is left empty, it will read the DFT_raMO_eht_parms.dat file by default.
+"""
+function read_eht_params(paramsfile::AbstractString="testfiles/DFT_raMO_eht_parms.dat")
+    # Skips header
+    ln = readlines(open(paramsfile,"r"))
+    ln = ln[4:length(ln)]
+    ln = filter(!isempty,split.(ln))
+    unique_atoms_index = unique(i->mapreduce(permutedims,vcat,ln)[:,1][i],eachindex(mapreduce(permutedims,vcat,ln)[:,1]))
+    mat = ehtParams(Matrix{OrbitalParams}(undef,length(ln),4))\
+    # Prefill with zeros
+    for i in 1:length(mat.data)
+        mat.data[i] = OrbitalParams(0,0,0,0,0.,0.,0.,0.,0.)
+    end
+    atom_counter = 0
+    # Runs through list of unique atoms
+    for i in 1:length(ln)
+        current = ln[i]
+        # Assigns atom_num,valence,l_quant,n_quant,IP,exp1,exp2,coeff1,coeff2
+        orbs = Dict("s"=>0,"p"=>1,"d"=>2,"f"=>3)
+        orb_param = OrbitalParams(parse(Int,current[2]), parse(Int,current[3]), get(orbs,current[6],3), parse(Int,current[5]), parse(Float64,current[7]), parse(Float64,current[8]), parse(Float64,current[9]), parse(Float64,current[10]), parse(Float64,current[11]))
+        if i in unique_atoms_index
+            atom_counter = atom_counter + 1
+        end
+        # Info stored in matrix of (unique atoms, orbital)
+        mat.data[atom_counter, get(orbs,current[6],3)+1] = orb_param
+    end
+    return mat
 end
