@@ -125,7 +125,7 @@ function read_eht_params(paramsfile::AbstractString="testfiles/DFT_raMO_eht_parm
     ln = ln[4:length(ln)]
     ln = filter(!isempty,split.(ln))
     unique_atoms_index = unique(i->mapreduce(permutedims,vcat,ln)[:,1][i],eachindex(mapreduce(permutedims,vcat,ln)[:,1]))
-    mat = ehtParams(Matrix{OrbitalParams}(undef,length(ln),4))\
+    mat = ehtParams(Matrix{OrbitalParams}(undef,length(ln),4))
     # Prefill with zeros
     for i in 1:length(mat.data)
         mat.data[i] = OrbitalParams(0,0,0,0,0.,0.,0.,0.,0.)
