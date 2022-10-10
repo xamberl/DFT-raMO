@@ -77,3 +77,36 @@ function make_target_cluster_sp(site_list::Vector{Vector{Float64}}, radius::Real
     end
     return psi_target
 end
+
+"""
+    make_target_hybrid()
+
+Makes a custom hybrid with manually specified coefficients from a cluster file that corresponds to an atom
+"""
+#==
+Currently echoes MATLAB version of DFT-raMO. Cluster file should have one Float per line,
+in multiples of 9.
+==#
+function make_target_hybrid(cluster_list::Vector{Vector{Float64}}, atom_num::Int, super::Supercell)
+    num_targets = length(cluster_list)/9
+    psi_target = zeros(sum(super.orbitals), num_targets)
+    AO_number = sum(super.orbitals[1:atom_num])-super.orbitals[atom_num]
+    # Loops through targets
+    for n in 1:num_targets
+        # Assigns s coefficient
+        psi_target[AO_number+1,n] = cluster_list[(n-1)*9+1]
+        # Assigns p coefficients
+        if super.orbitals[atom_num] > 1
+            for p in 1:3
+                psi_target[AO_number+1+p,n] = cluster_list[(n-1)*9+1+p]
+            end
+        end
+        # Assigns d coefficients
+        if super.orbitals[atom_num] > 4
+            for d in 1:3
+                psi_target[AO_number+4+d,n] = cluster_list[(n-1)*9+4+d]
+            end
+        end
+    end
+    return psi_target
+end
