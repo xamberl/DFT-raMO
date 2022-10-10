@@ -145,3 +145,25 @@ function read_eht_params(paramsfile::AbstractString="testfiles/DFT_raMO_eht_parm
     end
     return mat
 end
+
+"""
+    read_site_list(filename::AbstractString) -> site_list::Vector{Vector{Float64}}
+
+Reads in a txt file with coordinates, typically for specifing midpoints for isolobal bonds or cage states.
+"""
+function read_site_list(filename::AbstractString)
+    sitelist = Vector{Vector{Float64}}(undef,0)
+    open(filename,"r") do io
+        ln = readlines(io)
+        ln = filter(!isempty,split.(ln))
+        # Removes first column of atomic labels, if any
+        has_label = 0
+        if length(ln[1])==4
+            has_label = 1
+        end
+        for i in ln
+            push!(sitelist,parse.(Float64,i[1+has_label:3+has_label]))
+        end
+    end
+    return sitelist
+end
