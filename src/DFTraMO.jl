@@ -11,9 +11,9 @@ include("data.jl")
 export OrbitalParams, ehtParams
 
 include("raMO.jl")
-export read_eht_params
+export get_eht_params, make_overlap_mat
 
 include("inputs.jl")
-export create_run, extract_VASP, read_GCOEFF, track_kpoint_repeating, make_overlap_mat
+export create_run, extract_VASP, read_GCOEFF, track_kpoint_repeating, read_eht_params
 
 end
