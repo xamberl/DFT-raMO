@@ -184,13 +184,20 @@ function reconstruct_targets_DFT(
         spin_down_coeff = occ_coeff[:,1+num_spin_up:num_spin_up+num_spin_down]
     end
 
+    # Not sure what's going on here just yet; still parsing matlab code (~ ln 852)
     for i in 1:num_targets
         for j in 1:length(super.atomlist)
             prev_orb = sum(super.orbitals[1:j-1])
             # If psi_target is not empty for this atom
             if norm(psi_target[prev_orb+1:prev_orb+super.orbitals[j],i]) > 0
                 @info norm(psi_target[prev_orb+1:prev_orb+super.orbitals[j],i])
+                # Calculate overlap
+                # overlap_target_temp, E_mat_temp = calculate_overlap()
             end
         end
     end
+end
+
+function calculate_overlap()
+    # some function here
 end
