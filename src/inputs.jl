@@ -6,8 +6,52 @@ Generates a generic input file ("run_name.in") loaded with options for the run i
 function create_run(run_name::AbstractString)
     open(string(run_name,".in"),"w") do io
         println(io,
-        "run_type 1\nsites 1:36\nsite_list sitelist.txt\nAO 1\nradius 2.2\ncontinue_from lastrun.mat")
+        "RUN_TYPE 1\nSITES 1:36\nSITE_LIST sitelist.txt\nAO 1\nRADIUS 2.2\nCONTINUE_FROM lastrun.mat")
     end
+end
+
+"""
+"""
+function read_run_in(run_name::AbstractString)
+    # initialize outputs
+    run_type = 0
+    sites = Vector{Int}(undef,0)
+    sites_list = ""
+    AO = 0
+    radius = 0.0
+    continue_from = ""
+    # Begin parsing
+    ln = readlines(run_name)
+    for i in eachindex(ln)
+        ln_temp = lstrip(ln[i])
+        startswith(ln_temp, "RUN_TYPE") ? run_type = parse(Int,split( ln_temp)[2]) : nothing
+        # Reads and parses SITES
+        if startswith(ln_temp, "SITES")
+            # Removes spaces and commas after SITE_LIST
+            temp_sites = split(ln_temp,[' ',','])[2:length(split(ln_temp,[' ',',']))]
+            temp_sites = filter(!isempty, temp_sites)
+            # Checks for any site ranges
+            for j in temp_sites
+                temp = parse.(Int,split(j,':'))
+                if length(temp) == 2
+                    sites = vcat(sites,vcat(temp[1]:temp[2]))
+                else
+                    sites = vcat(sites,temp[1])
+                end
+            end
+        end
+        startswith(ln_temp, "SITE_LIST") ? sites_list = split( ln_temp)[2] : nothing
+        startswith(ln_temp, "AO") ? AO = parse(Int,split( ln_temp)[2]) : nothing
+        startswith(ln_temp, "RADIUS") ? radius = parse(Float64,split( ln_temp)[2]) : nothing
+        startswith(ln_temp, "CONTINUE_FROM") ? continue_from = split( ln_temp)[2] : nothing
+    end
+    # Checks and warnings
+    run_type == 0 ? @error("RUN_TYPE not found!") : nothing
+    isempty(sites) ? @error("SITES not found!") : nothing
+    isempty(sites_list) && run_type > 1 ? @error("SITE_LIST not found for hybrid run!") : nothing
+    radius <= 0 && run_type > 1 ? @error("RADIUS not specified or is negative for hybrid run!") : nothing
+    isempty(continue_from) ? @info("Starting afresh at the maximum valence electron count.") : @info("Continuing from ", continue_from)
+    return run_type, sites, sites_list, AO, radius, continue_from
 end
 
 """
