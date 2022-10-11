@@ -65,7 +65,7 @@ function extract_VASP()
     kpt = readKPOINTS("KPOINTS")
     wave = readWAVECAR("WAVECAR")
     # Creates an AtomList{3} supercell from POSCAR and KPOINTS
-    super = supercell(geo.gen,kpt.grid)
+    super = supercell(geo.atoms,kpt.grid)
     return fermi, geo, kpt, super, wave
 end
 
