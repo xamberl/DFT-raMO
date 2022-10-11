@@ -1,10 +1,10 @@
 """
-    get_eht_params(atom_num::Int) -> OrbitalParams
+get_eht_params(atom_num::Int, atom_orbital::Int, eht_params::ehtParams) -> OrbitalParams
 
-Search for parameters in the loaded ehtParams for corresponding atom.
+Search for parameters in the loaded ehtParams for corresponding atom. atom_orbital corresponds to the quantum number l.
 """
 function get_eht_params(atom_num::Int, atom_orbital::Int, eht_params::ehtParams)
-    return eht_params.data[atom_num, atom_orbital]
+    return eht_params.data[atom_num, atom_orbital+1]
 end
 
 
@@ -109,4 +109,88 @@ function make_target_hybrid(cluster_list::Vector{Vector{Float64}}, atom_num::Int
         end
     end
     return psi_target
+end
+
+"""
+    generate_H(super::Supercell, ehtparams::ehtParams) -> H::Matrix{Float64}
+
+Fills diagonal of the Atomic Orbital Hamiltonian with energy from eht_params.
+"""
+function generate_H(super::Supercell, ehtparams::ehtParams)
+    H = zeros(sum(super.orbitals),sum(super.orbitals))
+    for i in 1:length(super.atomlist)
+        prev_orb = sum(super.orbitals[1:i-1])
+        # d orbitals
+        if super.orbitals[i] > 4
+            orbital_params = get_eht_params(super.atomlist[i].num, 2, ehtparams)
+            for j in 5:9
+                H[prev_orb+j,prev_orb+j] = orbital_params.IP
+            end
+        end
+        # p orbitals
+        if super.orbitals[i] > 1
+            orbital_params = get_eht_params(super.atomlist[i].num, 1, ehtparams)
+            for j in 2:4
+                H[prev_orb+j,prev_orb+j] = orbital_params.IP
+            end
+        end
+        # s orbital
+        orbital_params = get_eht_params(super.atomlist[i].num, 0, ehtparams)
+        H[prev_orb+1,prev_orb+1] = orbital_params.IP
+    end
+    return H
+end
+
+"""
+    reconstruct_targets_DFT()
+
+The guts of DFTraMO.
+"""
+# For now, will not use the raMOSystemStatus struct. This will be a to-do to clean up the code!
+function reconstruct_targets_DFT(
+    psi_target::Array{<:Real},
+    num_electrons_left::Int,
+    run_name::AbstractString,
+    super::Supercell,
+    ehtparams::ehtParams,
+    wavefxn::ReciprocalWavefunction{3,Float32},
+    use_prev::Bool,
+    prev_mat::AbstractString=""
+    )
+
+    # Single target run or multiple targets
+    num_targets = 1
+    if length(size(psi_target)) == 2
+        num_targets = size(psi_target)[2]
+    end
+    num_electrons_left = num_electrons_left - 2*num_targets
+    
+    #output_name = @sprintf("%s_%05i.mat",run_name,num_electrons_left)
+    if use_prev
+        # TO DO: write code to load in previous matrix
+        open(prev_mat,"r")
+        println("Found and loaded remainder file ", prev_mat, ".")
+    end
+    
+    # Calculate overlap between each atomic orbital and planewave
+    H = generate_H(super,ehtparams)
+    # Checks for spin states
+    if size(wavefxn.waves)[1] == 1
+        spin_up_coeff = 1
+        spin_down_coeff = 1
+    else
+        # To do: fix this part once spin up/down is dealt with
+        spin_up_coeff = occ_coeff[:,1:num_spin_up]
+        spin_down_coeff = occ_coeff[:,1+num_spin_up:num_spin_up+num_spin_down]
+    end
+
+    for i in 1:num_targets
+        for j in 1:length(super.atomlist)
+            prev_orb = sum(super.orbitals[1:j-1])
+            # If psi_target is not empty for this atom
+            if norm(psi_target[prev_orb+1:prev_orb+super.orbitals[j],i]) > 0
+                @info norm(psi_target[prev_orb+1:prev_orb+super.orbitals[j],i])
+            end
+        end
+    end
 end
