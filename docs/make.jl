@@ -13,8 +13,10 @@ makedocs(
     format = Documenter.HTML(prettyurls = (get(ENV, "CI", nothing) == true)),
     modules = [DFTraMO],
     pages = [
-        "Home" => "index.md",
-        "API" => "api/index.md"
+        "Home"      => "index.md",
+        "Theory"    => "theory.md",
+        "Usage"     => "usage.md",
+        "API"       => "api/index.md"
     ]
 )
 
