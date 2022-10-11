@@ -68,3 +68,16 @@ struct Supercell
         return new(atomlist,orbitals)
     end
 end
+
+#==
+Might want this to make reconstruct_targets_DFT() neater?
+"""
+"""
+struct raMOSystemStatus
+    num_electrons_left::Int
+    num_occ_states::Int
+    num_planewaves::Int
+    kptlist::KPointlist{3}
+    G::Vector{Int}
+    #occ_coeff::
+end==#
