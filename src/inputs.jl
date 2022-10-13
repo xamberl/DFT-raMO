@@ -64,10 +64,10 @@ Searches in the specified directory (default is the current directory) for VASP 
 OUTCAR, POSCAR, KPOINTS, and WAVECAR, and extracts relevant information.
 """
 function extract_VASP(d::AbstractString="")
-    fermi = get_fermi(String(d,"OUTCAR"))
-    geo = readPOSCAR(String(d,"POSCAR"))
-    kpt = readKPOINTS(String(d,"KPOINTS"))
-    wave = readWAVECAR(String(d,"WAVECAR"))
+    fermi = get_fermi(string(d,"OUTCAR"))
+    geo = readPOSCAR(string(d,"POSCAR"))
+    kpt = readKPOINTS(string(d,"KPOINTS"))
+    wave = readWAVECAR(string(d,"WAVECAR"))
     # Creates an AtomList{3} supercell from POSCAR and KPOINTS
     super = supercell(geo.atoms,kpt.grid)
     return fermi, geo, kpt, super, wave
@@ -151,7 +151,7 @@ function read_GCOEFF(emin::Real, emax::Real)
 end
 
 # Repeated kpoints marked with 0; unrepeated marked with 1.
-function track_kpoint_repeating(kptlist::Vector{Vector{Float64}})
+function track_kpoint_repeating(kptlist::KPointList{3})
     kpoint_repeating = zeros(Bool,length(kptlist))
     kpoint_repeating[1] = 1
     for i in 2:length(kptlist)

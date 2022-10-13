@@ -175,7 +175,8 @@ function reconstruct_targets_DFT(
     # Calculate overlap between each atomic orbital and planewave
     H = generate_H(super,ehtparams)
     # Checks for spin states
-    if size(wavefxn.waves)[1] == 1
+    num_spin_states = size(wavefxn.waves)[1]
+    if num_spin_states == 1
         spin_up_coeff = 1
         spin_down_coeff = 1
     else
@@ -192,12 +193,44 @@ function reconstruct_targets_DFT(
             if norm(psi_target[prev_orb+1:prev_orb+super.orbitals[j],i]) > 0
                 @info norm(psi_target[prev_orb+1:prev_orb+super.orbitals[j],i])
                 # Calculate overlap
-                # overlap_target_temp, E_mat_temp = calculate_overlap()
+                #== overlap_target_temp, E_mat_temp = calculate_overlap(
+                    num_spin_states,
+                    num_spin_up,
+                    num_spin down,
+                    super.orbitals[j]), # number of target orbitals for the atom
+                    num_occ_states,
+                    kpoint_repeating,
+                    super.atomlist[j].pos, # atomic position in fractional coordinates
+                    super.waves[1].basis # reciprocal lattice vectors
+                    )==#
             end
         end
     end
 end
 
-function calculate_overlap()
-    # some function here
+function calculate_overlap(
+    num_spin_states::Int,
+    num_spin_up::Int,
+    num_spin_down::Int,
+    num_target_orbitals::Int,
+    num_occ_states::Int,
+    kpoint_repeating::Vector{Bool},
+    atom_pos_fract::Vector{Float64},
+    reciprocal_lattice::ReciprocalBasis{3}
+    )
+    # Initialize output matrix
+    overlap_target_occupied = zeros(num_spin_states, max(num_spin_up, num_spin_down), num_target_orbitals)
+    # Initialize secondary overlap container
+    overlap = zeros(num_planewaves*num_occ_states, num_target_orbitals)
+    for i in 1:num_occupied_states
+        if kpoint_repeating[i] == 0 # If this has been done before, copy values.
+            overlap[(i-1)*num_planewaves+1:i*num_planewaves,:] = overlap[(i-2)*num_planewaves+1:(i-1)*num_planewaves,:]
+        else
+            for j in 1:num_planewaves
+                direction = -1*G[j,:]+kptlist[i]
+                scalingfactor = exp(2*i*pi*dot(direction, atom_pos_fract))
+                direction = direction'*reciprocal_lattice
+            end
+        end
+    end
 end
