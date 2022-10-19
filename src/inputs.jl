@@ -58,23 +58,23 @@ function read_run_in(run_name::AbstractString)
 end
 
 """
-    extract_VASP(d::AbstractString="") -> fermi::Float64, geo::Crystal{3}, kpt::KPointGrid{3}, super::AtomList{3}, wave::ReciprocalWaveFunction{3,Float32}
+    import_VASP(d::AbstractString="") -> fermi::Float64, geo::Crystal{3}, kpt::KPointGrid{3}, super::AtomList{3}, wave::ReciprocalWaveFunction{3,Float32}
 
 Searches in the specified directory (default is the current directory) for VASP files
 OUTCAR, POSCAR, KPOINTS, and WAVECAR, and extracts relevant information.
 """
-function extract_VASP(d::AbstractString="")
+function import_VASP(d::AbstractString="")
     fermi = get_fermi(string(d,"OUTCAR"))
     geo = readPOSCAR(string(d,"POSCAR"))
     kpt = readKPOINTS(string(d,"KPOINTS"))
     wave = readWAVECAR(string(d,"WAVECAR"))
     # Creates an AtomList{3} supercell from POSCAR and KPOINTS
     super = supercell(geo.atoms,kpt.grid)
-    return fermi, geo, kpt, super, wave
+    return (fermi, geo, kpt, super, wave)
 end
 
 """
-    read_GCOEFF(emin::Real, emax::Real) -> (unique_g::Vector{Int64}, occupied_coefficients::Matrix{ComplexF64}, kptlist::Vector{Vector{Float64}})
+    read_GCOEFF(emin::Real, emax::Real) -> (g_indices::Vector{Int64}, occupied_coefficients::Matrix{ComplexF64}, kptlist::Vector{Vector{Float64}})
 
 Reads a GCOEFF.txt file within the specified energy range. Returns the unique G vectors, complex coefficients, and k-point list corresponding to occupied states.
 """
@@ -144,17 +144,19 @@ function read_GCOEFF(emin::Real, emax::Real)
         end
         println("Total occupied states: ", num_occ_states,)
         # Post processing of occ_coeff. Finds the unique G
-        unique_g = unique(i->occ_coeff[i].G,eachindex(occ_coeff))
-        occupied_coefficients = fill!(Array{ComplexF64}(undef,length(unique_g),num_occ_states),0)
+        g_indices = unique(i->occ_coeff[i].G,eachindex(occ_coeff))
+        unique_G = fill!(Vector{Vector{Int64}}(undef,length(g_indices)),[0,0,0])
+        occupied_coefficients = fill!(Array{ComplexF64}(undef,length(g_indices),num_occ_states),0)
         # Finds unique G in occ_coeff, then fills an array at index [G, number_of_the_occupied_state] with the corresponding coefficient.
         # Quite inefficient. This will need optimization, but for now it works.
-        for i in eachindex(unique_g)
-            indices = findall(x->x==occ_coeff[unique_g[i]].G, [occ_coeff[j].G for j in eachindex(occ_coeff)])
+        for i in eachindex(g_indices)
+            indices = findall(x->x==occ_coeff[g_indices[i]].G, [occ_coeff[j].G for j in eachindex(occ_coeff)])
             for j in indices
                 occupied_coefficients[i,occ_coeff[j].state] = occ_coeff[j].coeff
+                unique_G[i] = occ_coeff[j].G
             end
         end
-        return (unique_g, occupied_coefficients, kptlist)
+        return (unique_G, occupied_coefficients, kptlist)
     end
 end
 
