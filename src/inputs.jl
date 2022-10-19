@@ -58,7 +58,7 @@ function read_run_in(run_name::AbstractString)
 end
 
 """
-extract_VASP(d::AbstractString="") -> fermi::Float64, geo::Crystal{3}, kpt::KPointGrid{3}, super::AtomList{3}, wave::ReciprocalWaveFunction{3,Float32}
+    extract_VASP(d::AbstractString="") -> fermi::Float64, geo::Crystal{3}, kpt::KPointGrid{3}, super::AtomList{3}, wave::ReciprocalWaveFunction{3,Float32}
 
 Searches in the specified directory (default is the current directory) for VASP files
 OUTCAR, POSCAR, KPOINTS, and WAVECAR, and extracts relevant information.
@@ -73,7 +73,11 @@ function extract_VASP(d::AbstractString="")
     return fermi, geo, kpt, super, wave
 end
 
-# read_GCOEFF() is a WIP
+"""
+    read_GCOEFF(emin::Real, emax::Real) -> (unique_g::Vector{Int64}, occupied_coefficients::Matrix{ComplexF64}, kptlist::Vector{Vector{Float64}})
+
+Reads a GCOEFF.txt file within the specified energy range. Returns the unique G vectors, complex coefficients, and k-point list corresponding to occupied states.
+"""
 function read_GCOEFF(emin::Real, emax::Real)
     open("GCOEFF.txt","r") do io
         num_spin_states = parse(Int,readline(io))
@@ -91,9 +95,8 @@ function read_GCOEFF(emin::Real, emax::Real)
         # Initialize containers
         num_occ_states = 0
         kptlist = Array{Vector{Float64}}(undef,0)
-        npw_temp = 0
-        current_G = Array{Vector{Int}}(undef,0)
-        current_occ_coeff = []
+        #current_G = Array{Vector{Int}}(undef,0)
+        occ_coeff = []
         # Loop through spin states, kpts, band
         for s in 1:num_spin_states
             println("Reading spin state ", s)
@@ -121,20 +124,14 @@ function read_GCOEFF(emin::Real, emax::Real)
                         occ_states_k = occ_states_k + 1
                         num_occ_states = num_occ_states + 1
                         push!(kptlist,current_kpt)
-                        #temp_occ_coeff = Vector{Complex}(undef,0)
+                        # Loops through pw in each band and stores it in a array of tuples
+                        # where the NamedTuple is (state = Int, G = Vector{Int}, coeff = ComplexF64)
+                        # This probably needs a better method here.
                         for p in 1:num_pw
-                            # Counter to keep track of which G we're at
-                            g_count = 1
                             ln = split(readline(io))
-                            # If the G value is unique, append it to G, and temp_occ_coeff
-                            if !(parse.(Int,ln[1:3]) in current_G)
-                                npw_temp = npw_temp+1
-                                push!(current_G, parse.(Int,ln[1:3]))
-                                push!(current_occ_coeff, complex(parse(Float64,ln[5]),parse(Float64,ln[7])))
-                                # Otherwise, put it in the corresponding slot
-                            else
-                                push!(current_occ_coeff, complex(parse(Float64,ln[5]),parse(Float64,ln[7])))
-                            end
+                            temp_g = parse.(Int,ln[1:3])
+                            temp_occ_coeff = complex(parse(Float64,ln[5]),parse(Float64,ln[7]))
+                            push!(occ_coeff,(state = num_occ_states, G = temp_g, coeff = temp_occ_coeff))
                         end
                     else
                         for p in 1:num_pw
@@ -145,8 +142,19 @@ function read_GCOEFF(emin::Real, emax::Real)
                 println("For K-point # ", k, ", Spin State ", s, ", found ", occ_states_k, " Occupied States.")
             end
         end
-        println("Total occupied states: ", num_occ_states," npw_temp: ", npw_temp)
-        return current_G, current_occ_coeff, kptlist
+        println("Total occupied states: ", num_occ_states,)
+        # Post processing of occ_coeff. Finds the unique G
+        unique_g = unique(i->occ_coeff[i].G,eachindex(occ_coeff))
+        occupied_coefficients = fill!(Array{ComplexF64}(undef,length(unique_g),num_occ_states),0)
+        # Finds unique G in occ_coeff, then fills an array at index [G, number_of_the_occupied_state] with the corresponding coefficient.
+        # Quite inefficient. This will need optimization, but for now it works.
+        for i in eachindex(unique_g)
+            indices = findall(x->x==occ_coeff[unique_g[i]].G, [occ_coeff[j].G for j in eachindex(occ_coeff)])
+            for j in indices
+                occupied_coefficients[i,occ_coeff[j].state] = occ_coeff[j].coeff
+            end
+        end
+        return (unique_g, occupied_coefficients, kptlist)
     end
 end
 
@@ -181,7 +189,7 @@ function read_eht_params(paramsfile::AbstractString="testfiles/DFT_raMO_eht_parm
     end
     atom_counter = 0
     # Runs through list of unique atoms
-    for i in 1:length(ln)
+    for i in eachindex(ln)
         current = ln[i]
         # Assigns atom_num,valence,l_quant,n_quant,IP,exp1,exp2,coeff1,coeff2
         orbs = Dict("s"=>0,"p"=>1,"d"=>2,"f"=>3)
