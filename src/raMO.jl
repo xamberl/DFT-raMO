@@ -216,7 +216,9 @@ function calculate_overlap(
     num_occ_states::Int,
     kpoint_repeating::Vector{Bool},
     atom_pos_fract::Vector{Float64},
-    reciprocal_lattice::ReciprocalBasis{3}
+    reciprocal_lattice::ReciprocalBasis{3},
+    G::Vector{Int},
+    kptlist::Vector{Vector{Float64}}
     )
     # Initialize output matrix
     overlap_target_occupied = zeros(num_spin_states, max(num_spin_up, num_spin_down), num_target_orbitals)
@@ -227,7 +229,7 @@ function calculate_overlap(
             overlap[(i-1)*num_planewaves+1:i*num_planewaves,:] = overlap[(i-2)*num_planewaves+1:(i-1)*num_planewaves,:]
         else
             for j in 1:num_planewaves
-                direction = -1*G[j,:]+kptlist[i]
+                direction = -1*G[j]+kptlist[i]
                 scalingfactor = exp(2*i*pi*dot(direction, atom_pos_fract))
                 direction = direction'*reciprocal_lattice
             end
