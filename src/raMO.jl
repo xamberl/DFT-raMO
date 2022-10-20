@@ -218,7 +218,8 @@ function calculate_overlap(
     atom_pos_fract::Vector{Float64},
     reciprocal_lattice::ReciprocalBasis{3},
     G::Vector{Int},
-    kptlist::Vector{Vector{Float64}}
+    kptlist::Vector{Vector{Float64}},
+    e::OrbitalParams,
     )
     # Initialize output matrix
     overlap_target_occupied = zeros(num_spin_states, max(num_spin_up, num_spin_down), num_target_orbitals)
@@ -229,10 +230,33 @@ function calculate_overlap(
             overlap[(i-1)*num_planewaves+1:i*num_planewaves,:] = overlap[(i-2)*num_planewaves+1:(i-1)*num_planewaves,:]
         else
             for j in 1:num_planewaves
-                direction = -1*G[j]+kptlist[i]
-                scalingfactor = exp(2*i*pi*dot(direction, atom_pos_fract))
-                direction = direction'*reciprocal_lattice
+                # Vince's method
+                direction = -(G[j]+kptlist[i])
+                scalingfactor = exp(2*im*pi*dot(direction, atom_pos_fract))
+                direction2 = direction'*reciprocal_lattice
+                direction_norm = norm(direction2)
+                if num_target_orbitals > 1
+                    # Deal with s orbitals
+                    if direction_norm == 0 
+                        overlap[(i-1)*num_planewaves+j,1] = 0
+                    else
+                        if e.n_quant == 1
+                            overlap[(i-1)*num_planewaves+j,1] = scalingfactor*8*e.exp1^2/(direction_norm^2+e.exp1^2)^2*(e.exp1*pi)^0.5
+                        elseif e.n_quant == 2
+                        elseif e.n_quant == 3
+                        elseif e.n_quant == 4
+                            overlap[(i-1)*num_planewaves+j,1] = scalingfactor*96*e.exp1^4*(direction_norm^4-10*direction_norm^2*e.exp1^2+5*e.exp1^4)/(direction_norm^2+e.exp1^2)^5*(pi*e.exp1/315)^0.5
+                        elseif e.n_quant == 5
+                        elseif e.n_quant == 6
+                        elseif e.n_quant == 7
+                        end
+                    end
+                end
             end
         end
     end
+end
+
+function N_L(l::Int)
+    return (im^l)*(4*pi*(2l+1))^0.5
 end
