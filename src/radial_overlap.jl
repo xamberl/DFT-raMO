@@ -1,6 +1,8 @@
 #==
-This supporting file can analytically calculate the radial overlap integrals, which is then hardcoded into
-the calculate_overlap() functions for speed. The hardcoded functions were double-checked with Wolfram Alpha.
+This supporting file can analytically calculate the radial overlap integrals.
+The functions are cross-checked with Wolfram Mathematica.
+Wolfram Mathematica's solutions are simplified in an easier to code/read format, so those solutions are hardcoded in,
+in case you may be wondering why there are discrepancies between the output here and in calculate_overlap().
 ==#
 
 using SymPy

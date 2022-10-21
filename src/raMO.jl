@@ -22,94 +22,6 @@ function make_overlap_mat(occ_coeff, kpoint_repeating::Vector{Bool})
     return S
 end
 
-"""
-    make_target_AO(make_target_AO(atom_site::Vector{Int}, orbital_to_use::Int, total_num_orbitals::Int) -> Vector
-
-Returns a vector of length total_num_orbitals with "1" in the corresponding atomic orbital
-"""
-#==
-In the original DFTraMO, there is a make_target_massAO function, where instead of returning a
-vector with only one "1" in psi_target, it has multiple "1"s in psi_target. This is resolved by
-making atom_site a Vector, so we can get it for one site (length(atom_site) ==  1) or multiple.
-==#
-function make_target_AO(atom_site::Vector{Int}, target_orbital::Int, super::Supercell)
-    # psi_target has a length of total number of orbitals in the supercell
-    psi_target = zeros(sum(super.orbitals))
-    for atom in atom_site
-        psi_target[sum(super.orbitals[1:atom])-super.orbitals[atom]+target_orbital] = 1
-    end
-    return psi_target
-end
-
-"""
-    make_target_cluster_sp(site_list::Vector{Vector{Real}}, radius::Real, site_num::Int, super::Supercell)
-
-Returns a vector of length total_num_orbitals with "1" in the corresponding s & p atomic orbitals
-if they are within specified radius to the void.
-"""
-function make_target_cluster_sp(site_list::Vector{Vector{Float64}}, radius::Real, site_num::Int, super::Supercell)
-    # psi_target has a length of total number of orbitals in the supercell
-    psi_target = zeros(sum(super.orbitals))
-    # Loops through every atom and checks to see if it's within the radius to the void site
-    for n in 1:length(super.atomlist)
-        for j in -1:2
-            for k in -1:2
-                for l in -1:2
-                    # Translation of atom in cartesian coordinates
-                    new_pos = super.atomlist.basis*super.atomlist[n].pos .+ super.atomlist.basis*[j,k,l]
-                    check_distance = norm(new_pos-site_list[site_num])
-                    if check_distance <= radius
-                        # Δr is used to weigh the p orbitals in each direction
-                        # Is there a reason why this is negative?
-                        Δr = -(new_pos-site_list[site_num])/check_distance
-                        # Fill in corresponding s orbital
-                        psi_target[sum(super.orbitals[1:n])-super.orbitals[n]+1] = 0.5^0.5
-                        # Fill in corresponding p orbitals, if any
-                        if (super.orbitals[n] > 1)
-                            for i in 1:3
-                                psi_target[sum(super.orbitals[1:n])-super.orbitals[n]+1+i] = 0.5^(0.5*Δr[i])
-                            end
-                        end
-                    end
-                end
-            end
-        end
-    end
-    return psi_target
-end
-
-"""
-    make_target_hybrid()
-
-Makes a custom hybrid with manually specified coefficients from a cluster file that corresponds to an atom
-"""
-#==
-Currently echoes MATLAB version of DFT-raMO. Cluster file should have one Float per line,
-in multiples of 9.
-==#
-function make_target_hybrid(cluster_list::Vector{Vector{Float64}}, atom_num::Int, super::Supercell)
-    num_targets = length(cluster_list)/9
-    psi_target = zeros(sum(super.orbitals), num_targets)
-    AO_number = sum(super.orbitals[1:atom_num])-super.orbitals[atom_num]
-    # Loops through targets
-    for n in 1:num_targets
-        # Assigns s coefficient
-        psi_target[AO_number+1,n] = cluster_list[(n-1)*9+1]
-        # Assigns p coefficients
-        if super.orbitals[atom_num] > 1
-            for p in 1:3
-                psi_target[AO_number+1+p,n] = cluster_list[(n-1)*9+1+p]
-            end
-        end
-        # Assigns d coefficients
-        if super.orbitals[atom_num] > 4
-            for d in 1:3
-                psi_target[AO_number+4+d,n] = cluster_list[(n-1)*9+4+d]
-            end
-        end
-    end
-    return psi_target
-end
 
 """
     generate_H(super::Supercell, ehtparams::ehtParams) -> H::Matrix{Float64}
@@ -219,7 +131,7 @@ function calculate_overlap(
     reciprocal_lattice::ReciprocalBasis{3},
     G::Vector{Int},
     kptlist::Vector{Vector{Float64}},
-    e::OrbitalParams,
+    e::Vector{OrbitalParams},
     )
     # Initialize output matrix
     overlap_target_occupied = zeros(num_spin_states, max(num_spin_up, num_spin_down), num_target_orbitals)
@@ -230,25 +142,51 @@ function calculate_overlap(
             overlap[(i-1)*num_planewaves+1:i*num_planewaves,:] = overlap[(i-2)*num_planewaves+1:(i-1)*num_planewaves,:]
         else
             for j in 1:num_planewaves
-                # Vince's method
                 direction = -(G[j]+kptlist[i])
+                # scaling factor is necessary, bc the STO is not necessarily at the origin
                 scalingfactor = exp(2*im*pi*dot(direction, atom_pos_fract))
                 direction2 = direction'*reciprocal_lattice
-                direction_norm = norm(direction2)
-                if num_target_orbitals > 1
+                k_G = norm(direction2) # |k+G|
+                if num_target_orbitals >= 1
                     # Deal with s orbitals
-                    if direction_norm == 0 
+                    if k_G == 0 
                         overlap[(i-1)*num_planewaves+j,1] = 0
                     else
-                        if e.n_quant == 1
-                            overlap[(i-1)*num_planewaves+j,1] = scalingfactor*8*e.exp1^2/(direction_norm^2+e.exp1^2)^2*(e.exp1*pi)^0.5
-                        elseif e.n_quant == 2
-                        elseif e.n_quant == 3
-                        elseif e.n_quant == 4
-                            overlap[(i-1)*num_planewaves+j,1] = scalingfactor*96*e.exp1^4*(direction_norm^4-10*direction_norm^2*e.exp1^2+5*e.exp1^4)/(direction_norm^2+e.exp1^2)^5*(pi*e.exp1/315)^0.5
-                        elseif e.n_quant == 5
-                        elseif e.n_quant == 6
-                        elseif e.n_quant == 7
+                        z = e[1].exp1 # s orbital, First zeta value
+                        # HARDCODED INTEGRALS OF radial_STOs x spherical bessel function j0(k_G*r)
+                        if e[1].n_quant == 1
+                            overlap[(i-1)*num_planewaves+j,1] = scalingfactor * N_L(0) * 4*z^(5/2)/(k_G^2 + z^2)^2
+                        elseif e[1].n_quant == 2
+                            overlap[(i-1)*num_planewaves+j,1] = scalingfactor * N_L(0) * -(4*z^(5/2)*(k_G^2 - 3*z^2))/(sqrt(3) * (k_G^2 + z^2)^3)
+                        elseif e[1].n_quant == 3
+                            overlap[(i-1)*num_planewaves+j,1] = scalingfactor * N_L(0) * (16*sqrt(2/5)*z^(9/2)*(z^2 - k_G^2))/(k_G^2 + z^2)^4
+                        elseif e[1].n_quant == 4
+                            overlap[(i-1)*num_planewaves+j,1] = scalingfactor * N_L(0) * (16*z^(9/2)*(k_G^4 - 10*k_G^2*z^2 + 5*z^4))/(sqrt(35)*(k_G^2 + z^2)^5)
+                        elseif e[1].n_quant == 5
+                            overlap[(i-1)*num_planewaves+j,1] = scalingfactor * N_L(0) * (32*sqrt(2/7)*z^(13/2)*(3*k_G^4 - 10*k_G^2*z^2 + 3*z^4))/(3*(k_G^2 + z^2)^6)
+                        elseif e[1].n_quant == 6
+                            overlap[(i-1)*num_planewaves+j,1] = scalingfactor * N_L(0) * -(32*sqrt(2/231)*z^(13/2)*(k_G^6 - 21*k_G^4*z^2 + 35*k_G^2*z^4 - 7*z^6))/(k_G^2 + z^2)^7
+                        elseif e[1].n_quant == 7
+                            overlap[(i-1)*num_planewaves+j,1] = scalingfactor * N_L(0) * (512*z^(17/2)*(-k_G^6 + 7*k_G^4*z^2 - 7*k_G^2*z^4 + z^6))/(sqrt(429)*(k_G^2 + z^2)^8)
+                        end
+                    end
+                end
+                if num_target_orbitals >= 4
+                    # Deal with p orbitals. Store overlap in pz orbital for now.
+                    if k_G == 0 
+                        overlap[(i-1)*num_planewaves+j,2:4] .= 0
+                    else
+                        z = e[2].exp1 # p orbital, First zeta value
+                        if e[2].n_quant == 2
+                            overlap[(i-1)*num_planewaves+j,4] = scalingfactor * N_L(1) * (16*k_G*z^(7/2))/(sqrt(3)*(k_G^2 + z^2)^3) # for some reason radial_overlap()'s function does not give the correct answer
+                        elseif e[2].n_quant == 3
+                            overlap[(i-1)*num_planewaves+j,4] = scalingfactor * N_L(1) * -(16*sqrt(2/5)*k_G*z^(7/2)*(k_G^2 - 5*z^2))/(3*(k_G^2 + z^2)^4)
+                        elseif e[2].n_quant == 4
+                            overlap[(i-1)*num_planewaves+j,4] = scalingfactor * N_L(1) * (32*k_G*z^(11/2)*(-3*k_G^2 + 5*z^2))/(sqrt(35)*(k_G^2 + z^2)^5)
+                        elseif e[2].n_quant == 5
+                            overlap[(i-1)*num_planewaves+j,4] = scalingfactor * N_L(1) * (32*sqrt(2/7)*k_G*z^(11/2)*(3*k_G^4 - 42*k_G^2*z^2 + 35*z^4))/(15*(k_G^2 + z^2)^6)
+                        elseif e[2].n_quant == 6
+                            overlap[(i-1)*num_planewaves+j,4] = scalingfactor * N_L(1) * (256*sqrt(2/231)*k_G*z^(15/2)*(3*k_G^4 - 14*k_G^2*z^2 + 7*z^4))/(3*(k_G^2 + z^2)^7)
                         end
                     end
                 end
@@ -256,7 +194,11 @@ function calculate_overlap(
         end
     end
 end
+"""
+    N_L(l::Int)]
 
+Returns a constant of the planewave expansion, equal to (im^l)*(4*pi*(2l+1))^0.5.
+"""
 function N_L(l::Int)
     return (im^l)*(4*pi*(2l+1))^0.5
 end
