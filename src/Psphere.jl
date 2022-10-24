@@ -152,21 +152,18 @@ function writePsphere(
 )
     voidlist = readvoidlist(voidlistfile)
     f = open(outputfilename,"w")
-    println(f, string("Spherical DFTraMO overlaps with radius ", radius))
-    println(f,"integrated_sphere \tintegrated_total_XSF \tsphere/total \torigin_coord")
+    println(f, "Spherical DFTraMO overlaps with radius ", radius)
+    println(f, "integrated_sphere \tintegrated_total_XSF \tsphere/total \torigin_coord")
     count = 1
     for i in start_xsf:-2:end_xsf
         (integrated_sphere, integrated_total, sph_total) = DFTraMO_overlap(
-            string(xsf_prefix,i,xsf_suffix),
+            string(xsf_prefix, i, xsf_suffix),
             voidlist[count,:],
             radius
         )
-        println(f, string(
-                integrated_sphere, "\t",
-                integrated_total, "\t",
-                sph_total, "\t",
-                voidlist[count,:]
-            )
+        println(
+            f, integrated_sphere, "\t", integrated_total, "\t",
+            sph_total, "\t", voidlist[count,:]
         )
         count += 1
     end
