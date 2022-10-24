@@ -1,12 +1,24 @@
 """
-create_run(run_name::AbstractString)
+    create_run(run_name::AbstractString)
 
-Generates a generic input file ("run_name.in") loaded with options for the run in the current directory.
+Generates a generic input file ("run_name.in") loaded with options for the run in the current
+directory.
 """
 function create_run(run_name::AbstractString)
-    open(string(run_name,".in"),"w") do io
-        println(io,
-        "RUN_TYPE 1\nSITES 1:36\nSITE_LIST sitelist.txt\nAO 1\nRADIUS 2.2\nCONTINUE_FROM lastrun.mat")
+    # I would strongly recommend requiring the user to specify the
+    # file extension rather than assuming it's *.in. -BF
+    open(string(run_name, ".in"), write=true) do io
+        lns = [
+            "RUN_TYPE 1",
+            "SITES 1:36",
+            "SITE_LIST sitelist.txt",
+            "AO 1",
+            "RADIUS 2.2",
+            "CONTINUE_FROM lastrun.mat"
+        ]
+        for s in lns
+            println(io, s)
+        end
     end
 end
 
