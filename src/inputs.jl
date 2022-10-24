@@ -104,7 +104,7 @@ Reads a GCOEFF.txt file within the specified energy range. Returns the unique G 
 coefficients, and k-point list corresponding to occupied states.
 """
 function read_GCOEFF(emin::Real, emax::Real)
-    open("GCOEFF.txt","r") do io
+    open("GCOEFF.txt") do io
         num_spin_states = parse(Int,readline(io))
         num_kpt = parse(Int,readline(io))
         num_band = parse(Int,readline(io))
@@ -238,7 +238,7 @@ states.
 """
 function read_site_list(filename::AbstractString)
     sitelist = Vector{Vector{Float64}}(undef,0)
-    open(filename,"r") do io
+    open(filename) do io
         ln = readlines(io)
         ln = filter(!isempty,split.(ln))
         # Removes first column of atomic labels, if any

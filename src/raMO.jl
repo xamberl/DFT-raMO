@@ -92,7 +92,7 @@ function reconstruct_targets_DFT(
     #output_name = @sprintf("%s_%05i.mat",run_name,num_electrons_left)
     if use_prev
         # TO DO: write code to load in previous matrix
-        open(prev_mat,"r")
+        open(prev_mat)
         println("Found and loaded remainder file ", prev_mat, ".")
     end
     

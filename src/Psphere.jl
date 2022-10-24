@@ -9,7 +9,7 @@ function DFTraMO_overlap(
     radius::Real
 )
     # Opens xsf file
-    f = open(filename,"r")
+    f = open(filename)
     itr = eachline(f)
     
     # Grab cell vectors
