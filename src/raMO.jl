@@ -1,20 +1,20 @@
 """
-get_eht_params(atom_num::Int, atom_orbital::Int, eht_params::ehtParams) -> OrbitalParams
+get_eht_params(atom_num::Integer, atom_orbital::Integer, eht_params::ehtParams) -> OrbitalParams
 
-Search for parameters in the loaded ehtParams for corresponding atom. atom_orbital corresponds to the quantum number l.
+Search for parameters in the loaded ehtParams for corresponding atom. atom_orbital corresponds to
+the quantum number l.
 """
-function get_eht_params(atom_num::Int, atom_orbital::Int, eht_params::ehtParams)
+function get_eht_params(atom_num::Integer, atom_orbital::Integer, eht_params::ehtParams)
     return eht_params.data[atom_num, atom_orbital+1]
 end
 
-
 """
-    make_overlap_mat(occ_coeff, kpoint_repeating::Vector{Bool})
+    make_overlap_mat(occ_coeff, kpoint_repeating::AbstractVector{Bool})
 
-    Creates overlap matrix with occupied coefficients
-    If the kpoints are the same, they can overlap. Otherwise, they do not.
+Creates overlap matrix with occupied coefficients. If the kpoints are the same, they can overlap.
+Otherwise, they do not.
 """
-function make_overlap_mat(occ_coeff, kpoint_repeating::Vector{Bool})
+function make_overlap_mat(occ_coeff, kpoint_repeating::AbstractVector{Bool})
     num_occ_states = length(kpoint_repeating)
     S = zeros(num_occ_states,num_occ_states)
     kpoint_zero = findall(x -> x == 0, kpoint_repeating)
@@ -54,21 +54,30 @@ function generate_H(super::Supercell, ehtparams::ehtParams)
 end
 
 """
-    reconstruct_targets_DFT()
+    reconstruct_targets_DFT(
+        psi_target::AbstractArray{<:Real},
+        num_electrons_left::Integer,
+        run_name::AbstractString,
+        super::Supercell,
+        ehtparams::ehtParams,
+        wavefxn::ReciprocalWavefunction{3,Float32},
+        use_prev::Bool,
+        prev_mat::AbstractString=""
+    )
 
 The guts of DFTraMO.
 """
 # For now, will not use the raMOSystemStatus struct. This will be a to-do to clean up the code!
 function reconstruct_targets_DFT(
-    psi_target::Array{<:Real},
-    num_electrons_left::Int,
+    psi_target::AbstractArray{<:Real},
+    num_electrons_left::Integer,
     run_name::AbstractString,
     super::Supercell,
     ehtparams::ehtParams,
     wavefxn::ReciprocalWavefunction{3,Float32},
     use_prev::Bool,
     prev_mat::AbstractString=""
-    )
+)
 
     # Single target run or multiple targets
     num_targets = 1
@@ -120,19 +129,20 @@ function reconstruct_targets_DFT(
     end
 end
 
+# Add a docstring here...
 function calculate_overlap(
-    num_spin_states::Int,
-    num_spin_up::Int,
-    num_spin_down::Int,
-    num_target_orbitals::Int,
-    num_occ_states::Int,
-    kpoint_repeating::Vector{Bool},
-    atom_pos_fract::Vector{Float64},
+    num_spin_states::Integer,
+    num_spin_up::Integer,
+    num_spin_down::Integer,
+    num_target_orbitals::Integer,
+    num_occ_states::Integer,
+    kpoint_repeating::AbstractVector{Bool},
+    atom_pos_fract::AbstractVector{<:Real},
     reciprocal_lattice::ReciprocalBasis{3},
-    G::Vector{Int},
-    kptlist::Vector{Vector{Float64}},
-    e::Vector{OrbitalParams},
-    )
+    G::AbstractVector{<:Integer},
+    kptlist::AbstractVector{<:AbstractVector{<:Real}},
+    e::AbstractVector{OrbitalParams},
+)
     # Initialize output matrix
     overlap_target_occupied = zeros(num_spin_states, max(num_spin_up, num_spin_down), num_target_orbitals)
     # Initialize secondary overlap container
@@ -208,10 +218,10 @@ function calculate_overlap(
     end
 end
 """
-    N_L(l::Int)]
+    N_L(l::Integer)
 
-Returns a constant of the planewave expansion, equal to (im^l)*(4*pi*(2l+1))^0.5.
+Returns a constant of the planewave expansion, equal to `(im^l)*(4*pi*(2l+1))^0.5`.
 """
-function N_L(l::Int)
+function N_L(l::Integer)
     return (im^l)*(4*pi*(2l+1))^0.5
 end

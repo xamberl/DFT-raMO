@@ -14,15 +14,15 @@ struct OrbitalParams
     coeff1::Float64
     coeff2::Float64
     function OrbitalParams(
-        atom_num::Int,
-        valence::Int,
-        l_quant::Int,
-        n_quant::Int,
-        IP::Float64,
-        exp1::Float64,
-        exp2::Float64,
-        coeff1::Float64,
-        coeff2::Float64
+        atom_num::Integer,
+        valence::Integer,
+        l_quant::Integer,
+        n_quant::Integer,
+        IP::Real,
+        exp1::Real,
+        exp2::Real,
+        coeff1::Real,
+        coeff2::Real
     )
     return new(atom_num,valence,l_quant,n_quant,IP,exp1,exp2,coeff1,coeff2)
     end
@@ -69,15 +69,16 @@ struct Supercell
     end
 end
 
-#==
+#=
 Might want this to make reconstruct_targets_DFT() neater?
 """
 """
 struct raMOSystemStatus
-    num_electrons_left::Int
-    num_occ_states::Int
-    num_planewaves::Int
-    kptlist::KPointlist{3}
-    G::Vector{Int}
+    num_electrons_left::Integer
+    num_occ_states::Integer
+    num_planewaves::Integer
+    kptlist::KPointList{3}
+    G::AbstractVector{<:Integer}
     #occ_coeff::
-end==#
+end
+=#

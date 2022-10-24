@@ -1,14 +1,22 @@
 """
-    make_target_AO(make_target_AO(atom_site::Vector{Int}, orbital_to_use::Int, total_num_orbitals::Int) -> Vector
+    make_target_AO(
+        atom_site::AbstractVector{<:Integer},
+        target_orbital::Integer,
+        super::Supercell
+    ) -> Vector{Int}
 
-Returns a vector of length total_num_orbitals with "1" in the corresponding atomic orbital
+Returns a vector of length total_num_orbitals with "1" in the corresponding atomic orbital.
 """
 #==
 In the original DFTraMO, there is a make_target_massAO function, where instead of returning a
 vector with only one "1" in psi_target, it has multiple "1"s in psi_target. This is resolved by
 making atom_site a Vector, so we can get it for one site (length(atom_site) ==  1) or multiple.
 ==#
-function make_target_AO(atom_site::Vector{Int}, target_orbital::Int, super::Supercell)
+function make_target_AO(
+    atom_site::AbstractVector{<:Integer},
+    target_orbital::Integer,
+    super::Supercell
+)
     # psi_target has a length of total number of orbitals in the supercell
     psi_target = zeros(sum(super.orbitals))
     for atom in atom_site
@@ -18,12 +26,22 @@ function make_target_AO(atom_site::Vector{Int}, target_orbital::Int, super::Supe
 end
 
 """
-    make_target_cluster_sp(site_list::Vector{Vector{Real}}, radius::Real, site_num::Int, super::Supercell)
+    function make_target_cluster_sp(
+        site_list::AbstractVector{<:AbstractVector{<:Real}},
+        radius::Real,
+        site_num::Integer,
+        super::Supercell
+    ) -> Vector{Int}
 
 Returns a vector of length total_num_orbitals with "1" in the corresponding s & p atomic orbitals
 if they are within specified radius to the void.
 """
-function make_target_cluster_sp(site_list::Vector{Vector{Float64}}, radius::Real, site_num::Int, super::Supercell)
+function make_target_cluster_sp(
+    site_list::AbstractVector{<:AbstractVector{<:Real}},
+    radius::Real,
+    site_num::Integer,
+    super::Supercell
+)
     # psi_target has a length of total number of orbitals in the supercell
     psi_target = zeros(sum(super.orbitals))
     # Loops through every atom and checks to see if it's within the radius to the void site
@@ -55,15 +73,26 @@ function make_target_cluster_sp(site_list::Vector{Vector{Float64}}, radius::Real
 end
 
 """
-    make_target_hybrid()
+    make_target_hybrid(
+        cluster_list::AbstractVector{<:AbstractVector{<:Real}},
+        atom_num::Integer,
+        super::Supercell
+    )
 
-Makes a custom hybrid with manually specified coefficients from a cluster file that corresponds to an atom
+Makes a custom hybrid with manually specified coefficients from a cluster file that corresponds to
+an atom.
 """
 #==
 Currently echoes MATLAB version of DFT-raMO. Cluster file should have one Float per line,
 in multiples of 9.
+
+What's the return type? -BF
 ==#
-function make_target_hybrid(cluster_list::Vector{Vector{Float64}}, atom_num::Int, super::Supercell)
+function make_target_hybrid(
+    cluster_list::AbstractVector{<:AbstractVector{<:Real}},
+    atom_num::Integer,
+    super::Supercell
+)
     num_targets = length(cluster_list)/9
     psi_target = zeros(sum(super.orbitals), num_targets)
     AO_number = sum(super.orbitals[1:atom_num])-super.orbitals[atom_num]

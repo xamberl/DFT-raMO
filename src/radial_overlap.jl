@@ -8,11 +8,11 @@ in case you may be wondering why there are discrepancies between the output here
 using SymPy
 using SpecialFunctions
 """
-    radial_overlap(n_quant::Int, l_quant::Int) -> a::Sym
+    radial_overlap(n_quant::Integer, l_quant::Integer) -> a::Sym
 
 Returns a SymPy object and prints the radial overlap solution at corresponding quantum numbers n, l.
 """
-function radial_overlap(n_quant::Int, l_quant::Int)
+function radial_overlap(n_quant::Integer, l_quant::Integer)
     # Radial component of STOs 
     @vars n ζ r
     rad_STO = (2*ζ)^n*sqrt((2*ζ)/factorial(2*n))*r^(n-1)*exp(-ζ*r)
