@@ -190,6 +190,19 @@ function calculate_overlap(
                         end
                     end
                 end
+                if num_target_orbitals >= 9
+                    # Deal with d orbitals. Store overlap in dz2 orbital for now.
+                    if k_G == 0 
+                        overlap[(i-1)*num_planewaves+j,5:9] .= 0
+                    end
+                    z1 = e[3].exp1 # d orbital, First zeta value.
+                    z2 = e[3].exp2 # d orbital, Second zeta value.
+                    c1 = e[3].coeff1
+                    c2 = e[3].coeff2
+                    if e[3].n_quant == 3
+                        overlap[(i-1)*num_planewaves+j,6] = scalingfactor * N_L(2) * (32*sqrt(2/5)*k_G^2*(c2*(k_G^2 + z1^2)^4*z2^(9/2) + c1*z1^(9/2)*(k_G^2 + z2^2)^4))/((k_G^2 + z1^2)^4 * (k_G^2 + z2^2)^4)
+                    end
+                end
             end
         end
     end
