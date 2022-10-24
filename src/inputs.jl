@@ -70,7 +70,14 @@ function read_run_in(run_name::AbstractString)
 end
 
 """
-    import_VASP(d::AbstractString="") -> fermi::Float64, geo::Crystal{3}, kpt::KPointGrid{3}, super::AtomList{3}, wave::ReciprocalWaveFunction{3,Float32}
+    import_VASP(d::AbstractString="") -> 
+    (
+        fermi::Float64,
+        geo::Crystal{3},
+        kpt::KPointGrid{3},
+        super::AtomList{3},
+        wave::ReciprocalWaveFunction{3,Float32}
+    )
 
 Searches in the specified directory (default is the current directory) for VASP files
 OUTCAR, POSCAR, KPOINTS, and WAVECAR, and extracts relevant information.
@@ -86,9 +93,15 @@ function import_VASP(d::AbstractString="")
 end
 
 """
-    read_GCOEFF(emin::Real, emax::Real) -> (g_indices::Vector{Int64}, occupied_coefficients::Matrix{ComplexF64}, kptlist::Vector{Vector{Float64}})
+    read_GCOEFF(emin::Real, emax::Real) -> 
+    (
+        g_indices::Vector{Int64},
+        occupied_coefficients::Matrix{ComplexF64},
+        kptlist::Vector{Vector{Float64}}
+    )
 
-Reads a GCOEFF.txt file within the specified energy range. Returns the unique G vectors, complex coefficients, and k-point list corresponding to occupied states.
+Reads a GCOEFF.txt file within the specified energy range. Returns the unique G vectors, complex
+coefficients, and k-point list corresponding to occupied states.
 """
 function read_GCOEFF(emin::Real, emax::Real)
     open("GCOEFF.txt","r") do io
@@ -220,7 +233,8 @@ end
 """
     read_site_list(filename::AbstractString) -> site_list::Vector{Vector{Float64}}
 
-Reads in a txt file with coordinates, typically for specifing midpoints for isolobal bonds or cage states.
+Reads in a txt file with coordinates, typically for specifing midpoints for isolobal bonds or cage 
+states.
 """
 function read_site_list(filename::AbstractString)
     sitelist = Vector{Vector{Float64}}(undef,0)
