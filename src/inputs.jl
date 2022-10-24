@@ -205,7 +205,7 @@ If argument is left empty, it will read the DFT_raMO_eht_parms.dat file by defau
 """
 function read_eht_params(paramsfile::AbstractString="testfiles/DFT_raMO_eht_parms.dat")
     # Skips header
-    ln = readlines(open(paramsfile,"r"))
+    ln = readlines(paramsfile)
     ln = ln[4:length(ln)]
     ln = filter(!isempty,split.(ln))
     unique_atoms_index = unique(i->mapreduce(permutedims,vcat,ln)[:,1][i],eachindex(mapreduce(permutedims,vcat,ln)[:,1]))
