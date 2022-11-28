@@ -1,3 +1,5 @@
+using LinearAlgebra
+
 # Calculates Psphere from an xsf file, a list of coordinates, 
 # and a specified radii from the coordinates
 function DFTraMO_overlap(
@@ -69,7 +71,7 @@ function DFTraMO_overlap(
             for z in lower_index[3]:upper_index[3]
                 # println([x, y, z])
                 # Transform grid index into Cartesian
-                grid_cart = ([x, y, z]./grid)'*primvec
+                grid_cart = (([x, y, z]./grid)'*primvec)[1,:]
                 # check if grid_cart is within sphere
                 if norm(grid_cart - origin) <= radius
                     # Check if point is out of bounds. If so, use adjacent cell's value.
