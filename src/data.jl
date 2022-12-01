@@ -49,7 +49,7 @@ function Base.getindex(e::ehtParams, atom::Integer, ang::Integer)
 end
 
 """
-    supercell(atomlist::Atomlist{3}, orblist_by_type::Dict{String,Int64})
+    Supercell(atomlist::Atomlist{3}, orblist_by_type::Dict{String,Int64})
 
 Returns a supercell struct AtomList{3} and a Vector{Int} with number of orbitals associated with each atom
 """
