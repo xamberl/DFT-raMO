@@ -161,7 +161,7 @@ function read_GCOEFF(emin::Real, emax::Real)
 end
 
 # Repeated kpoints marked with 0; unrepeated marked with 1.
-function track_kpoint_repeating(kptlist::KPointList{3})
+function track_kpoint_repeating(kptlist)#::KPointList{3})
     kpoint_repeating = zeros(Bool,length(kptlist))
     kpoint_repeating[1] = 1
     for i in 2:length(kptlist)
