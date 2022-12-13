@@ -83,10 +83,7 @@ function reconstruct_targets_DFT(
     )
     
     # Single target run or multiple targets
-    num_targets = 1
-    if length(size(psi_target)) == 2
-        num_targets = size(psi_target)[2]
-    end
+    num_targets = length(size(psi_target))
     num_electrons_left = num_electrons_left - 2*num_targets
     
     #output_name = @sprintf("%s_%05i.mat",run_name,num_electrons_left)
@@ -109,13 +106,14 @@ function reconstruct_targets_DFT(
         spin_down_coeff = occ_coeff[:,1+num_spin_up:num_spin_up+num_spin_down]
     end
 
+    # Not sure what's going on here just yet; still parsing matlab code (~ ln 852)
     current_orb = 1;
     overlap_target_occupied = zeros(ComplexF64, max(num_spin_up,num_spin_down), num_targets, num_spin_states)
 
     # Not sure what's going on here just yet; still parsing matlab code (~ ln 852)
     E_mat = Vector{Float64}(undef,0)
-    for i in 1:num_targets
-        for j in 1:length(super.atomlist)
+    for i in 1:num_targets # Loop through targets
+        for j in 1:length(super.atomlist) # loop through every atom
             prev_orb = sum(super.orbitals[1:j-1])
             # If psi_target is not empty for this atom
             if norm(psi_target[prev_orb+1:prev_orb+super.orbitals[j],i]) > 0
@@ -186,10 +184,12 @@ function reconstruct_targets_DFT(
         print("Number of spin down states remaining: ", num_spin_down-targets_reconstructed-num_targets, "\n")
         psi_down = tempdown[:,1:total_num_target_orbs]
     end
-    #write_to_XSF()
+
+    #==write_to_XSF()
     f = open(string(run_name,".xsf"),"w")
-    writeXSF(f, data)
-    return (new_psi_previous, num_electrons_left)
+    writeXSF(f, data)==#
+
+    return (new_psi_previous, psi_up, e_up[1:total_num_target_orbs], num_electrons_left)
 end
 
 function calculate_overlap(
@@ -326,13 +326,13 @@ function calculate_overlap(
         for i in 1:num_occ_states
             overlap_target_occupied[i,1:num_target_orbitals] = occ_coeff[:,i]'*overlap[(i-1)*num_planewaves+1:i*num_planewaves,:]
         end
-    else # spin states = 2
+    #==else # spin states = 2
         for i in 1:num_spin_up
             overlap_target_occupied[i,:,1] = spin_up_coeff[:,i]'overlap[(i-1)*num_planewaves+1:i*num_planewaves,:]
         end
         for i in num_spin_up+1:num_spin_up+num_spin_down
             overlap_target_occupied[i-num_spin_up,:,2] = spin_down_coeff[:,i-num_spin_up]'*overlap[(i-1)*num_planewaves+1:i*num_planewaves,:]
-        end
+        end==#
     end
 return overlap_target_occupied
 end

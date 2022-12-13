@@ -4,6 +4,8 @@ using LinearAlgebra
 using StaticArrays
 using Xtal
 using Printf
+using Random
+using Distributions
 
 include("Psphere.jl")
 export writePsphere
@@ -20,5 +22,8 @@ export make_target_AO, make_target_cluster_sp, make_target_hybrid
 
 include("inputs.jl")
 export create_run, import_VASP, read_GCOEFF, track_kpoint_repeating, read_eht_params, read_site_list
+
+include("outputs.jl")
+export write_to_XSF
 
 end
