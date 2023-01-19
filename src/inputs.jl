@@ -74,6 +74,48 @@ function import_VASP(d::AbstractString="")
 end
 
 """
+    generateHKLvector(sz::Tuple{Int, Int, Int}) --> hkl_list::Vector{Vector{Int}}
+
+Returns an ordered list of hkl vectors based on the size of the HKLData array.
+"""
+function generateHKLvector(sz::Tuple{Int, Int, Int})
+    # This function is adapted from Xtal/Electrum's readWAVECAR. 
+    function incrementHKL(hkl::AbstractVector{<:Integer}, bounds::AbstractVector{<:AbstractRange})
+        # Loop through the vector indices, but in most cases we don't need them all
+        new_hkl = copy(hkl)
+        for n in eachindex(hkl)
+            # Increment the current vector component
+            new_hkl[n] = (hkl[n]+1 in bounds[n] ? new_hkl[n] + 1 : minimum(bounds[n]))
+            # Only increment the next components if the current one is zero
+            new_hkl[n] == 0 || break
+        end
+        return new_hkl
+    end
+    g = Int.(floor.(sz./2))
+    total_g = prod([(2*n+1) for n in g])
+    bounds = [-n:n for n in g]
+    hkl_list = Vector{Vector{Int}}(undef,total_g)
+    hkl_list[1] = [0,0,0]
+    for i in 2:1:length(hkl_list)
+        hkl_list[i] = incrementHKL(hkl_list[i-1], bounds)
+    end
+    return hkl_list
+end
+
+"""
+get_occupied_states(wave::ReciprocalWavefunction, energy::Real) -> occ_waves::Vector{HKLData}
+
+Returns a Vector of HKLData where the energy of the wavefunction is less
+than the specified energy (usually the fermi energy).
+"""
+function get_occupied_states(wave::ReciprocalWavefunction, energy::Real)
+    occ_states = wave.energies .< energy
+    occ_waves = wave.waves[occ_states]
+    return occ_waves
+end
+
+# Removing read_COEFF as we can use readWAVECAR directly.
+#=="""
     read_GCOEFF(emin::Real, emax::Real) -> (g_indices::Vector{Int64}, occupied_coefficients::Matrix{ComplexF64}, kptlist::Vector{Vector{Float64}})
 
 Reads a GCOEFF.txt file within the specified energy range. Returns the unique G vectors, complex coefficients, and k-point list corresponding to occupied states.
@@ -170,7 +212,7 @@ function track_kpoint_repeating(kptlist)#::KPointList{3})
         end
     end
     return kpoint_repeating
-end
+end==#
 
 """
     read_eht_params(paramsfile::AbstractString) -> mat::ehtParams 
