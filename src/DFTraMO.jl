@@ -2,7 +2,7 @@ module DFTraMO
 
 using LinearAlgebra
 using StaticArrays
-using Xtal
+using Electrum
 using Printf
 using Random
 using Distributions
@@ -21,7 +21,8 @@ include("make_targets.jl")
 export make_target_AO, make_target_cluster_sp, make_target_hybrid
 
 include("inputs.jl")
-export create_run, import_VASP, read_GCOEFF, track_kpoint_repeating, read_eht_params, read_site_list
+export create_run, import_VASP, track_kpoint_repeating, read_eht_params, read_site_list,
+generateHKLvector, get_occupied_states
 
 include("outputs.jl")
 export write_to_XSF

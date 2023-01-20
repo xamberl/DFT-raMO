@@ -103,15 +103,25 @@ function generateHKLvector(sz::Tuple{Int, Int, Int})
 end
 
 """
-get_occupied_states(wave::ReciprocalWavefunction, energy::Real) -> occ_waves::Vector{HKLData}
+get_occupied_states(wave::ReciprocalWavefunction, energy::Real) ->
+    (occ_states::Vector{HKLData}, occ_pw::Vector{Bool})
 
 Returns a Vector of HKLData where the energy of the wavefunction is less
-than the specified energy (usually the fermi energy).
+than the specified energy (usually the fermi energy). Also returns a Bool
+vector specifying which plane waves are nonzero, which can be applied to
+the list of G vectors and the each HKLData.
 """
 function get_occupied_states(wave::ReciprocalWavefunction, energy::Real)
-    occ_states = wave.energies .< energy
-    occ_waves = wave.waves[occ_states]
-    return occ_waves
+    # Occupied states
+    num_occ_states = wave.energies .< energy
+    occ_states = wave.waves[num_occ_states]
+    # Occupied planewaves (nonzero coeff throughout all kpts, bands)
+    # Get list of occupied nonzero plane waves across all kpts and bands
+    # nonzero_coeff's value = 1 if the coeff = 0 at that that kpt and band
+    nonzero_coeff = [iszero(occ_states[n].data[m]) for n in eachindex(occ_states), m in eachindex(occ_states[1].data)]
+    # sum_nonzero_coeff's value = 0 if the coeff = 0 across all occupied states
+    occ_pw = [sum(nonzero_coeff[:,n])!=164 for n in 1:size(nonzero_coeff)[2]]
+    return (occ_states, occ_pw)
 end
 
 # Removing read_COEFF as we can use readWAVECAR directly.
