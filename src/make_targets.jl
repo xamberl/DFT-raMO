@@ -35,8 +35,6 @@ function make_target_cluster_sp(site_list::Vector{Vector{Float64}}, radius::Real
                     new_pos = super.atomlist.basis*super.atomlist[n].pos .+ super.atomlist.basis*[j,k,l]
                     check_distance = norm(new_pos-site_list[site_num])
                     if check_distance <= radius
-                        @info super.atomlist[n]
-                        @info n
                         # Δr is used to weigh the p orbitals in each direction
                         # Is there a reason why this is negative?
                         Δr = -(new_pos-site_list[site_num])/check_distance
