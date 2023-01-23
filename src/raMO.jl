@@ -28,6 +28,17 @@ function make_overlap_mat(occ_coeff, kpoint_repeating::Vector{Bool})
     return S
 end
 
+function make_overlap_mat2(wave::ReciprocalWavefunction)
+    nkpts = length(wave.kpts)
+    nbands = size(wave.waves)[3]
+    S = Vector{ComplexF32}(undef,nkpts*nbands^2)
+    for k in 1:nkpts
+        new_wave = [wave.waves[1,k,n].data[m] for n in 1:nbands, m in eachindex(wave.waves[1,1,1].data)]
+        S[1+(k-1)*nbands^2:k*nbands^2] = vec(new_wave*new_wave')
+    end
+    return S
+end
+
 
 """
     generate_H(super::Supercell, ehtparams::ehtParams) -> H::Matrix{Float64}

@@ -11,10 +11,10 @@ include("Psphere.jl")
 export writePsphere
 
 include("data.jl")
-export OrbitalParams, ehtParams, Supercell
+export OrbitalParams, ehtParams, Supercell, OccupiedState
 
 include("raMO.jl")
-export get_eht_params, make_overlap_mat,
+export get_eht_params, make_overlap_mat, make_overlap_mat2
 generate_H, reconstruct_targets_DFT, N_L
 
 include("make_targets.jl")

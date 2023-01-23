@@ -104,24 +104,43 @@ end
 
 """
 get_occupied_states(wave::ReciprocalWavefunction, energy::Real) ->
-    (occ_states::Vector{HKLData}, occ_pw::Vector{Bool})
+    occ_state_array::Array{DFTraMO.OccupiedState}
 
-Returns a Vector of HKLData where the energy of the wavefunction is less
-than the specified energy (usually the fermi energy). Also returns a Bool
-vector specifying which plane waves are nonzero, which can be applied to
-the list of G vectors and the each HKLData.
+Returns an array of OccupiedState where the energy of the wavefunction is less
+than the specified energy (usually the fermi energy). The OccupiedState array
+has the dimensions n (number of occupied states) by m (number of nonzero
+planewaves). Each OccupiedState element holds information about the coefficient,
+kpoint, and G vector.
 """
 function get_occupied_states(wave::ReciprocalWavefunction, energy::Real)
-    # Occupied states
-    num_occ_states = wave.energies .< energy
+    # Filters occupied states below specified energy
+    num_occ_states = wave.energies .< energy # Bit array
     occ_states = wave.waves[num_occ_states]
-    # Occupied planewaves (nonzero coeff throughout all kpts, bands)
-    # Get list of occupied nonzero plane waves across all kpts and bands
-    # nonzero_coeff's value = 1 if the coeff = 0 at that that kpt and band
+    
+    # Filters planewaves that are nonzero throughout all kpoints and bands
     nonzero_coeff = [iszero(occ_states[n].data[m]) for n in eachindex(occ_states), m in eachindex(occ_states[1].data)]
-    # sum_nonzero_coeff's value = 0 if the coeff = 0 across all occupied states
-    occ_pw = [sum(nonzero_coeff[:,n])!=164 for n in 1:size(nonzero_coeff)[2]]
-    return (occ_states, occ_pw)
+    occ_pw = [sum(nonzero_coeff[:,n])!=164 for n in 1:size(nonzero_coeff)[2]] # Bool Array
+
+    # The G aka (hkl) value is stored in the way the wave.waves[].data is stored
+    # A 13x13x13 array means HKL goes from -6 to 6.
+    # In such order: 000, 100, 200, ... 600, -600, -500, ... -100,
+    # Then 010, 110, 210, 310 ...
+    # Additionally, the planewaves we use are nonzero
+    # List of G vectors corresponding to the filtered planewaves
+    hkl_list = DFTraMO.generateHKLvector(size(occ_states[1]))
+    hkl_list = hkl_list[occ_pw]
+
+    # Create an n occupied states by m occupied planewaves array that stores the
+    # coefficient, kpoint, and corresponding G vector.
+    occ_state_array = Array{DFTraMO.OccupiedState}(undef,length(occ_states),length(hkl_list))
+    for n in eachindex(occ_states)
+        pw = occ_states[n].data[occ_pw]
+        for m in eachindex(pw)
+            occ_state_array[n,m] = DFTraMO.OccupiedState(pw[m],occ_states[n].kpt,hkl_list[m])
+        end
+    end
+
+    return occ_state_array
 end
 
 # Removing read_COEFF as we can use readWAVECAR directly.
