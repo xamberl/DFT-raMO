@@ -9,33 +9,28 @@ end
 
 
 """
-    make_overlap_mat(occ_coeff, kpoint_repeating::Vector{Bool})
+    make_overlap_mat(occ_coeff::Array{OccupiedState}) -> S::Matrix{ComplexF32}
 
-    Creates overlap matrix with occupied coefficients
-    If the kpoints are the same, they can overlap. Otherwise, they do not.
+    Creates overlap matrix with occupied coefficients.
+    If the kpoints are the same, they can overlap.
 """
-function make_overlap_mat(occ_coeff, kpoint_repeating::Vector{Bool})
-    num_occ_states = length(kpoint_repeating)
-    S = zeros(ComplexF64,num_occ_states,num_occ_states)
-    # Creates list of unique kpoints. Append length of kpoint list + 1 for loop below
-    kpoint_zero = vcat(findall(!iszero, kpoint_repeating),length(kpoint_repeating)+1)
-    for k in 1:length(kpoint_zero)-1
-        # Finds overlap of plane waves at unique kpoints
-        range = vcat(kpoint_zero[k]:1:(kpoint_zero[k+1])-1)
-        S[range,range] = occ_coeff[:,range]'*occ_coeff[:,range] 
-    end
-    S = (S+S')*0.5
-    return S
-end
 
-function make_overlap_mat2(wave::ReciprocalWavefunction)
-    nkpts = length(wave.kpts)
-    nbands = size(wave.waves)[3]
-    S = Vector{ComplexF32}(undef,nkpts*nbands^2)
-    for k in 1:nkpts
-        new_wave = [wave.waves[1,k,n].data[m] for n in 1:nbands, m in eachindex(wave.waves[1,1,1].data)]
-        S[1+(k-1)*nbands^2:k*nbands^2] = vec(new_wave*new_wave')
+function make_overlap_mat(occ_coeff::Array{OccupiedState})
+    # Overlap entire matrix
+    S = [occ_coeff[n,m].coeff for n in 1:size(occ_coeff)[1], m in 1:size(occ_coeff)[2]]
+    S = S*S'
+    
+    # Get list of unique kpoints
+    kptlist = [occ_coeff[n,1].kpt for n in 1:size(occ_coeff)[1]]
+    u_kptlist = unique(kptlist)
+
+    # Checks to see if kpoint matches for the occ_coeff matrix
+    allowed_overlap = zeros(Int,size(occ_coeff)[1])
+    for u_kpt in u_kptlist
+        check_kpt = [kpt == u_kpt for kpt in kptlist]
+        allowed_overlap = allowed_overlap .+ (check_kpt.*check_kpt')
     end
+    S = S.*allowed_overlap
     return S
 end
 
@@ -107,7 +102,9 @@ function reconstruct_targets_DFT(
     # Calculate overlap between each atomic orbital and planewave
     H = generate_H(super,ehtparams)
     # Checks for spin states
-    num_spin_states = size(wavefxn.waves)[1]
+    # num_spin_states = size(wavefxn.waves)[1]
+    # For now, we are not going to deal with spin states...
+    num_spin_states = 1
     if num_spin_states == 1
         num_spin_up = size(occ_coeff)[2]
         num_spin_down = 0;
