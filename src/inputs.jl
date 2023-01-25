@@ -263,7 +263,8 @@ function read_eht_params(paramsfile::AbstractString="testfiles/DFT_raMO_eht_parm
         current = ln[i]
         # Assigns atom_num,valence,l_quant,n_quant,IP,exp1,exp2,coeff1,coeff2
         orbs = Dict("s"=>0,"p"=>1,"d"=>2,"f"=>3)
-        orb_param = OrbitalParams(parse(Int,current[2]), parse(Int,current[3]), get(orbs,current[6],3), parse(Int,current[5]), parse(Float64,current[7]), parse(Float64,current[8]), parse(Float64,current[9]), parse(Float64,current[10]), parse(Float64,current[11]))
+        to_ang = 0.52917721092 # constant from converting from a.u. to angstrom
+        orb_param = OrbitalParams(parse(Int,current[2]), parse(Int,current[3]), get(orbs,current[6],3), parse(Int,current[5]), parse(Float64,current[7]), parse(Float64,current[8])/to_ang, parse(Float64,current[9])/to_ang, parse(Float64,current[10]), parse(Float64,current[11]))
         if i in unique_atoms_index
             atom_counter = atom_counter + 1
         end
