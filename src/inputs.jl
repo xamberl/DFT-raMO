@@ -132,13 +132,10 @@ function get_occupied_states(wave::ReciprocalWavefunction, energy::Real)
 
     # Create an n occupied states by m occupied planewaves array that stores the
     # coefficient, kpoint, and corresponding G vector.
-    occ_state_array = Array{DFTraMO.OccupiedState}(undef,length(occ_states),length(hkl_list))
-    for n in eachindex(occ_states)
-        pw = occ_states[n].data[occ_pw]
-        for m in eachindex(pw)
-            occ_state_array[n,m] = DFTraMO.OccupiedState(pw[m],occ_states[n].kpt,hkl_list[m])
-        end
-    end
+    coeff = mapreduce(permutedims, vcat, [occ_states[n].data[occ_pw] for n in eachindex(occ_states)])
+    kpt = [occ_states[n].kpt for n in eachindex(occ_states)]
+
+    occ_state_array = OccupiedStates(coeff, kpt, hkl_list)
 
     return occ_state_array
 end

@@ -70,16 +70,16 @@ struct Supercell
 end
 
 """
-    OccupiedState(coeff::ComplexF32, kpt::SVector{3, Float64}, G::Vector{Int64})
+    OccupiedStates(coeff::Matrix{ComplexF32}, kpt::Vector{SVector{3, Float64}}, G::Vector{Vector{Int64}})
 
-Returns an OccupiedState struct, with the coefficient that corresponds to a state
-at its kpoint and hkl vector.
+Returns an OccupiedStates struct. The coeff matrix is num_occupied_states by num_occupied_pw in dimensions,
+while kpt is num_occupied_states in length, and G is num_occupied_pw in length.
 """
-struct OccupiedState
-    coeff::ComplexF32
-    kpt::SVector{3, Float64}
-    G::Vector{Int64}
-    function OccupiedState(coeff::ComplexF32, kpt::SVector{3, Float64}, G::Vector{Int64})
+struct OccupiedStates
+    coeff::Matrix{ComplexF32}
+    kpt::Vector{SVector{3, Float64}}
+    G::Vector{Vector{Int64}}
+    function OccupiedStates(coeff::Array{ComplexF32}, kpt::Vector{SVector{3, Float64}}, G::Array{Vector{Int64}})
         return new(coeff, kpt, G)
     end
 end
