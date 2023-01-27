@@ -54,16 +54,16 @@ end
 Returns a supercell struct AtomList{3} and a Vector{Int} with number of orbitals associated with each atom
 """
 struct Supercell
-    atomlist::AtomList{3}
+    atomlist::PeriodicAtomList{3}
     orbitals::Vector{Int}
-    function Supercell(atomlist::AtomList{3}, orblist_by_type::Dict{String,Int64})
+    function Supercell(atomlist::PeriodicAtomList{3}, orblist_by_type::Dict{String,Int64})
         orbitals = Vector{Int}(undef,0)
-        for atom in atomlist.coord
-            if !haskey(orblist_by_type, atom.name)
-                error("Number of orbitals for atom", atom.name,"cannot be found.")
+        for atom in atomlist.atoms
+            if !haskey(orblist_by_type, atom.atom.name)
+                error("Number of orbitals for atom", atom.atom.name,"cannot be found.")
             end
             # Get the number of orbitals for current atom and add to sum
-            push!(orbitals,get(orblist_by_type,atom.name,0))
+            push!(orbitals,get(orblist_by_type,atom.atom.name,0))
         end
         return new(atomlist,orbitals)
     end
