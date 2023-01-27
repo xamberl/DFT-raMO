@@ -44,20 +44,20 @@ function generate_H(super::Supercell, ehtparams::ehtParams)
         prev_orb = sum(super.orbitals[1:i-1])
         # d orbitals
         if super.orbitals[i] > 4
-            orbital_params = get_eht_params(super.atomlist[i].num, ehtparams)[3]
+            orbital_params = get_eht_params(super.atomlist[i].atom.num, ehtparams)[3]
             for j in 5:9
                 H[prev_orb+j,prev_orb+j] = orbital_params.IP
             end
         end
         # p orbitals
         if super.orbitals[i] > 1
-            orbital_params = get_eht_params(super.atomlist[i].num, ehtparams)[2]
+            orbital_params = get_eht_params(super.atomlist[i].atom.num, ehtparams)[2]
             for j in 2:4
                 H[prev_orb+j,prev_orb+j] = orbital_params.IP
             end
         end
         # s orbital
-        orbital_params = get_eht_params(super.atomlist[i].num, ehtparams)[1]
+        orbital_params = get_eht_params(super.atomlist[i].atom.num, ehtparams)[1]
         H[prev_orb+1,prev_orb+1] = orbital_params.IP
     end
     return H
@@ -127,10 +127,10 @@ function reconstruct_targets_DFT(
                     occ_states,
                     super.atomlist[j].pos, #atom_pos_fract::Vector{Float64},
                     rlatt/(2*pi), #reciprocal_lattice::ReciprocalBasis{3},
-                    get_eht_params(super.atomlist[j].num, ehtparams)
+                    get_eht_params(super.atomlist[j].atom.num, ehtparams)
                     )
                     for n in 1:super.orbitals[j]
-                        overlap_target_occupied[:,current_orb,:] = overlap_target_occupied[:,current_orb,:]+psi_target[prev_orb+n,i]*overlap_target_temp[:,n,:]
+                        overlap_target_occupied[:,current_orb,:] = overlap_target_occupied[:,current_orb,:]+psi_target[prev_orb+n,i]*overlap_target_temp[:,n]
                     end
             end
         end
