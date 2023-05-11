@@ -43,7 +43,7 @@ function make_target_cluster_sp(site_list::Vector{Vector{Float64}}, radius::Real
                         # Fill in corresponding p orbitals, if any
                         if (super.orbitals[n] > 1)
                             for i in 1:3
-                                psi_target[sum(super.orbitals[1:n])-super.orbitals[n]+1+i] = 0.5^(0.5*Δr[i])
+                                psi_target[sum(super.orbitals[1:n])-super.orbitals[n]+1+i] = 0.5^0.5*Δr[i]
                             end
                         end
                     end
