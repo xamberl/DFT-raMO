@@ -66,11 +66,11 @@ OUTCAR, POSCAR, KPOINTS, and WAVECAR, and extracts relevant information.
 function import_VASP(d::AbstractString="")
     fermi = get_fermi(string(d,"OUTCAR"))
     geo = readPOSCAR(string(d,"POSCAR"))
-    kpt = readKPOINTS(string(d,"KPOINTS"))
     wave = readWAVECAR(string(d,"WAVECAR"))
+    kpt = parse.(Int, split(readlines(string(d,"KPOINTS"))[4]))
     # Creates an AtomList{3} supercell from POSCAR and KPOINTS
-    super = supercell(geo.atoms,kpt.grid)
-    return (fermi, geo, kpt, super, wave)
+    super = supercell(geo,kpt)
+    return (fermi, geo, super, wave)
 end
 
 """
@@ -103,7 +103,7 @@ function generateHKLvector(sz::Tuple{Int, Int, Int})
 end
 
 """
-get_occupied_states(wave::ReciprocalWavefunction, energy::Real) ->
+get_occupied_states(wave::PlanewaveWavefunction, energy::Real) ->
     occ_state_array::Array{DFTraMO.OccupiedState}
 
 Returns an array of OccupiedState where the energy of the wavefunction is less
@@ -112,32 +112,35 @@ has the dimensions n (number of occupied states) by m (number of nonzero
 planewaves). Each OccupiedState element holds information about the coefficient,
 kpoint, and G vector.
 """
-function get_occupied_states(wave::ReciprocalWavefunction, energy::Real)
-    # Filters occupied states below specified energy
-    num_occ_states = wave.energies .< energy # Bit array
-    occ_states = wave.waves[num_occ_states]
-    
-    # Filters planewaves that are nonzero throughout all kpoints and bands
-    nonzero_coeff = [iszero(occ_states[n].data[m]) for n in eachindex(occ_states), m in eachindex(occ_states[1].data)]
-    occ_pw = [sum(nonzero_coeff[:,n])!=164 for n in 1:size(nonzero_coeff)[2]] # Bool Array
-
+function get_occupied_states(wave::PlanewaveWavefunction, energy::Real)
     # The G aka (hkl) value is stored in the way the wave.waves[].data is stored
     # A 13x13x13 array means HKL goes from -6 to 6.
     # In such order: 000, 100, 200, ... 600, -600, -500, ... -100,
     # Then 010, 110, 210, 310 ...
     # Additionally, the planewaves we use are nonzero
     # List of G vectors corresponding to the filtered planewaves
-    hkl_list = DFTraMO.generateHKLvector(size(occ_states[1]))
-    hkl_list = hkl_list[occ_pw]
+    # Not sure if cube root is okay here... will it always be cubed?
+    sz = Int(cbrt(size(wave.data)[1]))
+    hkl_list = DFTraMO.generateHKLvector((sz,sz,sz))
+
+    # Filters occupied states below specified energy
+    num_occ_states = wave.energies .< energy # Bit array
+    occ_states = reshape([(wave.data[n], wave.kpoints.points[CartesianIndices(wave.data)[n].I[3]].point, hkl_list[CartesianIndices(wave.data)[n].I[1]]) for n in eachindex(wave.data)], size(wave.data))
+    occ_states = [occ_states[n,:,:,:][num_occ_states] for n in 1:size(occ_states)[1]]
+    
+    # Filters planewaves that are nonzero throughout all kpoints and bands
+    nonzero_coeff = [iszero(occ_states[n][m][1]) for n in eachindex(occ_states), m in eachindex(occ_states[1])]
+    occ_pw = [count(==(1), nonzero_coeff[n,:]) != count(==(1), num_occ_states) for n in 1:size(nonzero_coeff)[1]] # Bool Array
 
     # Create an n occupied states by m occupied planewaves array that stores the
     # coefficient, kpoint, and corresponding G vector.
-    coeff = mapreduce(permutedims, vcat, [occ_states[n].data[occ_pw] for n in eachindex(occ_states)])
-    kpt = [occ_states[n].kpt for n in eachindex(occ_states)]
+    occ_states = occ_states[occ_pw]
+    coeff = mapreduce(permutedims, vcat, [occ_states[n] for n in eachindex(occ_states)])
 
-    occ_state_array = OccupiedStates(coeff, kpt, hkl_list)
+    # coeff is a matrix of tuples with dimensions occ_planewave x occ_states
+    # (occ_coeff, kpt, hkl)
 
-    return occ_state_array
+    return coeff
 end
 
 # Removing read_COEFF as we can use readWAVECAR directly.
