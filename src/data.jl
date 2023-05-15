@@ -1,3 +1,35 @@
+orb = [
+    1, 1, 1, 1, 4, 4, 4, 4, 4, 4,
+    1, 1, 4, 4, 4, 4, 4, 4,
+    1, 1, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 4, 4, 4, 4, 4, 9,
+    1, 1, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 4, 4, 4, 4, 4, 9,
+    1, 1, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16,
+    9, 9, 9, 9, 9, 9, 9, 9, 9, 4, 4, 4, 4, 4, 4,
+    1, 1, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16,
+    16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 
+    16, 16, 16, 16, 16, 16, 16, 16
+]
+
+val_e = [
+    1, 2, 1, 2, 3, 4, 5, 6, 7, 8,
+    1, 2, 3, 4, 5, 6, 7, 8,
+    1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 3, 4, 5, 6, 7, 8,
+    1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 3, 4, 5, 6, 7, 8,
+    1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17,
+    4, 5, 6, 7, 8, 9, 10, 11, 12, 3, 4, 5, 6, 7, 8,
+    1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17,
+    4, 5, 6, 7, 8, 9, 10, 11, 12, 3, 4, 5, 6, 7, 8,
+]
+
+const orb_dict = Dict{String, Int}(
+    [Electrum.ELEMENTS[n] => orb[n] for n in eachindex(orb)]
+)
+
+const e_dict = Dict{String, Int}(
+    [Electrum.ELEMENTS[n] => val_e[n] for n in eachindex(val_e)]
+)
+
+
 """
     OrbitalParams
 
@@ -84,6 +116,21 @@ struct OccupiedStates
     end
 end
 
+
+#==struct DFTinputs
+    fermi::NamedTuple{(:fermi, :alphabeta), Tuple{Float64, Float64}}
+    geo::PeriodicAtomList{3}
+    super::PeriodicAtomList{3}
+    wave::PlanewaveWavefunction{3, ComplexF32}
+    function DFTinputs(
+        fermi::NamedTuple{(:fermi, :alphabeta), Tuple{Float64, Float64}},
+        geo::PeriodicAtomList{3},
+        super::PeriodicAtomList{3},
+        wave::PlanewaveWavefunction{3, ComplexF32}
+        )
+        return new(fermi, geo, super, wave);
+    end
+end==#
 #==
 Might want this to make reconstruct_targets_DFT() neater?
 """
