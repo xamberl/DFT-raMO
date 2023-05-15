@@ -1,5 +1,5 @@
 """
-create_run(run_name::AbstractString)
+    create_run(run_name::AbstractString)
 
 Generates a generic input file ("run_name.in") loaded with options for the run in the current directory.
 """
@@ -73,6 +73,8 @@ function import_VASP(d::AbstractString="")
     return (fermi, geo, super, wave)
 end
 
+
+#==
 """
     generateHKLvector(sz::Tuple{Int, Int, Int}) --> hkl_list::Vector{Vector{Int}}
 
@@ -100,11 +102,11 @@ function generateHKLvector(sz::Tuple{Int, Int, Int})
         hkl_list[i] = incrementHKL(hkl_list[i-1], bounds)
     end
     return hkl_list
-end
+end==#
 
 """
-get_occupied_states(wave::PlanewaveWavefunction, energy::Real) ->
-    occ_state_array::Array{DFTraMO.OccupiedState}
+    get_occupied_states(wave::PlanewaveWavefunction, energy::Real) ->
+        occ_state_array::Array{DFTraMO.OccupiedState}
 
 Returns an array of OccupiedState where the energy of the wavefunction is less
 than the specified energy (usually the fermi energy). The OccupiedState array
@@ -113,19 +115,18 @@ planewaves). Each OccupiedState element holds information about the coefficient,
 kpoint, and G vector.
 """
 function get_occupied_states(wave::PlanewaveWavefunction, energy::Real)
-    # The G aka (hkl) value is stored in the way the wave.waves[].data is stored
-    # A 13x13x13 array means HKL goes from -6 to 6.
-    # In such order: 000, 100, 200, ... 600, -600, -500, ... -100,
-    # Then 010, 110, 210, 310 ...
-    # Additionally, the planewaves we use are nonzero
-    # List of G vectors corresponding to the filtered planewaves
-    # Not sure if cube root is okay here... will it always be cubed?
-    sz = Int(cbrt(size(wave.data)[1]))
-    hkl_list = DFTraMO.generateHKLvector((sz,sz,sz))
+    hkl_list = collect(CartesianIndices(wave.grange))
+    hkl_list = [SVector(hkl_list[n].I) for n in eachindex(hkl_list)]
 
     # Filters occupied states below specified energy
     num_occ_states = wave.energies .< energy # Bit array
-    occ_states = reshape([(wave.data[n], wave.kpoints.points[CartesianIndices(wave.data)[n].I[3]].point, hkl_list[CartesianIndices(wave.data)[n].I[1]]) for n in eachindex(wave.data)], size(wave.data))
+    occ_states = reshape(
+        [
+            (wave.data[n], wave.kpoints.points[CartesianIndices(wave.data)[n].I[3]].point, hkl_list[CartesianIndices(wave.data)[n].I[1]])
+            for n in eachindex(wave.data)
+        ],
+        size(wave.data)
+    )
     occ_states = [occ_states[n,:,:,:][num_occ_states] for n in 1:size(occ_states)[1]]
     
     # Filters planewaves that are nonzero throughout all kpoints and bands
@@ -139,7 +140,6 @@ function get_occupied_states(wave::PlanewaveWavefunction, energy::Real)
 
     # coeff is a matrix of tuples with dimensions occ_planewave x occ_states
     # (occ_coeff, kpt, hkl)
-
     return coeff
 end
 
