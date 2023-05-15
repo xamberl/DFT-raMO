@@ -143,11 +143,20 @@ function get_occupied_states(wave::PlanewaveWavefunction, energy::Real)
     # Create an n occupied states by m occupied planewaves array that stores the
     # coefficient, kpoint, and corresponding G vector.
     occ_states = occ_states[occ_pw]
-    coeff = mapreduce(permutedims, vcat, [occ_states[n] for n in eachindex(occ_states)])
+    occ_states = mapreduce(permutedims, vcat, [occ_states[n] for n in eachindex(occ_states)])
 
     # coeff is a matrix of tuples with dimensions occ_planewave x occ_states
     # (occ_coeff, kpt, hkl)
-    return coeff
+    coeff = Array{ComplexF32}(undef, size(occ_states))
+    kpt = Array{SVector{3, Float64}}(undef, size(occ_states))
+    hkl_list = Array{SVector{3, Int64}}(undef, size(occ_states))
+    for n in eachindex(occ_states)
+        coeff[n] = occ_states[n][1]
+        kpt[n] = occ_states[n][2]
+        hkl_list[n] = occ_states[n][3]
+    end
+
+    return OccupiedStates(coeff, kpt, hkl_list)
 end
 
 # Removing read_COEFF as we can use readWAVECAR directly.
