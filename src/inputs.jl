@@ -58,7 +58,12 @@ function read_run_in(run_name::AbstractString)
 end
 
 """
-    import_VASP(d::AbstractString="") -> fermi::Float64, geo::Crystal{3}, kpt::KPointGrid{3}, super::AtomList{3}, wave::ReciprocalWaveFunction{3,Float32}
+    import_VASP(d::AbstractString="")
+        -> Tuple{
+            NamedTuple{(:fermi, :alphabeta),NTuple{2,Float64}},
+            Crystal{3},
+            PlanewaveWavefunction{3,ComplexF32}
+        }
 
 Searches in the specified directory (default is the current directory) for VASP files
 OUTCAR, POSCAR, KPOINTS, and WAVECAR, and extracts relevant information.
@@ -68,9 +73,9 @@ function import_VASP(directory::AbstractString="")
     geo = readPOSCAR(directory)
     wave = readWAVECAR(directory)
     kpt = parse.(Int, split(readlines(string(directory, "KPOINTS"))[4]))
-    # Creates an AtomList{3} supercell from POSCAR and KPOINTS
-    super = supercell(geo,kpt)
-    return (fermi, geo, super, wave)
+    # Use a Crystal to lazily reference the supercell
+    xtal = set_transform!(Crystal(geo), kpt)
+    return (fermi, xtal, wave)
 end
 
 
