@@ -64,9 +64,9 @@ Searches in the specified directory (default is the current directory) for VASP 
 OUTCAR, POSCAR, KPOINTS, and WAVECAR, and extracts relevant information.
 """
 function import_VASP(directory::AbstractString="")
-    fermi = get_fermi(string(directory, "OUTCAR"))
-    geo = readPOSCAR(string(directory, "POSCAR"))
-    wave = readWAVECAR(string(directory, "WAVECAR"))
+    fermi = get_fermi(directory)
+    geo = readPOSCAR(directory)
+    wave = readWAVECAR(directory)
     kpt = parse.(Int, split(readlines(string(directory, "KPOINTS"))[4]))
     # Creates an AtomList{3} supercell from POSCAR and KPOINTS
     super = supercell(geo,kpt)
