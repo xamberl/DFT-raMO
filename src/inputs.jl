@@ -70,7 +70,7 @@ Searches in the specified directory (defaults to the current directory if none i
 for a DFT-raMO run.
 """
 function import_VASP(directory::AbstractString="")
-    isdir(directory) || error("$directory is not a directory.")
+    (isdir(directory) || isempty(directory)) || error("$directory is not a directory.")
     fermi = get_fermi(directory)
     geo = readPOSCAR(directory)
     wave = readWAVECAR(directory)
