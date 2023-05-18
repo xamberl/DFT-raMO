@@ -15,8 +15,8 @@ Creates overlap matrix with occupied coefficients.
 If the kpoints are the same, they can overlap.
 """
 function make_overlap_mat(occ_states::OccupiedStates)
-    # Overlap entire matrix
-    S = occ_states.coeff*occ_states.coeff'
+    # Overlap entire matrix (# occ states x # occ states)
+    S = occ_states.coeff'*occ_states.coeff
     
     # Get list of unique kpoints
     kptlist = occ_states.kpt
@@ -25,7 +25,7 @@ function make_overlap_mat(occ_states::OccupiedStates)
     # Checks to see if kpoint matches for the occ_states matrix
     allowed_overlap = zeros(Int,size(S))
     for u_kpt in u_kptlist
-        check_kpt = [kpt == u_kpt for kpt in kptlist[:,1]]
+        check_kpt = [kpt == u_kpt for kpt in kptlist[1,:]]
         allowed_overlap = allowed_overlap .+ (check_kpt.*check_kpt')
     end
     S = S.*allowed_overlap
@@ -100,8 +100,8 @@ function reconstruct_targets_DFT(
     # For now, we are not going to deal with spin states...
     num_spin_states = 1
     if num_spin_states == 1
-        num_spin_up = size(occ_states.coeff)[1]
-        num_spin_down = 0;
+        num_spin_up = size(occ_states.coeff)[2]
+        num_spin_down = 1;
     else
         # To do: fix this part once spin up/down is dealt with
         #spin_up_coeff = occ_coeff[:,1:num_spin_up]
@@ -209,13 +209,13 @@ function calculate_overlap2(
     reciprocal_lattice::ReciprocalBasis{3},
     e::Vector{OrbitalParams},
     )
-    (num_occ_states, num_planewaves) = size(occ_states.coeff)
+    (num_planewaves, num_occ_states) = size(occ_states.coeff)
     # Initialize output matrix
     overlap_target_occupied = zeros(num_spin_states, max(num_spin_up, num_spin_down), num_target_orbitals)
     # Initialize secondary overlap container
     overlap = zeros(ComplexF32, num_planewaves*num_occ_states, num_target_orbitals)
     for i in 1:num_occ_states, j in 1:num_planewaves
-        direction = -(occ_states.G[j]+occ_states.kpt[i])
+        direction = -(occ_states.G[j,i]+occ_states.kpt[j,i])
         # scaling factor is necessary, bc the STO is not necessarily at the origin
         scalingfactor = exp(2*im*pi*dot(direction, atom_pos_fract))
         d2 = direction'*reciprocal_lattice
@@ -322,7 +322,7 @@ function calculate_overlap2(
     overlap_target_occupied = zeros(ComplexF32, num_occ_states, num_target_orbitals)
     if num_spin_states == 1
         for i in 1:num_occ_states
-            overlap_target_occupied[i,1:num_target_orbitals] = occ_states.coeff[i,:]'*overlap[(i-1)*num_planewaves+1:i*num_planewaves,:]
+            overlap_target_occupied[i,1:num_target_orbitals] = occ_states.coeff[:,i]'*overlap[(i-1)*num_planewaves+1:i*num_planewaves,:]
         end
     #==else # spin states = 2
         for i in 1:num_spin_up
