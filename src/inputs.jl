@@ -65,8 +65,9 @@ end
             PlanewaveWavefunction{3,ComplexF32}
         }
 
-Searches in the specified directory (default is the current directory) for VASP files
-OUTCAR, POSCAR, KPOINTS, and WAVECAR, and extracts relevant information.
+Searches in the specified directory (defaults to the current directory if none is given) for VASP
+`OUTCAR`, `POSCAR`, `KPOINTS`, and `WAVECAR` files, returning a `Tuple` with all of the data needed
+for a DFT-raMO run.
 """
 function import_VASP(directory::AbstractString="")
     fermi = get_fermi(directory)
