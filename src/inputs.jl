@@ -77,6 +77,7 @@ function import_VASP(directory::AbstractString="")
     kpt = parse.(Int, split(readlines(string(directory, "KPOINTS"))[4]))
     # Use a Crystal to lazily reference the supercell
     xtal = set_transform!(Crystal(geo), kpt)
+    xtal = PeriodicAtomList(xtal)
     return (fermi, xtal, wave)
 end
 
