@@ -32,7 +32,7 @@ function make_target_cluster_sp(site_list::Vector{Vector{Float64}}, radius::Real
             for k in -1:2
                 for l in -1:2
                     # Translation of atom in cartesian coordinates
-                    new_pos = super.atomlist.basis*super.atomlist[n].pos .+ super.atomlist.basis*[j,k,l]
+                    new_pos = (super.atomlist.basis*super.atomlist[n].pos .+ super.atomlist.basis*[j,k,l])*Electrum.BOHR2ANG
                     check_distance = norm(new_pos-site_list[site_num])
                     if check_distance <= radius
                         # Δr is used to weigh the p orbitals in each direction
