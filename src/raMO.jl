@@ -126,7 +126,7 @@ function reconstruct_targets_DFT(
                     super.orbitals[j], #num_target_orbitals,
                     occ_states,
                     super.atomlist[j].pos, #atom_pos_fract::Vector{Float64},
-                    rlatt/(2*pi), #reciprocal_lattice::ReciprocalBasis{3},
+                    rlatt/(2*pi)/Electrum.BOHR2ANG, #reciprocal_lattice::ReciprocalBasis{3},
                     get_eht_params(super.atomlist[j].atom.num, ehtparams)
                     )
                     for n in 1:super.orbitals[j]
