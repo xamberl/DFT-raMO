@@ -123,8 +123,7 @@ planewaves). Each OccupiedState element holds information about the coefficient,
 kpoint, and G vector.
 """
 function get_occupied_states(wave::PlanewaveWavefunction, energy::Real)
-    hkl_list = collect(CartesianIndices(wave.grange))
-    hkl_list = [SVector(hkl_list[n].I) for n in eachindex(hkl_list)]
+    hkl_list = [SVector(v.I) for v in FFTBins(wave)]
 
     # Filters occupied states below specified energy
     num_occ_states = wave.energies .< energy # Bit array
@@ -139,7 +138,7 @@ function get_occupied_states(wave::PlanewaveWavefunction, energy::Real)
     
     # Filters planewaves that are nonzero throughout all kpoints and bands
     nonzero_coeff = [iszero(occ_states[n][m][1]) for n in eachindex(occ_states), m in eachindex(occ_states[1])]
-    occ_pw = [count(==(1), nonzero_coeff[n,:]) != count(==(1), num_occ_states) for n in 1:size(nonzero_coeff)[1]] # Bool Array
+    occ_pw = [sum(nonzero_coeff[n,:]) != sum(num_occ_states) for n in 1:size(nonzero_coeff)[1]]
 
     # Create an n occupied states by m occupied planewaves array that stores the
     # coefficient, kpoint, and corresponding G vector.
