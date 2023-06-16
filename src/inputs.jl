@@ -78,7 +78,7 @@ function import_VASP(directory::AbstractString="")
     # Use a Crystal to lazily reference the supercell
     xtal = set_transform!(Crystal(geo), kpt)
     xtal = PeriodicAtomList(xtal)
-    return (fermi, xtal, wave)
+    return (fermi, geo, xtal, kpt, wave)
 end
 
 
@@ -152,7 +152,16 @@ function get_occupied_states(wave::PlanewaveWavefunction, energy::Real)
     hkl_list = Array{SVector{3, Int64}}(undef, size(occ_states))
     for n in eachindex(occ_states)
         coeff[n] = occ_states[n][1]
-        kpt[n] = occ_states[n][2]
+        kptvect = Vector{Float64}(undef,3)
+        # correct for close-to-zero kpt vectors
+        for k in eachindex(occ_states[n][2])
+            if abs(occ_states[n][2][k]) < 0.000001
+                kptvect[k] = 0
+            else
+                kptvect[k] = occ_states[n][2][k]
+            end
+        end
+        kpt[n] = SVector{3, Float64}(kptvect) #occ_states[n][2]
         hkl_list[n] = occ_states[n][3]
     end
 
