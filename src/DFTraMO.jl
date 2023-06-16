@@ -3,6 +3,7 @@ module DFTraMO
 using LinearAlgebra, StaticArrays, Electrum
 using Random, Distributions
 using Printf, DelimitedFiles
+using ProgressBars, UnicodePlots
 
 include("Psphere.jl")
 export writePsphere
