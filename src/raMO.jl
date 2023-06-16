@@ -176,7 +176,7 @@ function reconstruct_targets_DFT(
     if num_spin_up-targets_reconstructed-num_targets > 0
         new_psi_previous[1:num_spin_up,1:(num_spin_up-targets_reconstructed-num_targets),1] = tempup[:,num_targets+1:end]
     end
-    print("Number of spin up states remaining: ", num_spin_up-targets_reconstructed-num_targets, "\n")
+    #print("Number of spin up states remaining: ", num_spin_up-targets_reconstructed-num_targets, "\n")
     psi_up = tempup[:,1:total_num_target_orbs]
     if num_spin_states == 2
         if (num_spin_down-targets_reconstructed-num_targets) > 0

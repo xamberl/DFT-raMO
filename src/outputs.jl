@@ -43,7 +43,7 @@ function psi_to_isosurf(
         n = findlast(x->x == reduced_kpt[k], occ_states.kpt[1,:])
         target_overlap[:,k] = occ_states.coeff[:,m:n]*psi_up[m:n]
     end
-    @info "Finished generating target_overlap"
+    #@info "Finished generating target_overlap"
     isosurf = zeros(ngfftsize[1]*ngfftsize[2]*ngfftsize[3])
     for i in eachindex(reduced_kpt)
         #Gx = occ_states.G[:,1]
@@ -57,7 +57,7 @@ function psi_to_isosurf(
             pw[j,:] = @. exp(pi*2*im*G)
         end
         isosurf += pw'*target_overlap[:,i]
-        @info string("K-point number ", i, " printed.")
+        #@info string("K-point number ", i, " printed.")
     end
     realimag = hcat(real(isosurf), imag(isosurf))
     (evalue, evec) = eigen(realimag'*realimag)
