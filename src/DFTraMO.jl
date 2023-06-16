@@ -25,6 +25,6 @@ export create_run, import_VASP, track_kpoint_repeating, read_eht_params, read_si
 generateHKLvector, get_occupied_states
 
 include("outputs.jl")
-export write_to_XSF
+export write_to_XSF, psi_to_isosurf, Psphere
 
 end
