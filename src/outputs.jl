@@ -114,14 +114,12 @@ function Psphere(
                     elseif z > size(datagrid)[3]
                         i3 = z-size(datagrid)[3]
                     end
-                    @info [i1,i2,i3]
                     sphere_sum += datagrid.data[i1,i2,i3]^2
                     count += 1
                 end
             end
         end
     end
-    @info count
     # Calculate partial electron density
     sphere_sum = sphere_sum*vox_vol
     psphere = sphere_sum/total_eden

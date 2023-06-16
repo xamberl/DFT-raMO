@@ -1,11 +1,8 @@
 module DFTraMO
 
-using LinearAlgebra
-using StaticArrays
-using Electrum
-using Printf
-using Random
-using Distributions
+using LinearAlgebra, StaticArrays, Electrum
+using Random, Distributions
+using Printf, DelimitedFiles
 
 include("Psphere.jl")
 export writePsphere
@@ -19,6 +16,9 @@ generate_H, reconstruct_targets_DFT, N_L
 
 include("make_targets.jl")
 export make_target_AO, make_target_cluster_sp, make_target_hybrid
+
+include("runs.jl")
+export loop_target_cluster_sp
 
 include("inputs.jl")
 export create_run, import_VASP, track_kpoint_repeating, read_eht_params, read_site_list,
