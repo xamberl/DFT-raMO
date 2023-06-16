@@ -1,119 +1,61 @@
 function write_to_XSF(
-    super::AtomList{3},
-    coeff::Matrix{ComplexF64},
-    kpoint_repeating::Vector{Bool},
-    kptlist::Vector{Vector{Float64}},
+    print_limit::Int,
+    xtal::PeriodicAtomList{3},
+    kpt::Vector{Int},
+    occ_states,
     psi_up::Matrix{ComplexF64},
-    G::Vector{Vector{Int64}},
-    energy::Vector{Float64}
+    filename::String
     )
-    printing_size_limit = 180000000
-    ratios = lengths(super.basis)/maximum(lengths(super.basis))
-    ratiofactor = (printing_size_limit/(ratios[1]*ratios[2]*ratios[3]*size(coeff)[1]))^(1/3) #size(coeff)[1] = num plane waves
-    ngfftsize = Int.(floor.(ratios*ratiofactor))
+    print_limit = 2000000 #180000000
+    ratio = Vector{Float64}(undef,3)
+    ratio[1] = norm(xtal.basis[1:3]); ratio[2] = norm(xtal.basis[4:6]); ratio[3] = norm(xtal.basis[7:9])
+    ratio = ratio/maximum(ratio)
+    ratiofactor = (print_limit/(ratio[1]*ratio[2]*ratio[3]*size(occ_states.coeff)[1]))^(1/3) #size(coeff)[1] = num plane waves
+    ngfftsize = Int.(floor.(ratio*ratiofactor))
     NX = zeros(ngfftsize[1],ngfftsize[2],ngfftsize[3])
     NY = zeros(ngfftsize[1],ngfftsize[2],ngfftsize[3])
     NZ = zeros(ngfftsize[1],ngfftsize[2],ngfftsize[3])
     for i in 1:ngfftsize[1]
         for j in 1:ngfftsize[2]
             for k in 1:ngfftsize[3]
-                NX[i,j,k] = lengths(super.basis)[1]*(i-1)/(ngfftsize[1]-1)
-                NY[i,j,k] = lengths(super.basis)[2]*(j-1)/(ngfftsize[2]-1)
-                NZ[i,j,k] = lengths(super.basis)[3]*(k-1)/(ngfftsize[3]-1)
+                NX[i,j,k] = kpt[1]*(i-1)/(ngfftsize[1]-1)
+                NY[i,j,k] = kpt[2]*(j-1)/(ngfftsize[2]-1)
+                NZ[i,j,k] = kpt[3]*(k-1)/(ngfftsize[3]-1)
             end
         end
     end
     NX = vec(NX); NY = vec(NY); NZ = vec(NZ)
-    reduced_kpt = unique(kptlist)
-    kpoint_zero = vcat(findall(!iszero, kpoint_repeating),length(kpoint_repeating)+1)
-    target_overlap = []
-    for k in 1:length(kpoint_zero)-1
-        # Finds overlap of plane waves at unique kpoints
-        range = vcat(kpoint_zero[k]:1:(kpoint_zero[k+1])-1)
-        push!(target_overlap, coeff[:,range]*psi_up[range,:])
+    reduced_kpt = unique(occ_states.kpt)
+    target_overlap = Array{ComplexF32}(undef,size(occ_states.coeff)[1], length(reduced_kpt))
+    for k in eachindex(reduced_kpt)
+        m = findfirst(x->x == reduced_kpt[k], occ_states.kpt[1,:])
+        n = findlast(x->x == reduced_kpt[k], occ_states.kpt[1,:])
+        target_overlap[:,k] = occ_states.coeff[:,m:n]*psi_up[m:n]
     end
     @info "Finished generating target_overlap"
     isosurf = zeros(ngfftsize[1]*ngfftsize[2]*ngfftsize[3])
     for i in eachindex(reduced_kpt)
-    #i = 1
-    pw = Matrix{ComplexF16}(undef,length(G),length(NX))
-    for j in eachindex(G)
-        # (kx+Gx)*NX + (ky+Gy)*NY + (kz+Gz)*NZ
-        pw[j,:] = sum((G[j].+reduced_kpt[i]).*[NX, NY, NZ])
-        pw[j,:] = @. exp(pi*2*im*pw[j,:])
-        @info j
-    end
-    isosurf += pw'*target_overlap[i]
-    @info string("K-point number ", i, " printed.")
-    #return isosurf
-    end
-    isosurf1 = isosurf
-    
-    isosurf = reshape(isosurf,ngfftsize[1],ngfftsize[2],ngfftsize[3]) 
-    
-    # Wave functions read in are complex. We rotate them back to the real axis.
-    # We also deal with degenerate states
-    degen_tol = 0.001
-    energy = vcat(energy,10000)
-    num_print = 1 # This variable is in case we have more than one to print. This will need to be an input argument. For now, set to one.
-    num_degen = 0
-    temp = 0
-    for i in 1:num_print
-        while temp == num_degen
-            if abs(energy[i+temp+1]-energy[i] < degen_tol*abs(energy[i]))
-                num_degen += 1
-                temp += 1
-            else
-                num_degen += 1
-            end
+        #Gx = occ_states.G[:,1]
+        pw = Matrix{ComplexF32}(undef,size(occ_states.coeff)[1],length(NX))
+        for j in eachindex(occ_states.G[:,1])
+            # (kx+Gx)*NX + (ky+Gy)*NY + (kz+Gz)*NZ
+            GX = (occ_states.G[j,1][1].+reduced_kpt[i][1])*NX
+            GY = (occ_states.G[j,1][2].+reduced_kpt[i][2])*NY
+            GZ = (occ_states.G[j,1][3].+reduced_kpt[i][3])*NZ
+            G = GX+GY+GZ
+            pw[j,:] = @. exp(pi*2*im*G)
         end
-        @info num_degen
-        temp_matrix = reshape(isosurf[:,:,:,i:i+num_degen-1],ngfftsize[1]*ngfftsize[2]*ngfftsize[3],num_degen)
-        # Pick out 1000 random vectors from the matrix
-        randos = randperm(ngfftsize[1]*ngfftsize[2]*ngfftsize[3])[1:1000]
-        @info randos
-        # Separate into real and imaginary components
-        realimag = hcat(real(temp_matrix[randos,:]), imag(temp_matrix[randos,:]))
-        (eig_energy, eig_vect) = eigen(realimag'*realimag)
-        vect = eig_vect[:,1:num_degen]
-        @info vect
-        vect = complex.(vect[num_degen+1:2*num_degen,:],vect[1:num_degen,:])
-        @info vect
-        temp_matrix = temp_matrix*vect
-        #isosurf2 = Array{ComplexF64}(undef,)
-        global isosurf[:,:,:,i:i+num_degen-1] = reshape(temp_matrix, ngfftsize[1],ngfftsize[2],ngfftsize[3], num_degen)
+        isosurf += pw'*target_overlap[:,i]
+        @info string("K-point number ", i, " printed.")
     end
-    return isosurf1, isosurf
-end  
-
-#reshape(isosurf,ngfftsize[1],ngfftsize[2],ngfftsize[3]) 
-
-#==
-# Wave functions read in are complex. We rotate them back to the real axis.
-# We also deal with degenerate states
-degen_tol = 0.001
-vcat(energy,10000)
-num_print = 1 # This variable is in case we have more than one to print. This will need to be an input argument. For now, set to one.
-num_degen = 0
-temp = 0
-for i in 1:num_print
-    while temp == num_degen
-        if abs(energy[i+temp+1]-energy[i] < degen_tol*abs(energy[i]))
-            num_degen += 1
-            temp += 1
-        else
-            num_degen += 1
-        end
-    end
+    realimag = hcat(real(isosurf), imag(isosurf))
+    (evalue, evec) = eigen(realimag'*realimag)
+    isosurf *= complex(evec[2], evec[1])
+    isosurf = reverse(reshape(isosurf,ngfftsize[1],ngfftsize[2],ngfftsize[3]), dims=3)
+    xcrystal = Crystal(xtal, 1, SVector{3, Float64}(0,0,0)) # space group number is 1 for now; origin is [0,0,0]
+    xdata = RealDataGrid(real(isosurf), xtal.basis)
+    xcrystalwithdatasets = CrystalWithDatasets(xcrystal, Dict("DENSITY"=>xdata))
+    f = open(filename,"w")
+    writeXSF(f, xcrystalwithdatasets, periodic=false)
+    close(f)
 end
-temp_matrix = reshape(isosurf[:,:,j:j+num_degen-1],ngfftsize[1]*ngfftsize[2]*ngfftsize[3],num_degen)
-# Pick out 1000 random vectors from the matrix
-randos = randperm(ngfftsize[1]*ngfftsize[2]*ngfftsize[3])[1:1000]
-# Separate into real and imaginary components
-realimag = hcat(real(temp_matrix[randos,:]), imag(temp_matrix[randos,:]))
-(eig_energy, eig_vect) = eigen(realimag'*realimag)
-vect = eig_vect[1:num_degen]
-vect = complex.(vect[num_degen+1:2*num_degen,:],vect[1:num_degen,:])
-temp_matrix = temp_matrix*vect
-isosurf[:,:,:,j:j+num_degen-1] = reshape(temp_matrix, ngfftsize[1],ngfftsize[2],ngfftsize[3], num_degen)
-return isosurf==#

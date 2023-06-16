@@ -76,8 +76,9 @@ function reconstruct_targets_DFT(
     super::Supercell,
     ehtparams::ehtParams,
     occ_states::OccupiedStates,
-    rlatt::ReciprocalBasis{3},
-    psi_previous::Array{Float64, 3},
+    cell::RealBasis{3},
+    kpt::Vector{Int},
+    psi_previous::Array{ComplexF32, 3},
     S_original::Matrix{ComplexF32},
     H::Matrix{Float64},
     use_prev::Bool,
@@ -125,8 +126,10 @@ function reconstruct_targets_DFT(
                     num_spin_down,
                     super.orbitals[j], #num_target_orbitals,
                     occ_states,
-                    super.atomlist[j].pos, #atom_pos_fract::Vector{Float64},
-                    rlatt/(2*pi)/Electrum.BOHR2ANG, #reciprocal_lattice::ReciprocalBasis{3},
+                    # Problem: this fractional coordinate needs to be in the cell basis, not supercell basis
+                    # The current conversion is imprecise.
+                    SVector(super.atomlist[j].pos.*kpt), #atom_pos_fract::Vector{Float64}
+                    ReciprocalBasis(cell)/(2*pi)/Electrum.BOHR2ANG, #reciprocal_lattice::ReciprocalBasis{3},
                     get_eht_params(super.atomlist[j].atom.num, ehtparams)
                     )
                     for n in 1:super.orbitals[j]
@@ -165,7 +168,7 @@ function reconstruct_targets_DFT(
         S = psi_previous[:,:,1]'*S_original*psi_previous[:,:,1]
         H = 0.5*(H+H')
         S = 0.5*(S+S')
-        (e_up, psi_vect) = eigen(H,S)
+        (e_up, psi_vect) = eigen(H,S+eps(1.0)*diagm(ones(size(S)[1]))) # not sure if this is important to add the eps
         tempup = psi_previous[:,:,1]*psi_vect
     end
     new_remainders = size(psi_previous)[2]-num_targets
@@ -205,8 +208,8 @@ function calculate_overlap2(
     num_spin_down::Int,
     num_target_orbitals::Int,
     occ_states::OccupiedStates,
-    atom_pos_fract::StaticArraysCore.SVector{3, Float64},
-    reciprocal_lattice::ReciprocalBasis{3},
+    atom_pos_fract::SVector{3, Float64},
+    reciprocal_lattice::SMatrix{3,3, Float64, 9},
     e::Vector{OrbitalParams},
     )
     (num_planewaves, num_occ_states) = size(occ_states.coeff)
