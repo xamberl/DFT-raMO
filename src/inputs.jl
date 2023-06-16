@@ -82,36 +82,6 @@ function import_VASP(directory::AbstractString="")
 end
 
 
-#==
-"""
-    generateHKLvector(sz::Tuple{Int, Int, Int}) --> hkl_list::Vector{Vector{Int}}
-
-Returns an ordered list of hkl vectors based on the size of the HKLData array.
-"""
-function generateHKLvector(sz::Tuple{Int, Int, Int})
-    # This function is adapted from Xtal/Electrum's readWAVECAR. 
-    function incrementHKL(hkl::AbstractVector{<:Integer}, bounds::AbstractVector{<:AbstractRange})
-        # Loop through the vector indices, but in most cases we don't need them all
-        new_hkl = copy(hkl)
-        for n in eachindex(hkl)
-            # Increment the current vector component
-            new_hkl[n] = (hkl[n]+1 in bounds[n] ? new_hkl[n] + 1 : minimum(bounds[n]))
-            # Only increment the next components if the current one is zero
-            new_hkl[n] == 0 || break
-        end
-        return new_hkl
-    end
-    g = Int.(floor.(sz./2))
-    total_g = prod([(2*n+1) for n in g])
-    bounds = [-n:n for n in g]
-    hkl_list = Vector{Vector{Int}}(undef,total_g)
-    hkl_list[1] = [0,0,0]
-    for i in 2:1:length(hkl_list)
-        hkl_list[i] = incrementHKL(hkl_list[i-1], bounds)
-    end
-    return hkl_list
-end==#
-
 """
     get_occupied_states(wave::PlanewaveWavefunction, energy::Real) ->
         occ_state_array::Array{DFTraMO.OccupiedState}
@@ -167,106 +137,6 @@ function get_occupied_states(wave::PlanewaveWavefunction, energy::Real)
 
     return OccupiedStates(coeff, kpt, hkl_list)
 end
-
-# Removing read_COEFF as we can use readWAVECAR directly.
-#=="""
-    read_GCOEFF(emin::Real, emax::Real) -> (g_indices::Vector{Int64}, occupied_coefficients::Matrix{ComplexF64}, kptlist::Vector{Vector{Float64}})
-
-Reads a GCOEFF.txt file within the specified energy range. Returns the unique G vectors, complex coefficients, and k-point list corresponding to occupied states.
-"""
-function read_GCOEFF(emin::Real, emax::Real)
-    open("GCOEFF.txt","r") do io
-        num_spin_states = parse(Int,readline(io))
-        num_kpt = parse(Int,readline(io))
-        num_band = parse(Int,readline(io))
-        # skips the next 6 lines, which correspond to a, b, c, a*, b*, c*
-        for i in 1:6
-            readline(io);
-        end
-        # Regarding spin states
-        if num_spin_states == 2
-            num_spin_up = 0
-            num_spin_down = 0
-        end
-        # Initialize containers
-        num_occ_states = 0
-        kptlist = Array{Vector{Float64}}(undef,0)
-        #current_G = Array{Vector{Int}}(undef,0)
-        occ_coeff = []
-        # Loop through spin states, kpts, band
-        for s in 1:num_spin_states
-            println("Reading spin state ", s)
-            for k in 1:num_kpt
-                current_kpt = parse.(Float64,split(readline(io)))
-                # Counter for occupied states in kpt
-                occ_states_k = 0
-                for b in 1:num_band
-                    current_band,num_pw = parse.(Int,split(readline(io)))
-                    # Read in Energy, Filling
-                    ln = split(readline(io))
-                    # Need if statement somewhere to check if we've reached the end of the bands
-                    energy, filling = parse.(Float64, [ln[2],ln[6]])
-                    # Reads in info for only occupied states
-                    if energy >= emin && energy <= emax
-                        # Counts spin up/down states
-                        if num_spin_states == 2
-                            if s == 1
-                                num_spin_up += 1
-                            else
-                                num_spin_down += 1
-                            end
-                        end
-                        # Counts occupied states, updates kptlist
-                        occ_states_k = occ_states_k + 1
-                        num_occ_states = num_occ_states + 1
-                        push!(kptlist,current_kpt)
-                        # Loops through pw in each band and stores it in a array of tuples
-                        # where the NamedTuple is (state = Int, G = Vector{Int}, coeff = ComplexF64)
-                        # This probably needs a better method here.
-                        for p in 1:num_pw
-                            ln = split(readline(io))
-                            temp_g = parse.(Int,ln[1:3])
-                            temp_occ_coeff = complex(parse(Float64,ln[5]),parse(Float64,ln[7]))
-                            push!(occ_coeff,(state = num_occ_states, G = temp_g, coeff = temp_occ_coeff))
-                        end
-                    else
-                        for p in 1:num_pw
-                            readline(io)
-                        end
-                    end
-                end
-                println("For K-point # ", k, ", Spin State ", s, ", found ", occ_states_k, " Occupied States.")
-            end
-        end
-        println("Total occupied states: ", num_occ_states,)
-        # Post processing of occ_coeff. Finds the unique G
-        g_indices = unique(i->occ_coeff[i].G,eachindex(occ_coeff))
-        unique_G = fill!(Vector{Vector{Int64}}(undef,length(g_indices)),[0,0,0])
-        occupied_coefficients = fill!(Array{ComplexF64}(undef,length(g_indices),num_occ_states),0)
-        # Finds unique G in occ_coeff, then fills an array at index [G, number_of_the_occupied_state] with the corresponding coefficient.
-        # Quite inefficient. This will need optimization, but for now it works.
-        for i in eachindex(g_indices)
-            indices = findall(x->x==occ_coeff[g_indices[i]].G, [occ_coeff[j].G for j in eachindex(occ_coeff)])
-            for j in indices
-                occupied_coefficients[i,occ_coeff[j].state] = occ_coeff[j].coeff
-                unique_G[i] = occ_coeff[j].G
-            end
-        end
-        return (unique_G, occupied_coefficients, kptlist)
-    end
-end
-
-# Repeated kpoints marked with 0; unrepeated marked with 1.
-function track_kpoint_repeating(kptlist)#::KPointList{3})
-    kpoint_repeating = zeros(Bool,length(kptlist))
-    kpoint_repeating[1] = 1
-    for i in 2:length(kptlist)
-        if kptlist[i] != kptlist[i-1]
-            kpoint_repeating[i] = 1
-        end
-    end
-    return kpoint_repeating
-end==#
 
 """
     read_eht_params(paramsfile::AbstractString) -> mat::ehtParams 
@@ -332,4 +202,22 @@ function read_site_list(filename::AbstractString)
         end
     end
     return sitelist
+end
+
+"""
+    import_psi_previous(filename::AbstractString)
+
+Imports a remainder matrix of coefficients to use for raMO runs.
+"""
+function import_psi_previous(filename::AbstractString)
+    file = readdlm(filename, '\t')
+    psi_previous = Array{ComplexF32}(undef, size(file))
+    for i in eachindex(file)
+       f = split(file[i],[' ', 'f', 'i', 'm'])
+       real = parse(Float32,f[1])*10^parse(Float32,f[2])
+       imag = parse(Float32,string(f[3],f[4]))*10^parse(Float32,f[5])
+       psi_previous[i] = real+imag*im
+    end
+    num_electrons_left = parse(Int,split(filename, ['.', '_'])[end-1])
+    return (psi_previous, num_electrons_left)
 end

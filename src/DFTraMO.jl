@@ -22,8 +22,8 @@ include("runs.jl")
 export loop_target_cluster_sp
 
 include("inputs.jl")
-export create_run, import_VASP, track_kpoint_repeating, read_eht_params, read_site_list,
-generateHKLvector, get_occupied_states
+export create_run, import_VASP, track_kpoint_repeating, read_eht_params, read_site_list, get_occupied_states,
+import_psi_previous
 
 include("outputs.jl")
 export write_to_XSF, psi_to_isosurf, Psphere
