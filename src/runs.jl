@@ -34,7 +34,7 @@ function loop_target_cluster_sp(
         )
         isosurf = psi_to_isosurf(5000000, super.atomlist, kpt, occ_states, psi_up)
         (sphere, total, psphere[i]) = Psphere(RealDataGrid(real(isosurf),super.atomlist.basis), voids_list[i], rsphere)
-        println(iter, string("Psphere: ", psphere[i], " at site ", voids_list[i]))
+        @printf(iter, "Psphere: %.3f at site [%.3f, %.3f, %.3f]", psphere[i], voids_list[i][1], voids_list[i][2], voids_list[i][3])
         write_to_XSF(isosurf, super.atomlist, string(run_name, "_", i, "_", num_electrons_left, ".xsf"))
         # for now, write only one spin as save state
         writedlm(string(run_name, "_psi_prev_", i, "_", num_electrons_left, ".txt"), psi_previous[:,:,1])
