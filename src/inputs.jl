@@ -78,7 +78,7 @@ function import_VASP(directory::AbstractString="")
     # Use a Crystal to lazily reference the supercell
     xtal = set_transform!(Crystal(geo), kpt)
     xtal = PeriodicAtomList(xtal)
-    return (fermi, geo, xtal, kpt, wave)
+    return (fermi, xtal, geo, kpt, wave)
 end
 
 
@@ -219,5 +219,6 @@ function import_psi_previous(filename::AbstractString)
        psi_previous[i] = real+imag*im
     end
     num_electrons_left = parse(Int,split(filename, ['.', '_'])[end-1])
-    return (psi_previous, num_electrons_left)
+    num_raMO = parse(Int,split(filename, ['.', '_'])[end-2])
+    return (psi_previous, num_electrons_left, num_raMO)
 end

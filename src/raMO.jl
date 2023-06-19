@@ -78,7 +78,7 @@ function reconstruct_targets_DFT(
     occ_states::OccupiedStates,
     cell::RealBasis{3},
     kpt::Vector{Int},
-    psi_previous::Array{ComplexF32, 3},
+    psi_previous::Array{ComplexF32},
     S_original::Matrix{ComplexF32},
     H::Matrix{Float64},
     use_prev::Bool,

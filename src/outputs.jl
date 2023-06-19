@@ -125,3 +125,32 @@ function Psphere(
     psphere = sphere_sum/total_eden
     return(sphere_sum, total_eden, psphere)
 end
+
+function psphere_eval(psphere::Vector{Float64}, super::Supercell, site_list::Vector{Int})
+    m = maximum(psphere)
+    a = findall(x->x<0.15*m, psphere)
+    if !isempty(a)
+        println("The following atoms have Pspheres <15% of the maximum (", m, "):")
+        for n in a
+            site = Vector(super.atomlist.basis*Electrum.BOHR2ANG*super.atomlist[site_list[n]].pos)
+            println("Atom ", site_list[n], ": ", @sprintf("Psphere: %.3f", psphere[n]), @sprintf(" at site [%.3f, %.3f, %.3f]", site[1], site[2], site[3]))
+        end
+    end
+    return a
+end
+
+function output_files(
+    run_name,
+    num_electrons_left,
+    num_raMO,
+    super,
+    isosurf,
+    psi_previous,
+    psi_up
+    )
+    write_to_XSF(isosurf, super.atomlist, string(run_name, "_", num_raMO, "_", num_electrons_left, ".xsf"))
+    # for now, write only one spin as save state
+    writedlm(string(run_name, "_psi_prev_", num_raMO, "_", num_electrons_left, ".txt"), psi_previous[:,:,1])
+    # same with the raMO function itself
+    writedlm(string(run_name, "_psi_", num_raMO, "_", num_electrons_left, ".txt"), psi_up)
+end

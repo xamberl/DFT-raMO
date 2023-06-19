@@ -4,6 +4,7 @@ authors = ["Amber Lim <xalim@wisc.edu>", "Brandon Flores <bsflores@wisc.edu>"]
 version = "0.1.0"
 
 [deps]
+Crayons = "a8cc5b0e-0ffa-5ad4-8c14-923d3ee1735f"
 Distributions = "31c24e10-a181-5473-b8eb-7969acd0382f"
 Electrum = "b7bf5f09-dce4-461b-b741-5180c76f4cfe"
 LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"

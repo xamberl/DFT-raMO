@@ -3,7 +3,7 @@ module DFTraMO
 using LinearAlgebra, StaticArrays, Electrum
 using Random, Distributions
 using Printf, DelimitedFiles
-using ProgressBars, UnicodePlots
+using ProgressBars, UnicodePlots, Crayons
 
 include("Psphere.jl")
 export writePsphere
@@ -19,7 +19,7 @@ include("make_targets.jl")
 export make_target_AO, make_target_cluster_sp, make_target_hybrid
 
 include("runs.jl")
-export loop_target_cluster_sp
+export loop_target_cluster_sp, loop_AO
 
 include("inputs.jl")
 export create_run, import_VASP, track_kpoint_repeating, read_eht_params, read_site_list, get_occupied_states,
