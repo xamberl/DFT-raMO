@@ -11,6 +11,21 @@ function write_to_XSF(
     close(f)
 end
 
+"""
+    psi_to_isosurf(
+        print_limit::Int,
+        xtal::PeriodicAtomList{3},
+        kpt::Vector{Int},
+        occ_states,
+        psi_up::Matrix{ComplexF64}
+    )
+Transforms a raMO function (psi_up) to an electron density grid.
+    - psi_up is a vector of complex coefficients with length = number of occupied states
+    - xtal corresponds to the supercell
+    - kpt corresponds to the supercell size
+    - occ_states contains information about occupied states.
+        occ_states.coeff = complex coefficients (dims = num_pw * num_states)
+"""
 function psi_to_isosurf(
     print_limit::Int,
     xtal::PeriodicAtomList{3},
@@ -36,6 +51,8 @@ function psi_to_isosurf(
         end
     end
     NX = vec(NX); NY = vec(NY); NZ = vec(NZ)
+    # Generate target_overlap: express psi_up in terms of the occupied coefficients.
+    # States at the same kpt are combined such that target_overlap has (dims = num_pw * num_kpts)
     reduced_kpt = unique(occ_states.kpt)
     target_overlap = Array{ComplexF32}(undef,size(occ_states.coeff)[1], length(reduced_kpt))
     for k in eachindex(reduced_kpt)
@@ -43,10 +60,10 @@ function psi_to_isosurf(
         n = findlast(x->x == reduced_kpt[k], occ_states.kpt[1,:])
         target_overlap[:,k] = occ_states.coeff[:,m:n]*psi_up[m:n]
     end
-    #@info "Finished generating target_overlap"
+    # Generate isosurface
+    # Ψk(r) = exp(ikr)*sum(ck*exp(iGr))
     isosurf = zeros(ngfftsize[1]*ngfftsize[2]*ngfftsize[3])
     for i in eachindex(reduced_kpt)
-        #Gx = occ_states.G[:,1]
         pw = Matrix{ComplexF32}(undef,size(occ_states.coeff)[1],length(NX))
         for j in eachindex(occ_states.G[:,1])
             # (kx+Gx)*NX + (ky+Gy)*NY + (kz+Gz)*NZ
@@ -59,11 +76,38 @@ function psi_to_isosurf(
         isosurf += pw'*target_overlap[:,i]
         #@info string("K-point number ", i, " printed.")
     end
+    # This repeats the MATLAB code. But basically we create the isosurface by |Ψ|^2
     realimag = hcat(real(isosurf), imag(isosurf))
     (evalue, evec) = eigen(realimag'*realimag)
     isosurf *= complex(evec[2], evec[1])
+    # Reverse for right symmetry for printing
     isosurf = reverse(reshape(isosurf,ngfftsize[1],ngfftsize[2],ngfftsize[3]))
     return isosurf
+
+    #==
+    The problem I'm working on is attempting to perform the same operation using
+    FFT, since the pw[j,:] = @. exp(pi*2*im*G) line is the rate-limiting step.
+    The Bloch functions can be described in a Fourier series; however, the isosurfaces
+    I am getting are erroneous.
+
+    gridsize = (16,16,16);
+    bin = FFTBins(gridsize);
+    isosurf = zeros(ComplexF32, gridsize);
+    index = [CartesianIndex(Tuple(occ_states.G[i,1])) for i in eachindex(occ_states.G[:,1])]
+    index2 = [findfirst(x->x == i, bin) for i in index] # cartesian indexing for states
+    for k in eachindex(reduced_kpt)
+        recip = zeros(ComplexF64, gridsize)
+        for i in eachindex(occ_states.G[:,k])
+            cindex = CartesianIndex(Tuple(occ_states.G[i,1]))
+            recip[index2[i]] = target_overlap[i,k]
+        end
+        u = ifft(recip)
+        global isosurf += conj(u).*u
+        @info string(k, " printed")
+    end
+    DFTraMO.write_to_XSF(isosurf, xtal, "test.xsf")
+    ==#
+
 end
 
 function Psphere(
