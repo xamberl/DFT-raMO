@@ -89,13 +89,6 @@ function reconstruct_targets_DFT(
     num_targets = length(size(psi_target))
     num_electrons_left = num_electrons_left - 2*num_targets
     
-    #output_name = @sprintf("%s_%05i.mat",run_name,num_electrons_left)
-    if use_prev
-        # TO DO: write code to load in previous matrix
-        open(prev_mat,"r")
-        println("Found and loaded remainder file ", prev_mat, ".")
-    end
-    
     # Checks for spin states
     # num_spin_states = size(wavefxn.waves)[1]
     # For now, we are not going to deal with spin states...
