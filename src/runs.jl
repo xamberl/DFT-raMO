@@ -46,7 +46,7 @@ function loop_target_cluster_sp(
     writedlm(string(run_name, "_psphere_", rsphere, ".txt"), psphere)
     cd("..")
     psphere_graph(psphere, num_raMO, rsphere)
-    low_psphere = psphere_eval(psphere, super, void_list)
+    low_psphere = psphere_eval(psphere, super, voids_list)
     return low_psphere
 end
 
