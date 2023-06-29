@@ -106,7 +106,7 @@ function loop_AO(
     cd("..")
     p = psphere_graph(psphere, num_raMO, rsphere); display(p)
     low_psphere = psphere_eval(psphere, super, atom_list)
-    return (low_psphere, remainders, num_raMO+length(atom_list), num_elecrons_left)
+    return (low_psphere, remainders, num_raMO+length(atom_list), num_electrons_left)
 end
 
 """
