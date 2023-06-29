@@ -7,7 +7,7 @@ function write_to_XSF(
     xdata = RealDataGrid(real(isosurf), xtal.basis)
     xcrystalwithdatasets = CrystalWithDatasets(xcrystal, Dict("DENSITY"=>xdata))
     f = open(filename,"w")
-    writeXSF(f, xcrystalwithdatasets, periodic=false)
+    writeXSF(f, xcrystalwithdatasets, periodic=true)
     close(f)
 end
 
@@ -83,31 +83,54 @@ function psi_to_isosurf(
     # Reverse for right symmetry for printing
     isosurf = reverse(reshape(isosurf,ngfftsize[1],ngfftsize[2],ngfftsize[3]))
     return isosurf
+end
 
-    #==
-    The problem I'm working on is attempting to perform the same operation using
-    FFT, since the pw[j,:] = @. exp(pi*2*im*G) line is the rate-limiting step.
-    The Bloch functions can be described in a Fourier series; however, the isosurfaces
-    I am getting are erroneous.
 
-    gridsize = (16,16,16);
+"""
+    psi_to_isosurf2(occ_states, psi, kpt, grange)
+
+Converts the raMO (psi) into an electron density grid using FFT.
+"""
+function psi_to_isosurf2(
+    occ_states,
+    psi,
+    kpt,
+    grange,
+    )
+    reduced_kpt = unique(occ_states.kpt)
+    target_overlap = Array{ComplexF32}(undef,size(occ_states.coeff)[1],length(reduced_kpt))
+    for k in eachindex(reduced_kpt)
+        m = findfirst(x->x == reduced_kpt[k], occ_states.kpt[1,:])
+        n = findlast(x->x == reduced_kpt[k], occ_states.kpt[1,:])
+        target_overlap[:,k] = occ_states.coeff[:,m:n]*psi[m:n]
+    end
+    gridsize = grange
+    real_gridsize = collect(gridsize).*kpt
+    rgrid = [SVector(
+        kpt[1]*(i-1)/(real_gridsize[1]),
+        kpt[2]*(j-1)/(real_gridsize[2]),
+        kpt[3]*(k-1)/(real_gridsize[3])) for i in 1:real_gridsize[1], j in 1:real_gridsize[2], k in 1:real_gridsize[3]]
     bin = FFTBins(gridsize);
-    isosurf = zeros(ComplexF32, gridsize);
+    isosurf = zeros(ComplexF64, Tuple(real_gridsize));
     index = [CartesianIndex(Tuple(occ_states.G[i,1])) for i in eachindex(occ_states.G[:,1])]
     index2 = [findfirst(x->x == i, bin) for i in index] # cartesian indexing for states
+    recip = zeros(ComplexF64, gridsize)
     for k in eachindex(reduced_kpt)
-        recip = zeros(ComplexF64, gridsize)
-        for i in eachindex(occ_states.G[:,k])
-            cindex = CartesianIndex(Tuple(occ_states.G[i,1]))
+        for i in eachindex(target_overlap[:,k])
             recip[index2[i]] = target_overlap[i,k]
         end
         u = ifft(recip)
-        global isosurf += conj(u).*u
-        @info string(k, " printed")
+        u = repeat(u, outer = Tuple(kpt))
+        kr = [dot(reduced_kpt[k],r) for r in rgrid]
+        phase = [exp(2*pi*im*r) for r in kr]
+        isosurf .+= u.*phase
     end
-    DFTraMO.write_to_XSF(isosurf, xtal, "test.xsf")
-    ==#
-
+    isosurf = vec(isosurf)
+    realimag = hcat(real(isosurf), imag(isosurf))
+    (evalue, evec) = eigen(realimag'*realimag)
+    isosurf *= complex(evec[2], evec[1]) 
+    isosurf = reshape(ComplexF64.(isosurf), Tuple(real_gridsize))
+    return isosurf
 end
 
 function Psphere(
@@ -170,7 +193,12 @@ function Psphere(
     return(sphere_sum, total_eden, psphere)
 end
 
-function psphere_eval(psphere::Vector{Float64}, super::Supercell, site_list::Vector{Int})
+"""
+    psphere_eval(psphere::Vector{Float64}, super::Supercell, site_list::Vector{Int})
+    
+Prints Psphere analysis to the terminal.
+"""
+function psphere_eval(psphere::Vector{Float64}, super::Supercell, site_list)
     m = maximum(psphere)
     a = findall(x->x<0.15*m, psphere)
     if !isempty(a)
@@ -183,6 +211,21 @@ function psphere_eval(psphere::Vector{Float64}, super::Supercell, site_list::Vec
     return a
 end
 
+"""
+output_files(
+    run_name,
+    num_electrons_left,
+    num_raMO,
+    super,
+    isosurf,
+    psi_previous,
+    psi_up
+    )
+Saves files to disk.
+    - raMO xsf
+    - raMO coefficients
+    - remainder coefficients
+"""
 function output_files(
     run_name,
     num_electrons_left,
