@@ -223,11 +223,11 @@ end
 
 function import_psi(filename::AbstractString)
     file = readdlm(filename)
-    psi = Vector{ComplexF32}(undef, size(file)[1])
+    psi = Vector{ComplexF64}(undef, size(file)[1])
     for i in eachindex(psi)
        real = file[i,1]
        file[i,2] == "+" ? n = 1 : n = -1
-       imag = parse.(Float32,split(file[i,3],[' ', 'f', 'i', 'm'])[1])
+       imag = parse.(Float64,split(file[i,3],[' ', 'f', 'i', 'm'])[1])*n
        psi[i] = real+imag*im
     end
     return (psi)
