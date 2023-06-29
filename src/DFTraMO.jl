@@ -5,9 +5,6 @@ using Random, Distributions
 using Printf, DelimitedFiles
 using ProgressBars, UnicodePlots, Crayons
 
-include("Psphere.jl")
-export writePsphere
-
 include("data.jl")
 export OrbitalParams, ehtParams, Supercell, OccupiedStates
 
@@ -26,6 +23,9 @@ export create_run, import_VASP, track_kpoint_repeating, read_eht_params, read_si
 import_psi_previous
 
 include("outputs.jl")
-export write_to_XSF, psi_to_isosurf, Psphere
+export write_to_XSF, psi_to_isosurf
+
+include("Psphere.jl")
+export Psphere, psphere_eval
 
 end
