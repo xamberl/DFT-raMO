@@ -192,11 +192,9 @@ function read_site_list(filename::AbstractString)
     open(filename,"r") do io
         ln = readlines(io)
         ln = filter(!isempty,split.(ln))
+        length(ln[1]) > 4 ? error("Check that your file is in the format 'Atom  0.0  0.0  0.0'") : nothing
         # Removes first column of atomic labels, if any
-        has_label = 0
-        if length(ln[1])==4
-            has_label = 1
-        end
+        length(ln[1])==4 ? has_label = 1 : has_label = 0
         for i in ln
             push!(sitelist,parse.(Float64,i[1+has_label:3+has_label]))
         end
