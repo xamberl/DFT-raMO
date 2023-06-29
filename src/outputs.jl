@@ -51,14 +51,14 @@ function psi_to_isosurf(
         end
     end
     NX = vec(NX); NY = vec(NY); NZ = vec(NZ)
-    # Generate target_overlap: express psi_up in terms of the occupied coefficients.
-    # States at the same kpt are combined such that target_overlap has (dims = num_pw * num_kpts)
+    # Generate pw_raMO: express psi_up in terms of the occupied coefficients.
+    # States at the same kpt are combined such that pw_raMO has (dims = num_pw * num_kpts)
     reduced_kpt = unique(occ_states.kpt)
-    target_overlap = Array{ComplexF32}(undef,size(occ_states.coeff)[1], length(reduced_kpt))
+    pw_raMO = Array{ComplexF32}(undef,size(occ_states.coeff)[1], length(reduced_kpt))
     for k in eachindex(reduced_kpt)
         m = findfirst(x->x == reduced_kpt[k], occ_states.kpt[1,:])
         n = findlast(x->x == reduced_kpt[k], occ_states.kpt[1,:])
-        target_overlap[:,k] = occ_states.coeff[:,m:n]*psi_up[m:n]
+        pw_raMO[:,k] = occ_states.coeff[:,m:n]*psi_up[m:n]
     end
     # Generate isosurface
     # Ψk(r) = exp(ikr)*sum(ck*exp(iGr))
@@ -73,7 +73,7 @@ function psi_to_isosurf(
             G = GX+GY+GZ
             pw[j,:] = @. exp(pi*2*im*G)
         end
-        isosurf += pw'*target_overlap[:,i]
+        isosurf += pw'*pw_raMO[:,i]
         #@info string("K-point number ", i, " printed.")
     end
     # This repeats the MATLAB code. But basically we create the isosurface by |Ψ|^2
@@ -98,11 +98,11 @@ function psi_to_isosurf2(
     grange,
     )
     reduced_kpt = unique(occ_states.kpt)
-    target_overlap = Array{ComplexF32}(undef,size(occ_states.coeff)[1],length(reduced_kpt))
+    pw_raMO = Array{ComplexF32}(undef,size(occ_states.coeff)[1],length(reduced_kpt))
     for k in eachindex(reduced_kpt)
         m = findfirst(x->x == reduced_kpt[k], occ_states.kpt[1,:])
         n = findlast(x->x == reduced_kpt[k], occ_states.kpt[1,:])
-        target_overlap[:,k] = occ_states.coeff[:,m:n]*psi[m:n]
+        pw_raMO[:,k] = occ_states.coeff[:,m:n]*psi[m:n]
     end
     gridsize = grange
     real_gridsize = collect(gridsize).*kpt
@@ -116,8 +116,8 @@ function psi_to_isosurf2(
     index2 = [findfirst(x->x == i, bin) for i in index] # cartesian indexing for states
     recip = zeros(ComplexF64, gridsize)
     for k in eachindex(reduced_kpt)
-        for i in eachindex(target_overlap[:,k])
-            recip[index2[i]] = target_overlap[i,k]
+        for i in eachindex(pw_raMO[:,k])
+            recip[index2[i]] = pw_raMO[i,k]
         end
         u = ifft(recip)
         u = repeat(u, outer = Tuple(kpt))
@@ -131,84 +131,6 @@ function psi_to_isosurf2(
     isosurf *= complex(evec[2], evec[1]) 
     isosurf = reshape(ComplexF64.(isosurf), Tuple(real_gridsize))
     return isosurf
-end
-
-function Psphere(
-    datagrid::RealDataGrid,
-    origin::Vector{Float64},
-    rsphere::Float64
-    )
-
-    # Volume of cell in BOHR
-    vol = volume(datagrid)
-
-    # Volume of voxel, length of voxel dimensions (angle not stored)
-    vox_vol = vol/length(datagrid)
-
-    # Find unnormalized electron count
-    total_eden = sum(datagrid.data.^2)*vox_vol
-
-    # Calculate unnormalized electron count in defined radius
-    # Calculate bounds of box of sphere
-    lowerbound = (origin.-rsphere)*Electrum.ANG2BOHR
-    upperbound = (origin.+rsphere)*Electrum.ANG2BOHR
-    # Calculate indices of box in the voxel grid
-    lower_index = round.(Int, (lowerbound'/datagrid.basis)'.*size(datagrid))
-    upper_index = round.(Int, (upperbound'/datagrid.basis)'.*size(datagrid))
-    sphere_sum = 0
-    count = 0
-    for x in lower_index[1]:upper_index[1]
-        for y in lower_index[2]:upper_index[2]
-            for z in lower_index[3]:upper_index[3]
-                # Transform grid index into Cartesian (Angstrom)
-                grid_cart = (([x, y, z]./size(datagrid))'*datagrid.basis)*Electrum.BOHR2ANG
-                # check if grid_cart is within sphere
-                if ((grid_cart[1]-origin[1])^2+(grid_cart[2]-origin[2])^2+(grid_cart[3]-origin[3])^2)^.5 <= rsphere
-                    # Check if point is out of bounds. If so, use adjacent cell's value.
-                    (i1, i2, i3) = (x, y, z)
-                    if x < 1
-                        i1 = size(datagrid)[1]+x
-                    elseif x > size(datagrid)[1]
-                        i1 = x-size(datagrid)[1]
-                    end
-                    if y < 1
-                        i2 = size(datagrid)[2]+y
-                    elseif y > size(datagrid)[2]
-                        i2 = y-size(datagrid)[2]
-                    end
-                    if z < 1
-                        i3 = size(datagrid)[3]+z
-                    elseif z > size(datagrid)[3]
-                        i3 = z-size(datagrid)[3]
-                    end
-                    sphere_sum += datagrid.data[i1,i2,i3]^2
-                    count += 1
-                end
-            end
-        end
-    end
-    # Calculate partial electron density
-    sphere_sum = sphere_sum*vox_vol
-    psphere = sphere_sum/total_eden
-    return(sphere_sum, total_eden, psphere)
-end
-
-"""
-    psphere_eval(psphere::Vector{Float64}, super::Supercell, site_list::Vector{Int})
-    
-Prints Psphere analysis to the terminal.
-"""
-function psphere_eval(psphere::Vector{Float64}, super::Supercell, site_list)
-    m = maximum(psphere)
-    a = findall(x->x<0.15*m, psphere)
-    if !isempty(a)
-        println("The following atoms have Pspheres <15% of the maximum (", m, "):")
-        for n in a
-            site = Vector(super.atomlist.basis*Electrum.BOHR2ANG*super.atomlist[site_list[n]].pos)
-            println("Atom ", site_list[n], ": ", @sprintf("Psphere: %.3f", psphere[n]), @sprintf(" at site [%.3f, %.3f, %.3f]", site[1], site[2], site[3]))
-        end
-    end
-    return a
 end
 
 """
