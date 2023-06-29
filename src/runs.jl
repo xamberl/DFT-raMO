@@ -9,6 +9,7 @@ function loop_target_cluster_sp(
     occ_states,
     geo_basis,
     kpt,
+    grange,
     psi_previous,
     S,
     H,
@@ -20,6 +21,7 @@ function loop_target_cluster_sp(
     end
     cd(run_name)
     psphere = Vector{Float64}(undef, size(voids_list))
+    remainders = []
     iter = ProgressBar(1:length(voids_list), unit="raMOs")
     for i in iter
         target = make_target_cluster_sp(voids_list, void_radius, i, super)
@@ -38,16 +40,17 @@ function loop_target_cluster_sp(
         false,
         "",
         )
-        isosurf = psi_to_isosurf(5000000, super.atomlist, kpt, occ_states, psi_up)
+        isosurf = psi_to_isosurf2(occ_states, psi_up, kpt, grange)
         (sphere, total, psphere[i]) = Psphere(RealDataGrid(real(isosurf),super.atomlist.basis), voids_list[i], rsphere)
         print_psphere_terminal(iter, num_raMO+i, psphere[i], voids_list[i])
         output_files(run_name, num_electrons_left, num_raMO+i, super, isosurf, psi_previous, psi_up)
+        remainders = psi_previous
     end
     writedlm(string(run_name, "_psphere_", rsphere, ".txt"), psphere)
     cd("..")
-    psphere_graph(psphere, num_raMO, rsphere)
+    p = psphere_graph(psphere, num_raMO, rsphere); display(p)
     low_psphere = psphere_eval(psphere, super, voids_list)
-    return low_psphere
+    return (low_psphere, remainders, num_raMO+length(voids_list), num_electrons_left)
 end
 
 function loop_AO(
@@ -61,6 +64,7 @@ function loop_AO(
     occ_states,
     geo_basis,
     kpt,
+    grange,
     psi_previous,
     S,
     H,
@@ -72,6 +76,7 @@ function loop_AO(
     end
     cd(run_name)
     psphere = Vector{Float64}(undef, size(atom_list))
+    remainders = []
     iter = ProgressBar(1:length(atom_list), unit="raMOs")
     for i in iter
         target = make_target_AO(atom_list[i], target_orbital, super)
@@ -90,17 +95,18 @@ function loop_AO(
         false,
         "",
         )
-        isosurf = psi_to_isosurf(5000000, super.atomlist, kpt, occ_states, psi_up)
+        isosurf = psi_to_isosurf2(occ_states, psi_up, kpt, grange)
         pos = Vector(super.atomlist.basis*Electrum.BOHR2ANG*super.atomlist[atom_list[i]].pos)
         (sphere, total, psphere[i]) = Psphere(RealDataGrid(real(isosurf),super.atomlist.basis), pos, rsphere)
         print_psphere_terminal(iter, num_raMO+i, psphere[i], pos)
         output_files(run_name, num_electrons_left, num_raMO+i, super, isosurf, psi_previous, psi_up)
+        remainders = psi_previous
     end
     writedlm(string(run_name, "_psphere_", rsphere, ".txt"), psphere)
     cd("..")
     p = psphere_graph(psphere, num_raMO, rsphere); display(p)
     low_psphere = psphere_eval(psphere, super, atom_list)
-    return low_psphere
+    return (low_psphere, remainders, num_raMO+length(atom_list), num_elecrons_left)
 end
 
 """
