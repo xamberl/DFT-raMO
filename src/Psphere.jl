@@ -29,18 +29,18 @@ function Psphere(
         if norm(grid_cart'.-origin) <= rsphere#((grid_cart[1]-origin[1])^2+(grid_cart[2]-origin[2])^2+(grid_cart[3]-origin[3])^2)^.5 <= rsphere
             # Check if point is out of bounds. If so, use adjacent cell's value.
             coord = [x,y,z]
-            for n in eachindex([x,y,z])
+            for n in eachindex(coord)
                 if coord[n] < 1
                     coord[n] = size(datagrid)[n]+coord[n]
                 elseif coord[n] > size(datagrid)[n]
-                    coord[n] = n-size(datagrid)[n]
+                    coord[n] = coord[n]-size(datagrid)[n]
                 end
             end
             sphere_sum += datagrid.data[CartesianIndex(Tuple(coord))]^2
         end
     end
     # Calculate partial electron density
-    return(sphere_sum*vox_vol, total_eden, sphere_sum/total_eden)
+    return(sphere_sum*vox_vol, total_eden, sphere_sum*vox_vol/total_eden)
 end
 
 """
