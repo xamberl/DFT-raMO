@@ -17,7 +17,7 @@ Loads options for the run specified by a file.
 """
 function read_run_yaml(file::AbstractString)
     data = YAML.load_file(file)
-    vasp = import_VASP()
+    dftinfo = import_VASP()
 
     # crayons for color
     cr_b = crayon"light_cyan"
@@ -49,7 +49,7 @@ function read_run_yaml(file::AbstractString)
 
         type = lowercase(get(runs[n], "type", ""))
         isempty(type) ? error("type for run ", n, " is empty") : nothing
-        !in(type, union(AO_RUNS, CAGE_RUNS)) ? error("type", type, " is an invalid entry.") : nothing
+        !in(type, union(keys(AO_RUNS), CAGE_RUNS)) ? error("type", type, " is an invalid entry.") : nothing
         println("   type: ", cr_b, type, cr_d)
 
         site_file = get(runs[n], "site_file", nothing)
@@ -57,7 +57,7 @@ function read_run_yaml(file::AbstractString)
             site_file = ""
         else
             # site_file is not needed for an AO run
-            if in(type, AO_RUNS)
+            if in(type, keys(AO_RUNS))
                 println("   AO type run. site_file will be ignored.")
                 site_file = ""
             else
@@ -78,10 +78,10 @@ function read_run_yaml(file::AbstractString)
             # Different requirements for different type of runs
             # If CAGE_RUNS, no element needs to be specified
             # If AO_RUNS, an element must be the first item in the list.
-            if in(type, AO_RUNS)
+            if in(type, keys(AO_RUNS))
                 e = string(sites[1])
                 !in(e, Electrum.ELEMENTS) ? error(e, " is not a valid element.") : nothing
-                valid_atoms = findall(x -> Electrum.name(x) == e, vasp[2].atoms)
+                valid_atoms = findall(x -> Electrum.name(x) == e, dftinfo.xtal.atoms)
                 isempty(valid_atoms) ? error("Element ", e, "was not found in the system.") : nothing
                 length(sites) > 1 ? sites_final = valid_atoms[parse_sites(sites[2:end])] : sites_final = valid_atoms
             else
@@ -95,7 +95,7 @@ function read_run_yaml(file::AbstractString)
         if isnothing(radius)
             radius = 0.0
         else
-            if in(type, AO_RUNS)
+            if in(type, keys(AO_RUNS))
                 println("   Radius is ignored for atomic orbital type runs.")
             else
                 typeof(radius) == String ? error("Radius must be a number.") : nothing
@@ -113,7 +113,7 @@ function read_run_yaml(file::AbstractString)
 
         runlist[n] = RunInfo(name, type, site_file, sites_final, radius, rsphere)
     end
-    return(runlist, checkpoint, auto_psphere, vasp)
+    return(runlist, checkpoint, auto_psphere, dftinfo)
 end
 
 function parse_sites(sites::Vector{SubString{String}})
@@ -158,7 +158,7 @@ function import_VASP(directory::AbstractString="")
     # Use a Crystal to lazily reference the supercell
     xtal = set_transform!(Crystal(geo), kpt)
     xtal = PeriodicAtomList(xtal)
-    return (fermi, xtal, geo, kpt, wave)
+    return (fermi=fermi, xtal=xtal, geo=geo, kpt=kpt, wave=wave)
 end
 
 

@@ -29,10 +29,7 @@ const e_dict = Dict{String, Int}(
     [Electrum.ELEMENTS[n] => val_e[n] for n in eachindex(val_e)]
 )
 
-
-const AO_RUNS = [
-    "s", "px", "py", "pz", "dxy", "dxz", "dyz", "dx2-y2", "dz2", # Atomic orbitals
-]
+const AO_RUNS = Dict("s"=>1, "px"=>2, "py"=>3, "pz"=>4, "dx2y2"=>5, "dx2-y2"=>5, "dz2"=>6, "dxy"=>7, "dxz"=>8, "dyz"=>9)
 
 const CAGE_RUNS = [
     "sp" # hybrid cage states by distance
@@ -127,12 +124,12 @@ end
 struct RunInfo
     name::AbstractString
     type::AbstractString
-    sitefile::AbstractString
+    site_file::AbstractString
     sites::AbstractVector{Int}
     radius::AbstractFloat
     rsphere::AbstractFloat
-    function RunInfo(name::AbstractString, type::AbstractString, sitefile::AbstractString, sites::AbstractVector{Int}, radius::AbstractFloat, rsphere::AbstractFloat)
-        return new(name, type, sitefile, sites, radius, rsphere)
+    function RunInfo(name::AbstractString, type::AbstractString, site_file::AbstractString, sites::AbstractVector{Int}, radius::AbstractFloat, rsphere::AbstractFloat)
+        return new(name, type, site_file, sites, radius, rsphere)
     end
 end
 
