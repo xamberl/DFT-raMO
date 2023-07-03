@@ -71,7 +71,7 @@ function read_run_yaml(file::AbstractString)
         isnothing(sites) ? error("sites cannot be empty.") : nothing
         site_final = Vector{Int}(undef, 0)
         if sites == "all"
-            in(type, AO_RUNS) ? error("'all' is not valid for atomic orbital type runs.") : nothing
+            in(type, keys(AO_RUNS)) ? error("'all' is not valid for atomic orbital type runs.") : nothing
             sites_final = collect(1:length(site_list))
         else
             sites = split(sites, [' ', ','], keepempty=false)
