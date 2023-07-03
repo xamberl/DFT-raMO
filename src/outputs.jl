@@ -128,7 +128,7 @@ function psi_to_isosurf2(
     isosurf = vec(isosurf)
     realimag = hcat(real(isosurf), imag(isosurf))
     (evalue, evec) = eigen(realimag'*realimag)
-    isosurf *= complex(evec[2], evec[1]) 
+    isosurf *= complex(evec[2], evec[1])
     isosurf = reshape(ComplexF64.(isosurf), Tuple(real_gridsize))
     return isosurf
 end

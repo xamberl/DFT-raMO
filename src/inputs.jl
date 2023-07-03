@@ -1,4 +1,4 @@
-"""
+#=="""
     create_run(run_name::AbstractString)
 
 Generates a generic input file ("run_name.in") loaded with options for the run in the current directory.
@@ -8,53 +8,133 @@ function create_run(run_name::AbstractString)
         println(io,
         "RUN_TYPE 1\nSITES 1:36\nSITE_LIST sitelist.txt\nAO 1\nRADIUS 2.2\nCONTINUE_FROM lastrun.mat")
     end
-end
+end==#
 
 """
-    read_run_in(run_name::AbstractString)
+    read_run_yaml(run_name::AbstractString)
 
-Reads and loads options for the run specified by a file.
+Loads options for the run specified by a file.
 """
-function read_run_in(run_name::AbstractString)
-    # initialize outputs
-    run_type = 0
-    sites = Vector{Int}(undef,0)
-    sites_list = ""
-    AO = 0
-    radius = 0.0
-    continue_from = ""
-    # Begin parsing
-    ln = readlines(run_name)
-    for i in eachindex(ln)
-        ln_temp = lstrip(ln[i])
-        startswith(ln_temp, "RUN_TYPE") ? run_type = parse(Int,split( ln_temp)[2]) : nothing
-        # Reads and parses SITES
-        if startswith(ln_temp, "SITES")
-            # Removes spaces and commas after SITE_LIST
-            temp_sites = split(ln_temp,[' ',','])[2:length(split(ln_temp,[' ',',']))]
-            temp_sites = filter(!isempty, temp_sites)
-            # Checks for any site ranges
-            for j in temp_sites
-                temp = parse.(Int,split(j,':'))
-                if length(temp) == 2
-                    sites = vcat(sites,vcat(temp[1]:temp[2]))
-                else
-                    sites = vcat(sites,temp[1])
-                end
+function read_run_yaml(file::AbstractString)
+    data = YAML.load_file(file)
+    vasp = import_VASP()
+
+    # crayons for color
+    cr_b = crayon"light_cyan"
+    cr_y = crayon"yellow"
+    cr_d = crayon"default"
+
+    checkpoint = get(data, "checkpoint", nothing)
+    if isnothing(checkpoint)
+        println("No checkpoint file specified. Run will start from beginning conditions.")
+    elseif !isfile(checkpoint)
+        error(checkpoint, " does not exist. Check path to file.") : nothing
+    else
+        println("Using checkpoint file ", cr_b, checkpoint, cr_n)
+    end 
+    
+    auto_psphere = get(data, "auto_psphere", false)
+    typeof(auto_psphere) != Bool ? error("Invalid entry for auto_psphere.") : nothing
+    println("Auto-Psphere: ", auto_psphere)
+    
+    runs = get(data, "runs", nothing)
+    println("Number of runs: ", length(runs))
+    runlist = Vector{RunInfo}(undef, length(runs))
+    for n in eachindex(runs)
+        println("Run ", n, ":")
+        # Need to run checks here...
+        # type, site_file, sites, radius, rsphere
+        name = get(runs[n], "name", string("run_", n))
+        println("   name: ", cr_b, name, cr_d)
+
+        type = lowercase(get(runs[n], "type", ""))
+        isempty(type) ? error("type for run ", n, " is empty") : nothing
+        !in(type, union(AO_RUNS, CAGE_RUNS)) ? error("type", type, " is an invalid entry.") : nothing
+        println("   type: ", cr_b, type, cr_d)
+
+        site_file = get(runs[n], "site_file", nothing)
+        if isnothing(site_file)
+            site_file = ""
+        else
+            # site_file is not needed for an AO run
+            if in(type, AO_RUNS)
+                println("   AO type run. site_file will be ignored.")
+                site_file = ""
+            else
+                !isfile(site_file) ? error(site_file, " does not exist. Check filename.") : nothing 
+                site_list = read_site_list(site_file)
+                println("   site_file: ", cr_b, site_file, cr_d)
             end
         end
-        startswith(ln_temp, "SITE_LIST") ? sites_list = split( ln_temp)[2] : nothing
-        startswith(ln_temp, "AO") ? AO = parse(Int,split( ln_temp)[2]) : nothing
-        startswith(ln_temp, "RADIUS") ? radius = parse(Float64,split( ln_temp)[2]) : nothing
-        startswith(ln_temp, "CONTINUE_FROM") ? continue_from = split( ln_temp)[2] : nothing
+
+        sites = get(runs[n], "sites", nothing)
+        isnothing(sites) ? error("sites cannot be empty.") : nothing
+        site_final = Vector{Int}(undef, 0)
+        if sites == "all"
+            in(type, AO_RUNS) ? error("'all' is not valid for atomic orbital type runs.") : nothing
+            sites_final = collect(1:length(site_list))
+        else
+            sites = split(sites, [' ', ','], keepempty=false)
+            # Different requirements for different type of runs
+            # If CAGE_RUNS, no element needs to be specified
+            # If AO_RUNS, an element must be the first item in the list.
+            if in(type, AO_RUNS)
+                e = string(sites[1])
+                !in(e, Electrum.ELEMENTS) ? error(e, " is not a valid element.") : nothing
+                valid_atoms = findall(x -> Electrum.name(x) == e, vasp[2].atoms)
+                isempty(valid_atoms) ? error("Element ", e, "was not found in the system.") : nothing
+                length(sites) > 1 ? sites_final = valid_atoms[parse_sites(sites[2:end])] : sites_final = valid_atoms
+            else
+                sites_final = parse_sites(sites)
+                length(sites_final) > length(site_list) ? error("Number of sites specified exceeds site_list length.") : nothing
+            end
+        end
+        println("   sites: ", cr_b, get(runs[n], "sites", nothing), cr_d)
+        
+        radius = get(runs[n], "radius", 0.0)
+        if isnothing(radius)
+            radius = 0.0
+        else
+            if in(type, AO_RUNS)
+                println("   Radius is ignored for atomic orbital type runs.")
+            else
+                typeof(radius) == String ? error("Radius must be a number.") : nothing
+                println("   radius: ", cr_b, radius, " Å", cr_d)
+            end
+        end
+
+        rsphere = get(runs[n], "rsphere", nothing)
+        if isnothing(rsphere) 
+            rsphere = 3.0
+            println(cr_y, "   rsphere was not specified. Default value of 3.0 Å is applied.", cr_d)
+        end
+        typeof(rsphere) == String ? error("rsphere must be a number.") : Float64(rsphere)
+        println("   rsphere: ", cr_b, rsphere, " Å", cr_d)
+
+        runlist[n] = RunInfo(name, type, site_file, sites_final, radius, rsphere)
     end
-    # Checks and warnings
-    run_type == 0 ? @error("RUN_TYPE not found!") : nothing
-    isempty(sites) ? @error("SITES not found!") : nothing
-    isempty(sites_list) && run_type > 1 ? @error("SITE_LIST not found for hybrid run!") : nothing
-    radius <= 0 && run_type > 1 ? @error("RADIUS not specified or is negative for hybrid run!") : nothing
-    isempty(continue_from) ? @info("Starting afresh at the maximum valence electron count.") : @info("Continuing from ", continue_from)
-    return run_type, sites, sites_list, AO, radius, continue_from
+    return(runlist, checkpoint, auto_psphere, vasp)
+end
+
+function parse_sites(sites::Vector{SubString{String}})
+    site_final = Vector{Int}(undef, 0)
+    for s in sites
+        # process ranges of Ints, i.e. "1:9, 11:20"
+        if occursin(":", s)
+            ln = parse.(Int, split(s, ':'))
+            length(ln) == 2 ? site_final = vcat(site_final, collect(ln[1]:ln[2])) : nothing
+            if length(ln) == 3
+                check_range = collect(ln[1]:ln[2]:ln[3])
+                typeof(check_range) == Vector{Float64} ? error("Atom range ", ln, "is invalid.") : nothing
+                site_final = vcat(site_final, collect(ln[1]:ln[2]:ln[3]))
+            end            
+            # account for erroneous cases
+            length(ln) == 1 || length(ln) > 3 ? error("Error in sites input: ", s, ". Please fix.") : nothing
+        else
+            site_final = vcat(site_final, parse(Int, s))
+        end
+    end
+    return site_final
 end
 
 """
