@@ -30,6 +30,14 @@ const e_dict = Dict{String, Int}(
 )
 
 
+const AO_RUNS = [
+    "s", "px", "py", "pz", "dxy", "dxz", "dyz", "dx2-y2", "dz2", # Atomic orbitals
+]
+
+const CAGE_RUNS = [
+    "sp" # hybrid cage states by distance
+]
+
 """
     OrbitalParams
 
@@ -116,30 +124,24 @@ struct OccupiedStates
     end
 end
 
-
-#==struct DFTinputs
-    fermi::NamedTuple{(:fermi, :alphabeta), Tuple{Float64, Float64}}
-    geo::PeriodicAtomList{3}
-    super::PeriodicAtomList{3}
-    wave::PlanewaveWavefunction{3, ComplexF32}
-    function DFTinputs(
-        fermi::NamedTuple{(:fermi, :alphabeta), Tuple{Float64, Float64}},
-        geo::PeriodicAtomList{3},
-        super::PeriodicAtomList{3},
-        wave::PlanewaveWavefunction{3, ComplexF32}
-        )
-        return new(fermi, geo, super, wave);
+struct RunInfo
+    name::AbstractString
+    type::AbstractString
+    sitefile::AbstractString
+    sites::AbstractVector{Int}
+    radius::AbstractFloat
+    rsphere::AbstractFloat
+    function RunInfo(name::AbstractString, type::AbstractString, sitefile::AbstractString, sites::AbstractVector{Int}, radius::AbstractFloat, rsphere::AbstractFloat)
+        return new(name, type, sitefile, sites, radius, rsphere)
     end
-end==#
-#==
-Might want this to make reconstruct_targets_DFT() neater?
-"""
-"""
-struct raMOSystemStatus
+end
+
+#==struct raMOStatus
+    fermi::NamedTuple{(:fermi, :alphabeta), Tuple{Float64, Float64}}
+    xtal::PeriodicAtomList{3}
+    geo::PeriodicAtomList{3}
+    kpt::AbstractVector{Int}
+    wave::Planewavefunction
+    num_raMO::Int
     num_electrons_left::Int
-    num_occ_states::Int
-    num_planewaves::Int
-    kptlist::KPointlist{3}
-    G::Vector{Int}
-    #occ_coeff::
 end==#

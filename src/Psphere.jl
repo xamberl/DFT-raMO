@@ -60,3 +60,37 @@ function psphere_eval(psphere::Vector{Float64}, super::Supercell, site_list)
     end
     return a
 end
+
+"""
+print_psphere_terminal(iter, psphere, site)
+
+Prints Psphere values to the terminal while raMO loops. The color of Psphere
+    is arbitrarily color-coded.
+    Green:        Psphere ≥ 0.5
+    Yellow: 0.1 ≤ Psphere < 0.5
+    Red:          Psphere < 0.1
+"""
+function print_psphere_terminal(iter, num_raMO, psphere, site)
+    col = Crayon(foreground = :green)
+    psphere < 0.5 ? col = Crayon(foreground = :light_yellow) : nothing
+    psphere < 0.1 ? col = Crayon(foreground = :light_red) : nothing
+    println(
+        iter,
+        num_raMO,
+        ", Psphere: ",
+        col, @sprintf("%.3f", psphere),
+        Crayon(foreground = :default),
+        @sprintf(" at site [%.3f, %.3f, %.3f]", site[1], site[2], site[3]))
+end
+    
+function psphere_graph(psphere::Vector{Float64}, num_raMO::Int, rsphere::Float64)
+    p = lineplot(
+        collect(1:length(psphere)).+num_raMO,
+        psphere,
+        title="Psphere",
+        name=string("rsphere @ ", rsphere),
+        xlabel="raMO",
+        ylabel="Psphere",
+        ylim=(0,1))
+    return p
+end
