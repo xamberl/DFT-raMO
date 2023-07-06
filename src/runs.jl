@@ -109,11 +109,16 @@ function loop_AO(
     return (low_psphere, remainders, num_raMO+length(atom_list), num_electrons_left)
 end
 
+"""
+    dftramo_run(filename::AbstractString)
+
+Reads a run.yaml file and executes DFTraMO.
+"""
 function dftramo_run(filename::AbstractString)
     (runs, checkpoint, auto_psphere, dftinfo) = read_run_yaml(filename)
     ehtparams = read_eht_params("DFT_raMO_eht_parms.dat")
-    occ_states = get_occupied_states(dftinfo.wave, fermi.fermi*Electrum.EV2HARTREE)
-    super = Supercell(dftramo.xtal, DFTraMO.orb_dict)
+    occ_states = get_occupied_states(dftinfo.wave, dftinfo.fermi.fermi*Electrum.EV2HARTREE)
+    super = Supercell(dftinfo.xtal, DFTraMO.orb_dict)
     S = make_overlap_mat(occ_states)
     H = DFTraMO.generate_H(super, ehtparams)
 
@@ -126,20 +131,21 @@ function dftramo_run(filename::AbstractString)
         psi_previous = ComplexF32.(repeat(psi_previous, 1, 1, 2))
     end
 
-    # This loop needs some design... WIP
     low_psphere = Vector{Int}(undef, 0)
-    auto_psphere ? aps = "_aps" : aps = ""
     next = iterate(runs)
     while next!==nothing
     (r, state) = next
-        if in(r.type, AO_RUNS)
+
+    # print run information
+    println(crayon"bold", "Run: ", crayon"light_cyan", r.name, crayon"default")
+        if in(r.type, keys(AO_RUNS))
             (low_psphere, psi_previous2, num_raMO2, num_electrons_left2) = DFTraMO.loop_AO(
                 super,
                 r.sites,
                 get(AO_RUNS, r.type, 0),
                 num_electrons_left,
                 num_raMO,
-                string(r.name, aps),
+                r.name,
                 ehtparams,
                 occ_states,
                 dftinfo.geo.basis,
@@ -158,7 +164,7 @@ function dftramo_run(filename::AbstractString)
                 r.radius,
                 num_electrons_left,
                 num_raMO,
-                string(r.name, aps),
+                r.name,
                 ehtparams,
                 occ_states,
                 dftinfo.geo.basis,
@@ -171,12 +177,24 @@ function dftramo_run(filename::AbstractString)
                 )
         end
         # If auto_psphere is enabled, rerun and use the new run
-        if auto_psphere
-           for i in reverse(low_psphere)
-                deleteat!(atom_list, i)
-           end
+        if auto_psphere && !isempty(low_psphere)
+            # delete targets with low pspheres
+            for i in reverse(low_psphere)
+                deleteat!(r.sites, i)
+            end
+            # set raMO analysis to where the first low psphere occurred
+            # to prevent redundant raMO analysis
+            deleteat!(r.sites, collect(1:low_psphere[1]-1))
+            e = num_electrons_left - (low_psphere[1]-1)*2
+            raMO = num_raMO + (low_psphere[1]-1)
+            (psi_previous, num_electrons_left, num_raMO) = import_psi_previous(string(r.name, "/", r.name, "_psi_prev_", raMO, "_", e, ".txt"))
+            # If the last raMOs were the only ones with low_psphere, no need to rerun
+            isempty(r.sites) ? next = iterate(runs, state) : r.name = string(r.name, "_aps")
         else
             next = iterate(runs, state)
+            num_electrons_left = num_electrons_left2
+            num_raMO = num_raMO2
+            psi_previous = psi_previous2
         end
     end
 end
