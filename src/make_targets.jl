@@ -44,6 +44,7 @@ function make_target_cluster_sp(site_list::Vector{Vector{Float64}}, radius::Real
             end
         end
     end
+    iszero(norm(psi_target)) ? error("Target is empty. Try increasing radii.") : nothing
     return psi_target/norm(psi_target)
 end
 
