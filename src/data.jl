@@ -121,13 +121,16 @@ struct OccupiedStates
     end
 end
 
-struct RunInfo
+"""
+    RunInfo(name::AbstractString, type::AbstractString, site_file::AbstractString, sites::AbstractVector{Int}, radius::AbstractFloat, rsphere::AbstractFloat)
+"""
+mutable struct RunInfo
     name::AbstractString
-    type::AbstractString
-    site_file::AbstractString
+    const type::AbstractString
+    const site_file::AbstractString
     sites::AbstractVector{Int}
-    radius::AbstractFloat
-    rsphere::AbstractFloat
+    const radius::AbstractFloat
+    const rsphere::AbstractFloat
     function RunInfo(name::AbstractString, type::AbstractString, site_file::AbstractString, sites::AbstractVector{Int}, radius::AbstractFloat, rsphere::AbstractFloat)
         return new(name, type, site_file, sites, radius, rsphere)
     end
