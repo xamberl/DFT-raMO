@@ -1,15 +1,3 @@
-#=="""
-    create_run(run_name::AbstractString)
-
-Generates a generic input file ("run_name.in") loaded with options for the run in the current directory.
-"""
-function create_run(run_name::AbstractString)
-    open(string(run_name,".in"),"w") do io
-        println(io,
-        "RUN_TYPE 1\nSITES 1:36\nSITE_LIST sitelist.txt\nAO 1\nRADIUS 2.2\nCONTINUE_FROM lastrun.mat")
-    end
-end==#
-
 """
     read_run_yaml(run_name::AbstractString)
 
