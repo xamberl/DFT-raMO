@@ -19,7 +19,7 @@ include("runs.jl")
 export loop_target_cluster_sp, loop_AO, dftramo_run
 
 include("inputs.jl")
-export create_run, import_VASP, track_kpoint_repeating, read_eht_params, read_site_list, get_occupied_states,
+export import_VASP, track_kpoint_repeating, read_eht_params, read_site_list, get_occupied_states,
 import_psi_previous, read_run_yaml
 
 include("outputs.jl")
