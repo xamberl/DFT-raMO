@@ -40,7 +40,7 @@ function loop_target_cluster_sp(
         false,
         "",
         )
-        isosurf = psi_to_isosurf2(occ_states, psi_up, kpt, grange)
+        isosurf = psi_to_isosurf(occ_states, psi_up, kpt, grange)
         (sphere, total, psphere[i]) = Psphere(RealDataGrid(real(isosurf),super.atomlist.basis), voids_list[i], rsphere)
         print_psphere_terminal(iter, num_raMO+i, psphere[i], voids_list[i])
         output_files(run_name, num_electrons_left, num_raMO+i, super, isosurf, psi_previous, psi_up)
@@ -95,7 +95,7 @@ function loop_AO(
         false,
         "",
         )
-        isosurf = psi_to_isosurf2(occ_states, psi_up, kpt, grange)
+        isosurf = psi_to_isosurf(occ_states, psi_up, kpt, grange)
         pos = Vector(super.atomlist.basis*Electrum.BOHR2ANG*super.atomlist[atom_list[i]].pos)
         (sphere, total, psphere[i]) = Psphere(RealDataGrid(real(isosurf),super.atomlist.basis), pos, rsphere)
         print_psphere_terminal(iter, num_raMO+i, psphere[i], pos)
