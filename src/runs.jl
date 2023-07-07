@@ -117,7 +117,7 @@ end
 Reads a run.yaml file and executes DFTraMO.
 """
 function dftramo_run(filename::AbstractString, software::AbstractString="vasp")
-    redirect_stdio(stdout=string(splitext(filename)[1], ".log")) do
+    #redirect_stdio(stdout=string(splitext(filename)[1], ".log")) do
         (runs, checkpoint, auto_psphere, dftinfo) = read_run_yaml(filename, software)
         ehtparams = read_eht_params("DFT_raMO_eht_parms.dat")
         occ_states = get_occupied_states(dftinfo.wave, dftinfo.fermi.fermi*Electrum.EV2HARTREE)
@@ -199,5 +199,5 @@ function dftramo_run(filename::AbstractString, software::AbstractString="vasp")
                 psi_previous = psi_previous2
             end
         end
-    end
+    #end
 end
