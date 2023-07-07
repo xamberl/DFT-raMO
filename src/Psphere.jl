@@ -83,7 +83,7 @@ function print_psphere_terminal(iter, num_raMO, psphere, site)
         @sprintf(" at site [%.3f, %.3f, %.3f]", site[1], site[2], site[3]))
 end
     
-function psphere_graph(psphere::Vector{Float64}, num_raMO::Int, rsphere::Float64)
+function psphere_graph(psphere::AbstractVector{<:Real}, num_raMO::Integer, rsphere::Real)
     p = lineplot(
         collect(1:length(psphere)).+num_raMO,
         psphere,
