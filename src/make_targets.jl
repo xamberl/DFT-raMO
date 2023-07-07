@@ -16,7 +16,12 @@ end
 Returns a vector of length total_num_orbitals with "1" in the corresponding s & p atomic orbitals
 if they are within specified radius to the void.
 """
-function make_target_cluster_sp(site_list::Vector{Vector{Float64}}, radius::Real, site_num::Int, super::Supercell)
+function make_target_cluster_sp(
+    site_list::AbstractVector{<:AbstractVector{<:Real}},
+    radius::Real,
+    site_num::Integer,
+    super::Supercell
+)
     # psi_target has a length of total number of orbitals in the supercell
     psi_target = zeros(sum(super.orbitals))
     # Loops through every atom and checks to see if it's within the radius to the void site
