@@ -68,20 +68,18 @@ end
 Base.getindex(o::OrbitalParams, s::Symbol) = getproperty(o,s)
 
 """
-    ehtParams
+    ehtParams <: AbstractMatrix{OrbitalParams}
 
-Matrix of OrbitalParams (atom x ang)
+Matrix of OrbitalParams (atom x ang).
 """
-struct ehtParams
+struct ehtParams <: AbstractMatrix{OrbitalParams}
     data::Matrix{OrbitalParams}
-    function ehtParams(data::Matrix{OrbitalParams})
-        return new(data)
-    end
+    ehtParams(data::AbstractMatrix{OrbitalParams}) = new(data)
 end
 
-function Base.getindex(e::ehtParams, atom::Integer, ang::Integer)
-    return e.data[atom, ang]
-end
+Base.size(e::ehtParams) = size(e.data)
+Base.axes(e::ehtParams) = axes(e.data)
+Base.getindex(e::ehtParams, i...) = e.data[i...]
 
 """
     Supercell(atomlist::Atomlist{3}, orblist_by_type::Dict{String,Int64})
