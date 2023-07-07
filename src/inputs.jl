@@ -3,6 +3,7 @@
 
 Loads options for the run specified by a file.
 """
+
 function read_run_yaml(file::AbstractString, software::AbstractString="vasp")
     data = YAML.load_file(file)
     software == "vasp" ? dftinfo = import_VASP() : error("Other DFT packages are not implement yet.")
