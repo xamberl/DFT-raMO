@@ -1,14 +1,14 @@
+# TODO: the ordering of this function's arguments may need to be changed
+# also, maybe we want to use a file handle argument
 function write_to_XSF(
-    isosurf::Array{ComplexF64, 3},
-    xtal::PeriodicAtomList{3},
-    filename::String
+    isosurf::AbstractArray{ComplexF64, 3},
+    xtal::AbstractAtomList{3},
+    filename::AbstractString
 )
     xcrystal = Crystal(xtal, 1, SVector{3, Float64}(0,0,0)) # space group number is 1 for now; origin is [0,0,0]
-    xdata = RealDataGrid(real(isosurf), xtal.basis)
+    xdata = RealDataGrid(real(isosurf), basis(xtal))
     xcrystalwithdatasets = CrystalWithDatasets(xcrystal, Dict("DENSITY"=>xdata))
-    f = open(filename,"w")
-    writeXSF(f, xcrystalwithdatasets, periodic=true)
-    close(f)
+    open(io -> writeXSF(io, xcrystalwithdatasets, periodic=true), filename, write=true)
 end
 
 """
