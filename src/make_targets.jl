@@ -3,7 +3,7 @@
 
 Returns a vector of length total_num_orbitals with "1" in the corresponding atomic orbital
 """
-function make_target_AO(atom_site::Int, target_orbital::Int, super::Supercell)
+function make_target_AO(atom_site::Integer, target_orbital::Integer, super::Supercell)
     # psi_target has a length of total number of orbitals in the supercell
     psi_target = zeros(sum(super.orbitals))
     psi_target[sum(super.orbitals[1:atom_site])-super.orbitals[atom_site]+target_orbital] = 1
