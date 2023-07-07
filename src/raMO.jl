@@ -192,16 +192,17 @@ Returns a constant of the planewave expansion, equal to `(im^l) * (4pi * (2l + 1
 """
 N_L(l::Integer) = (im^l) * sqrt(4pi * (2l + 1))
 
+# TODO: docstring?
 function calculate_overlap2(
-    num_spin_states::Int,
-    num_spin_up::Int,
-    num_spin_down::Int,
-    num_target_orbitals::Int,
+    num_spin_states::Integer,
+    num_spin_up::Integer,
+    num_spin_down::Integer,
+    num_target_orbitals::Integer,
     occ_states::OccupiedStates,
-    atom_pos_fract::SVector{3, Float64},
-    reciprocal_lattice::SMatrix{3,3, Float64, 9},
-    e::Vector{OrbitalParams},
-    )
+    atom_pos_fract::AbstractVector{<:Number},
+    reciprocal_lattice::AbstractMatrix{<:Real},
+    e::AbstractVector{OrbitalParams},
+)
     (num_planewaves, num_occ_states) = size(occ_states.coeff)
     # Initialize output matrix
     overlap_target_occupied = zeros(num_spin_states, max(num_spin_up, num_spin_down), num_target_orbitals)
@@ -215,7 +216,7 @@ function calculate_overlap2(
         k_G = norm(d2)
         if num_target_orbitals >= 1
             # Deal with s orbitals
-            if abs(k_G) < 0.0000000001
+            if abs(k_G) < 0.0000000001  # Use ≈ or explain this magic number
                 overlap[(i-1)*num_planewaves+j,1] = 0
             else
                 z = e[1].exp1 # s orbital, First zeta value, converted from a.u. to Angstrom
@@ -325,5 +326,5 @@ function calculate_overlap2(
             overlap_target_occupied[i-num_spin_up,:,2] = spin_down_coeff[:,i-num_spin_up]'*overlap[(i-1)*num_planewaves+1:i*num_planewaves,:]
         end==#
     end
-return (overlap, overlap_target_occupied)
+    return (overlap, overlap_target_occupied)
 end
