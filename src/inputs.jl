@@ -3,9 +3,9 @@
 
 Loads options for the run specified by a file.
 """
-function read_run_yaml(file::AbstractString)
+function read_run_yaml(file::AbstractString, software::AbstractString="vasp")
     data = YAML.load_file(file)
-    dftinfo = import_VASP()
+    software == "vasp" ? dftinfo = import_VASP() : error("Other DFT packages are not implement yet.")
 
     # crayons for color
     cr_b = crayon"light_cyan"
@@ -30,8 +30,7 @@ function read_run_yaml(file::AbstractString)
     runlist = Vector{RunInfo}(undef, length(runs))
     for n in eachindex(runs)
         println("Run ", n, ":")
-        # Need to run checks here...
-        # type, site_file, sites, radius, rsphere
+        # Checks type, site_file, sites, radius, rsphere
         name = get(runs[n], "name", string("run_", n))
         println("   name: ", cr_b, name, cr_d)
 
@@ -104,10 +103,16 @@ function read_run_yaml(file::AbstractString)
     return(runlist, checkpoint, auto_psphere, dftinfo)
 end
 
+"""
+    parse_sites(sites::Vector{SubString{String}}) -> site_final::Vector{Int}
+
+Parses a portion of the "sites" lines in the yaml file to return a Vector{Int} with valid
+indices for targets. e.g. ["1:3", "3", "18:2:20"] -> [1, 2, 3, 18, 20, 22]
+"""
 function parse_sites(sites::Vector{SubString{String}})
     site_final = Vector{Int}(undef, 0)
     for s in sites
-        # process ranges of Ints, i.e. "1:9, 11:20"
+        # process ranges of Ints, i.e. "1:3"
         if occursin(":", s)
             ln = parse.(Int, split(s, ':'))
             length(ln) == 2 ? site_final = vcat(site_final, collect(ln[1]:ln[2])) : nothing
@@ -122,7 +127,7 @@ function parse_sites(sites::Vector{SubString{String}})
             site_final = vcat(site_final, parse(Int, s))
         end
     end
-    return site_final
+    return unique(site_final)
 end
 
 """
@@ -141,7 +146,7 @@ function import_VASP(directory::AbstractString="")
     (isdir(directory) || isempty(directory)) || error("$directory is not a directory.")
     fermi = get_fermi(directory)
     geo = readPOSCAR(directory)
-    wave = readWAVECAR(directory)
+    wave = readWAVECAR(directory, quiet = true)
     kpt = parse.(Int, split(readlines(string(directory, "KPOINTS"))[4]))
     # Use a Crystal to lazily reference the supercell
     xtal = set_transform!(Crystal(geo), kpt)
