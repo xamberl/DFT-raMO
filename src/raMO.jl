@@ -65,22 +65,24 @@ end
 
 The guts of DFTraMO.
 """
+# TODO: explain what all the arguments are
 # For now, will not use the raMOSystemStatus struct. This will be a to-do to clean up the code!
 function reconstruct_targets_DFT(
-    psi_target::Array{<:Real},
-    num_electrons_left::Int,
+    psi_target::AbstractArray{<:Real},  # array dimensionality?
+    num_electrons_left::Integer,
     run_name::AbstractString,
     super::Supercell,
     ehtparams::ehtParams,
     occ_states::OccupiedStates,
-    cell::RealBasis{3},
-    kpt::Vector{Int},
-    psi_previous::Array{ComplexF32},
-    S_original::Matrix{ComplexF32},
-    H::Matrix{Float64},
+    cell::RealBasis{3},                 # TODO: change to AbstractBasis on next Electrum release
+    kpt::AbstractVector{<:Integer},
+    psi_previous::Array{<:Number},      # array dimensionality?
+    S_original::Matrix{<:Number},
+    H::Matrix{<:Number},
+    # TODO: could these be keyword arguments? and can we remove use_prev?
     use_prev::Bool,
     prev_mat::AbstractString="",
-    )
+)
     
     # Single target run or multiple targets
     num_targets = length(size(psi_target))
