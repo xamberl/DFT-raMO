@@ -186,13 +186,11 @@ function reconstruct_targets_DFT(
 end
 
 """
-    N_L(l::Int)]
+    N_L(l::Integer)]
 
-Returns a constant of the planewave expansion, equal to (im^l)*(4*pi*(2l+1))^0.5.
+Returns a constant of the planewave expansion, equal to `(im^l) * (4pi * (2l + 1))^0.5.`
 """
-function N_L(l::Int)
-    return (im^l)*(4*pi*(2l+1))^0.5
-end
+N_L(l::Integer) = (im^l) * (4pi * (2l + 1))^0.5
 
 function calculate_overlap2(
     num_spin_states::Int,
