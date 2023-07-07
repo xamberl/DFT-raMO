@@ -14,7 +14,7 @@ function loop_target_cluster_sp(
     S,
     H,
     rsphere
-    )
+)
     # check to see which directory we're in
     if split(pwd(),'/')[end] != run_name && !isdir(run_name)
         mkdir(run_name)
@@ -26,19 +26,19 @@ function loop_target_cluster_sp(
         for i in iter
             target = make_target_cluster_sp(voids_list, void_radius, i, super)
             (psi_previous, psi_up, e_up, num_electrons_left) = reconstruct_targets_DFT(
-            target,
-            num_electrons_left,
-            run_name,
-            super,
-            ehtparams,
-            occ_states,
-            geo_basis,
-            kpt,
-            psi_previous,
-            S,
-            H,
-            false,
-            "",
+                target,
+                num_electrons_left,
+                run_name,
+                super,
+                ehtparams,
+                occ_states,
+                geo_basis,
+                kpt,
+                psi_previous,
+                S,
+                H,
+                false,
+                "",
             )
             isosurf = psi_to_isosurf(occ_states, psi_up, kpt, grange)
             (sphere, total, psphere[i]) = Psphere(RealDataGrid(real(isosurf),super.atomlist.basis), voids_list[i], rsphere)
@@ -70,7 +70,7 @@ function loop_AO(
     S,
     H,
     rsphere
-    )
+)
     # check to see which directory we're in
     if split(pwd(),'/')[end] != run_name && !isdir(run_name)
         mkdir(run_name)
@@ -82,19 +82,19 @@ function loop_AO(
         for i in iter
             target = make_target_AO(atom_list[i], target_orbital, super)
             (psi_previous, psi_up, e_up, num_electrons_left) = reconstruct_targets_DFT(
-            target,
-            num_electrons_left,
-            run_name,
-            super,
-            ehtparams,
-            occ_states,
-            geo_basis,
-            kpt,
-            psi_previous,
-            S,
-            H,
-            false,
-            "",
+                target,
+                num_electrons_left,
+                run_name,
+                super,
+                ehtparams,
+                occ_states,
+                geo_basis,
+                kpt,
+                psi_previous,
+                S,
+                H,
+                false,
+                "",
             )
             isosurf = psi_to_isosurf(occ_states, psi_up, kpt, grange)
             pos = Vector(super.atomlist.basis*Electrum.BOHR2ANG*super.atomlist[atom_list[i]].pos)
@@ -140,42 +140,42 @@ function dftramo_run(filename::AbstractString, software::AbstractString="vasp")
             (r, state) = next
             # print run information
             println(crayon"bold", "Run: ", crayon"light_cyan", r.name, crayon"!bold default")
-            if in(r.type, keys(AO_RUNS))
+            if r.type in keys(AO_RUNS)
                 (low_psphere, psi_previous2, num_raMO2, num_electrons_left2) = DFTraMO.loop_AO(
-                super,
-                r.sites,
-                get(AO_RUNS, r.type, 0),
-                num_electrons_left,
-                num_raMO,
-                r.name,
-                ehtparams,
-                occ_states,
-                dftinfo.geo.basis,
-                dftinfo.kpt,
-                length.(collect.(dftinfo.wave.grange)),
-                psi_previous,
-                S,
-                H,
-                r.rsphere
+                    super,
+                    r.sites,
+                    get(AO_RUNS, r.type, 0),
+                    num_electrons_left,
+                    num_raMO,
+                    r.name,
+                    ehtparams,
+                    occ_states,
+                    dftinfo.geo.basis,
+                    dftinfo.kpt,
+                    length.(collect.(dftinfo.wave.grange)),
+                    psi_previous,
+                    S,
+                    H,
+                    r.rsphere
                 )
-            elseif in(r.type, CAGE_RUNS)
+            elseif r.type in CAGE_RUNS
                 site_list = read_site_list(r.site_file)
                 (low_psphere, psi_previous2, num_raMO2, num_electrons_left2) = loop_target_cluster_sp(
-                super,
-                site_list,
-                r.radius,
-                num_electrons_left,
-                num_raMO,
-                r.name,
-                ehtparams,
-                occ_states,
-                dftinfo.geo.basis,
-                dftinfo.kpt,
-                length.(collect.(dftinfo.wave.grange)),
-                psi_previous,
-                S,
-                H,
-                r.rsphere
+                    super,
+                    site_list,
+                    r.radius,
+                    num_electrons_left,
+                    num_raMO,
+                    r.name,
+                    ehtparams,
+                    occ_states,
+                    dftinfo.geo.basis,
+                    dftinfo.kpt,
+                    length.(collect.(dftinfo.wave.grange)),
+                    psi_previous,
+                    S,
+                    H,
+                    r.rsphere
                 )
             end
             # If auto_psphere is enabled, rerun and use the new run
