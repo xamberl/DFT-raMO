@@ -126,16 +126,32 @@ struct OccupiedStates
 end
 
 """
-    RunInfo(name::AbstractString, type::AbstractString, site_file::AbstractString, sites::AbstractVector{Int}, radius::AbstractFloat, rsphere::AbstractFloat)
+    RunInfo(
+        name::AbstractString,
+        type::AbstractString,
+        site_file::AbstractString,
+        sites::AbstractVector{<:Integer},
+        radius::Number,
+        rsphere::Number
+    )
 """
+# TODO: add documentation describing what this does
+# Also, does this need to be mutable?
 mutable struct RunInfo
-    name::AbstractString
-    const type::AbstractString
-    const site_file::AbstractString
-    sites::AbstractVector{Int}
-    const radius::AbstractFloat
-    const rsphere::AbstractFloat
-    function RunInfo(name::AbstractString, type::AbstractString, site_file::AbstractString, sites::AbstractVector{Int}, radius::AbstractFloat, rsphere::AbstractFloat)
+    name::String
+    const type::String
+    const site_file::String
+    sites::Vector{Int}
+    const radius::Float64
+    const rsphere::Float64
+    function RunInfo(
+        name::AbstractString,
+        type::AbstractString,
+        site_file::AbstractString,
+        sites::AbstractVector{<:Integer},
+        radius::Number,
+        rsphere::Number
+    )
         return new(name, type, site_file, sites, radius, rsphere)
     end
 end
