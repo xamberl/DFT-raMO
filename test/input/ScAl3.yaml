@@ -1,0 +1,33 @@
+checkpoint:
+auto_psphere: true
+runs:
+  - name: 1_Sc-Sc
+    type: sp
+    site_file: Sc-Sc_reordered.xyz
+    sites: all
+    radius: 2.2
+    rsphere: 2.2
+  - name: 2_Sc_dxy
+    type: dxy
+    site_file: 
+    sites: Sc
+    radius: 
+    rsphere: 2.2
+  - name: 3_Sc_dxz
+    type: dxz
+    site_file: 
+    sites: Sc
+    radius: 
+    rsphere: 2.2
+  - name: 4_Sc_dyz
+    type: dyz
+    site_file: 
+    sites: Sc
+    radius: 
+    rsphere: 2.2
+  - name: 5_Al_oct
+    type: sp
+    site_file: Al-Al_reordered.xyz
+    sites: all
+    radius: 2.1
+    rsphere: 4.11
