@@ -103,16 +103,24 @@ struct Supercell
 end
 
 """
-    OccupiedStates(coeff::Matrix{ComplexF32}, kpt::Vector{SVector{3, Float64}}, G::Vector{Vector{Int64}})
+    OccupiedStates(
+        coeff::AbstractMatrix{<:Number},
+        kpt::AbstractVector{<:AbstractVector},
+        G::AbstractVector{<:AbstractVector}
+    )
 
-Returns an OccupiedStates struct. The coeff matrix is num_occupied_states by num_occupied_pw in dimensions,
-while kpt is num_occupied_states in length, and G is num_occupied_pw in length.
+Returns an `OccupiedStates` struct. The coeff matrix is `num_occupied_states` by `num_occupied_pw`
+in dimensions, while kpt is `num_occupied_states` in length, and G is `num_occupied_pw` in length.
 """
 struct OccupiedStates
-    coeff::Array{ComplexF32}
-    kpt::Array{SVector{3, Float64}}
-    G::Array{SVector{3, Int64}}
-    function OccupiedStates(coeff::Array{ComplexF32}, kpt::Array{SVector{3, Float64}}, G::Array{SVector{3, Int64}})
+    coeff::Matrix{ComplexF32}
+    kpt::Vector{SVector{3, Float64}}
+    G::Vector{SVector{3, Int64}}
+    function OccupiedStates(
+        coeff::AbstractMatrix{<:Number},
+        kpt::AbstractVector{<:AbstractVector},
+        G::AbstractVector{<:AbstractVector}
+    )
         return new(coeff, kpt, G)
     end
 end
