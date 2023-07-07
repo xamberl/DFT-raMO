@@ -8,10 +8,9 @@ Search for parameters in the loaded ehtParams for corresponding atom(s).
 get_eht_params(atom_num, eht_params::ehtParams) = eht_params.data[atom_num, :]
 
 """
-    make_overlap_mat(occ_states::Array{OccupiedState}) -> S::Matrix{ComplexF32}
+    make_overlap_mat(occ_states::OccupiedStates) -> S::Matrix{ComplexF32}
 
-Creates overlap matrix with occupied coefficients.
-If the kpoints are the same, they can overlap.
+Creates overlap matrix with occupied coefficients. If the kpoints are the same, they can overlap.
 """
 function make_overlap_mat(occ_states::OccupiedStates)
     # Overlap entire matrix (# occ states x # occ states)
