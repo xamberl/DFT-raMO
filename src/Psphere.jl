@@ -44,11 +44,11 @@ function Psphere(
 end
 
 """
-    psphere_eval(psphere::Vector{Float64}, super::Supercell, site_list::Vector{Int})
+    psphere_eval(psphere::AbstractVector{<:Real}, super::Supercell, site_list)
     
 Prints Psphere analysis to the terminal.
 """
-function psphere_eval(psphere::Vector{Float64}, super::Supercell, site_list)
+function psphere_eval(psphere::AbstractVector{<:Real}, super::Supercell, site_list)
     m = maximum(psphere)
     a = findall(x->x<0.15*m, psphere)
     if !isempty(a)
