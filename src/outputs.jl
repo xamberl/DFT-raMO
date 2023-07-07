@@ -2,7 +2,7 @@ function write_to_XSF(
     isosurf::Array{ComplexF64, 3},
     xtal::PeriodicAtomList{3},
     filename::String
-    )
+)
     xcrystal = Crystal(xtal, 1, SVector{3, Float64}(0,0,0)) # space group number is 1 for now; origin is [0,0,0]
     xdata = RealDataGrid(real(isosurf), xtal.basis)
     xcrystalwithdatasets = CrystalWithDatasets(xcrystal, Dict("DENSITY"=>xdata))
@@ -21,7 +21,7 @@ function psi_to_isosurf(
     psi,
     kpt,
     grange,
-    )
+)
     reduced_kpt = unique(occ_states.kpt)
     pw_raMO = Array{ComplexF32}(undef,size(occ_states.coeff)[1],length(reduced_kpt))
     for k in eachindex(reduced_kpt)
@@ -59,16 +59,17 @@ function psi_to_isosurf(
 end
 
 """
-output_files(
-    run_name,
-    num_electrons_left,
-    num_raMO,
-    super,
-    isosurf,
-    psi_previous,
-    psi_up
+    output_files(
+        run_name,
+        num_electrons_left,
+        num_raMO,
+        super,
+        isosurf,
+        psi_previous,
+        psi_up
     )
-Saves files to disk.
+
+Saves files to disk:
     - raMO xsf
     - raMO coefficients
     - remainder coefficients

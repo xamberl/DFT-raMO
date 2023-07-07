@@ -3,14 +3,15 @@
         datagrid::RealDataGrid,
         origin::Vector{Float64},
         rsphere::Float64
-        )
+    )
+
 Finds the fraction of electron density in a sphere of radius `rsphere`` (Å) at point `origin` (fractional).
 """
 function Psphere(
     datagrid::RealDataGrid,
     origin::Vector{Float64},
     rsphere::Float64
-    )
+)
     # Calculate volume of single voxel
     vox_vol = volume(datagrid)/length(datagrid)
     # Find unnormalized electron count
