@@ -16,7 +16,7 @@ end
 
 Converts the raMO (psi) into an electron density grid using FFT.
 """
-function psi_to_isosurf2(
+function psi_to_isosurf(
     occ_states,
     psi,
     kpt,
