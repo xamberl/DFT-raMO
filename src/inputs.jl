@@ -18,7 +18,7 @@ function read_run_yaml(file::AbstractString, software::AbstractString="vasp")
     elseif !isfile(checkpoint)
         error(checkpoint, " does not exist. Check path to file.") : nothing
     else
-        println("Using checkpoint file ", cr_b, checkpoint, cr_n)
+        println("Using checkpoint file ", cr_b, checkpoint, cr_d)
     end 
     
     auto_psphere = get(data, "auto_psphere", false)
