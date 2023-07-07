@@ -51,17 +51,17 @@ struct OrbitalParams
     coeff1::Float64
     coeff2::Float64
     function OrbitalParams(
-        atom_num::Int,
-        valence::Int,
-        l_quant::Int,
-        n_quant::Int,
-        IP::Float64,
-        exp1::Float64,
-        exp2::Float64,
-        coeff1::Float64,
-        coeff2::Float64
+        atom_num::Integer,
+        valence::Integer,
+        l_quant::Integer,
+        n_quant::Integer,
+        IP::Real,
+        exp1::Real,
+        exp2::Real,
+        coeff1::Real,
+        coeff2::Real
     )
-    return new(atom_num,valence,l_quant,n_quant,IP,exp1,exp2,coeff1,coeff2)
+    return new(atom_num, valence, l_quant, n_quant, IP,exp1, exp2, coeff1, coeff2)
     end
 end
 
