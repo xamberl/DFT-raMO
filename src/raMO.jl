@@ -1,12 +1,11 @@
 """
-    get_eht_params(atom_num::Int, eht_params::ehtParams) -> OrbitalParams
+    get_eht_params(atom_num, eht_params::ehtParams) -> OrbitalParams
 
-Search for parameters in the loaded ehtParams for corresponding atom.
+Search for parameters in the loaded ehtParams for corresponding atom(s).
 """
-function get_eht_params(atom_num::Int, eht_params::ehtParams)
-    return eht_params.data[atom_num, :]
-end
-
+# TODO: can this function be replaced with simple indexing?
+# Also, we may want to reverse the order if this function is needed.
+get_eht_params(atom_num, eht_params::ehtParams) = eht_params.data[atom_num, :]
 
 """
     make_overlap_mat(occ_states::Array{OccupiedState}) -> S::Matrix{ComplexF32}
@@ -31,7 +30,6 @@ function make_overlap_mat(occ_states::OccupiedStates)
     S = S.*allowed_overlap
     return S
 end
-
 
 """
     generate_H(super::Supercell, ehtparams::ehtParams) -> H::Matrix{Float64}
