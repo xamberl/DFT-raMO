@@ -190,7 +190,7 @@ end
 
 Returns a constant of the planewave expansion, equal to `(im^l) * (4pi * (2l + 1))^0.5.`
 """
-N_L(l::Integer) = (im^l) * (4pi * (2l + 1))^0.5
+N_L(l::Integer) = (im^l) * sqrt(4pi * (2l + 1))
 
 function calculate_overlap2(
     num_spin_states::Int,
