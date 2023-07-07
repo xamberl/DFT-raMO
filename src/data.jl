@@ -65,9 +65,7 @@ struct OrbitalParams
     end
 end
 
-function Base.getindex(o::OrbitalParams, s::Symbol)
-    return getproperty(o,s)
-end
+Base.getindex(o::OrbitalParams, s::Symbol) = getproperty(o,s)
 
 """
     ehtParams
