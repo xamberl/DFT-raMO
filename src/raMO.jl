@@ -5,7 +5,7 @@ Search for parameters in the loaded ehtParams for corresponding atom(s).
 """
 # TODO: can this function be replaced with simple indexing?
 # Also, we may want to reverse the order if this function is needed.
-get_eht_params(atom_num, eht_params::ehtParams) = eht_params.data[atom_num, :]
+get_eht_params(atom_num, eht_params::ehtParams) = eht_params.data[:, atom_num]
 
 """
     make_overlap_mat(occ_states::OccupiedStates) -> S::Matrix{ComplexF32}

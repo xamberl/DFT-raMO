@@ -28,6 +28,6 @@ export write_to_XSF, psi_to_isosurf
 include("Psphere.jl")
 export Psphere, psphere_eval, print_psphere_terminal, psphere_graph
 
-const EHTPARAMS = read_eht_params("DFT_raMO_eht_parms.dat")
+include("ehtparams.jl")
 
 end

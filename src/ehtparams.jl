@@ -5,7 +5,7 @@ Parameters are (in order):
     number of valence electrons
     orbital angular momentum (l)
     principal quantum number (n)
-    IP (not sure what this is yet)
+    IP (Energy of the atomic orital)
     Exponents of the STO linear combination
     Scalar coefficients of the STO linear combination
 =#
