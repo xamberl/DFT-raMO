@@ -191,7 +191,7 @@ function get_occupied_states(wave::PlanewaveWavefunction, energy::Real)
 
     # coeff is a matrix of tuples with dimensions occ_planewave x occ_states
     # (occ_coeff, kpt, hkl)
-    coeff = Array{ComplexF32}(undef, size(occ_states))
+    coeff = Matrix{ComplexF32}(undef, size(occ_states))
     kpt = Array{SVector{3, Float64}}(undef, size(occ_states))
     hkl_list = Array{SVector{3, Int64}}(undef, size(occ_states))
     for n in eachindex(occ_states)
@@ -205,7 +205,7 @@ function get_occupied_states(wave::PlanewaveWavefunction, energy::Real)
                 kptvect[k] = occ_states[n][2][k]
             end
         end
-        kpt[n] = SVector{3, Float64}(kptvect) #occ_states[n][2]
+        kpt[n] = SVector{3, Float64}(kptvect)
         hkl_list[n] = occ_states[n][3]
     end
 
