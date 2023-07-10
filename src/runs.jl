@@ -119,11 +119,11 @@ Reads a run.yaml file and executes DFTraMO.
 function dftramo_run(filename::AbstractString, software::AbstractString="vasp")
     #redirect_stdio(stdout=string(splitext(filename)[1], ".log")) do
         (runs, checkpoint, auto_psphere, dftinfo) = read_run_yaml(filename, software)
-        ehtparams = read_eht_params("DFT_raMO_eht_parms.dat")
+        #ehtparams = read_eht_params("DFT_raMO_eht_parms.dat")
         occ_states = get_occupied_states(dftinfo.wave, dftinfo.fermi.fermi*Electrum.EV2HARTREE)
-        super = Supercell(dftinfo.xtal, DFTraMO.orb_dict)
+        super = Supercell(dftinfo.xtal, orb_dict)
         S = make_overlap_mat(occ_states)
-        H = DFTraMO.generate_H(super, ehtparams)
+        H = DFTraMO.generate_H(super, EHTPARAMS)
         
         if !isnothing(checkpoint)
             (psi_previous, num_electrons_left, num_raMO) = import_psi_previous(checkpoint)
@@ -148,7 +148,7 @@ function dftramo_run(filename::AbstractString, software::AbstractString="vasp")
                     num_electrons_left,
                     num_raMO,
                     r.name,
-                    ehtparams,
+                    EHTPARAMS,
                     occ_states,
                     dftinfo.geo.basis,
                     dftinfo.kpt,
@@ -167,7 +167,7 @@ function dftramo_run(filename::AbstractString, software::AbstractString="vasp")
                     num_electrons_left,
                     num_raMO,
                     r.name,
-                    ehtparams,
+                    EHTPARAMS,
                     occ_states,
                     dftinfo.geo.basis,
                     dftinfo.kpt,
