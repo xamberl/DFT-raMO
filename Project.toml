@@ -14,7 +14,6 @@ ProgressBars = "49802e3a-d2f1-5c88-81d8-b72133a6f568"
 Random = "9a3f8284-a2c9-5f02-9a11-845980a1fd5c"
 Requires = "ae029012-a4dd-5104-9daa-d747884805df"
 StaticArrays = "90137ffa-7385-5640-81b9-e52037218182"
-UnicodePlots = "b8865327-cd53-5732-bb35-84acbb429228"
 YAML = "ddb6d928-2868-570f-bddf-ab3f9cf99eb6"
 
 [compat]
@@ -24,6 +23,7 @@ julia = "1.8"
 
 [extras]
 Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
+UnicodePlots = "b8865327-cd53-5732-bb35-84acbb429228"
 
 [targets]
 test = ["Test"]
