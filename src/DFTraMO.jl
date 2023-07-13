@@ -30,4 +30,8 @@ export Psphere, psphere_eval, print_psphere_terminal, psphere_graph
 
 include("ehtparams.jl")
 
+function ___init___()
+    @require UnicodePlots = "b8865327-cd53-5732-bb35-84acbb429228" include("extra/UnicodePlots.jl")
+end
+
 end
