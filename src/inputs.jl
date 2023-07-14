@@ -3,7 +3,6 @@
 
 Loads options for the run specified by a file.
 """
-
 function read_run_yaml(file::AbstractString, software::AbstractString="vasp")
     data = YAML.load_file(file)
     software == "vasp" ? dftinfo = import_VASP() : error("Other DFT packages are not implement yet.")
@@ -155,6 +154,26 @@ function import_VASP(directory::AbstractString="")
     return (fermi=fermi, xtal=xtal, geo=geo, kpt=kpt, wave=wave)
 end
 
+"""
+    import_abinit(file)
+
+Reads a abinit binary wavefunction output (usually ending in `_WFK`) and gets the Fermi energy, the
+crystal geometry, the k-point mesh, and the wavefunction data.
+"""
+function import_abinit(io::IO)
+    h = Electrum.read_abinit_header(io)
+    seekstart(io)
+    isdiag(h[:kpt]) || error("Currently, non-diagonal k-point lattices are unsupported.")
+    return (
+        fermi = h[:fermi],
+        xtal = Crystal(h),
+        geo = PeriodicAtomList(Crystal(h)),
+        kpt = diag(h[:kptrlatt]),
+        wave = read_abinit_WFK(io)["wavefunction"]
+    )
+end
+
+import_abinit(file) = open(import_abinit, file)
 
 """
     get_occupied_states(wave::PlanewaveWavefunction, energy::Real) ->
