@@ -15,12 +15,29 @@ Electrum.PlanewaveWavefunction(x::raMOInput) = x.wave
 Electrum.fermi(x::raMOInput) = x.fermi
 kptmesh(x::raMOInput) = x.xtal.set_transform
 
+"""
+    DFTraMO.InputOrigin
+
+Dispatch type for various computational chemistry packages (for a complete list, run
+`subtypes(DFTraMO.InputOrigin)` in the REPL).
+"""
 abstract type InputOrigin
 end
 
+"""
+    DFTraMO.FromABINIT
+
+Dispatch type for reading abinit WFK outputs.
+"""
 struct FromABINIT
 end
 
+"""
+    DFTraMO.FromVASP
+
+Dispatch type for reading VASP calculation outputs (specifically, the `POSCAR`, `WAVECAR`,
+`KPOINTS`, and `OUTCAR` files.)
+"""
 struct FromVASP
 end
 
