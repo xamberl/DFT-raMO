@@ -3,7 +3,7 @@ module DFTraMO
 using LinearAlgebra, StaticArrays, Electrum
 using Random, Distributions
 using Printf, DelimitedFiles, YAML
-using ProgressBars, UnicodePlots, Crayons
+using ProgressBars, Crayons
 
 include("data.jl")
 export OrbitalParams, ehtParams, Supercell, OccupiedStates
