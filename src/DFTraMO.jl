@@ -9,6 +9,9 @@ using Requires
 include("data.jl")
 export OrbitalParams, ehtParams, Supercell, OccupiedStates
 
+include("software.jl")
+export raMOinput, FromABINIT, FromVASP
+
 include("raMO.jl")
 export get_eht_params, make_overlap_mat,
 generate_H, reconstruct_targets_DFT, N_L
