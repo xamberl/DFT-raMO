@@ -1,5 +1,10 @@
 # DFT-raMO
-DFT-raMO and tools to support DFT-raMO, a Wannier-type analysis.
+
+[![Documentation (stable)][docs-stable-img]][docs-stable-url]
+[![Documentation (dev)][docs-dev-img]][docs-dev-url]
+[![CI status][ci-status-img]][ci-status-url]
+
+DFT-raMO, a Wannier-type analysis, and its supporting tools.
 
 # The original DFT-raMO (written in MATLAB)
 
@@ -8,7 +13,9 @@ a MATLAB installation in order to run it.
 
 # DFTraMO.jl
 A Julia package that performs the same DFT-raMO analysis, but with support for parallelization.
-This code can be adapted to run 
+The results from this package are higher in quality than the original MATLAB code, and it has
+support for both abinit and VASP inputs. Runs are specified through YAML files
+([an example](examples/ScAl3.yaml) is provided).
 
 This package also contains Psphere analysis, a tool to determine the degree of localization for
 reconstructed orbitals.
@@ -23,3 +30,10 @@ Git repo as of this writing. You'll need to clone the package from Git over SSH 
 
 Then you can start a Julia instance, enter package mode (right bracket),  and use `activate 
 [clone directory]` to use and modify the package.
+
+[docs-stable-img]:  https://img.shields.io/badge/docs-stable-blue.svg
+[docs-stable-url]:  https://xamberl.github.io/DFT-raMO/stable
+[docs-dev-img]:     https://img.shields.io/badge/docs-dev-blue.svg
+[docs-dev-url]:     https://xamberl.github.io/DFT-raMO/dev
+[ci-status-img]:    https://github.com/xamberl/DFT-raMO/workflows/CI/badge.svg
+[ci-status-url]:    https://github.com/xamberl/DFT-raMO/actions
