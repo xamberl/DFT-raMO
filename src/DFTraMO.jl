@@ -4,6 +4,7 @@ using LinearAlgebra, StaticArrays, Electrum
 using Random, Distributions
 using Printf, DelimitedFiles, YAML
 using ProgressBars, Crayons
+using Requires
 
 include("data.jl")
 export OrbitalParams, ehtParams, Supercell, OccupiedStates
