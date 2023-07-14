@@ -1,3 +1,5 @@
+using .UnicodePlots
+@info "UnicodePlots is loaded"
 function psphere_graph(psphere::AbstractVector{<:Real}, num_raMO::Integer, rsphere::Real)
     p = lineplot(
         collect(1:length(psphere)).+num_raMO,
