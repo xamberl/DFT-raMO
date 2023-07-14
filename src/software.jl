@@ -9,6 +9,7 @@ struct raMOInput
     fermi::Float64
 end
 
+Electrum.basis(x::raMOInput) = basis(x.xtal.atoms)
 Electrum.Crystal(x::raMOInput) = x.xtal
 Electrum.PeriodicAtomList(x::raMOInput) = x.xtal.atoms
 Electrum.PlanewaveWavefunction(x::raMOInput) = x.wave
