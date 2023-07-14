@@ -50,14 +50,24 @@ end
 
 raMOInput(file, ::FromABINIT) = open(io -> raMOInput(io, FromABINIT()), file)
 
-function raMOInput(
-    ::FromVASP;
-    POSCAR = "POSCAR",
-    WAVECAR = "WAVECAR",
-    KPOINTS = "KPOINTS",
-    OUTCAR = "OUTCAR"
-)
-    fermi = get_fermi(OUTCAR)
+"""
+    raMOInput(POSCAR, WAVECAR, KPOINTS, OUTCAR, ::FromVASP)
+    raMOInput(;
+        POSCAR = "POSCAR",
+        WAVECAR = "WAVECAR",
+        KPOINTS = "KPOINTS",
+        OUTCAR = "OUTCAR"
+    )
+
+Reads VASP output files required for DFT-raMO. The files may be specified as strings, I/O handles,
+or path types if another package provides them (for more details, see the Electrum functions
+`readPOSCAR`, `readWAVECAR`, `readKPOINTS`, and `get_fermi`).
+
+File names may be specified through the argument order given above, or with keyword arguments which
+have no fixed order.
+"""
+function raMOInput(POSCAR, WAVECAR, KPOINTS, OUTCAR, ::FromVASP)
+    fermi = get_fermi(OUTCAR) * Electrum.EV2HARTREE
     geo = readPOSCAR(POSCAR)
     wave = readWAVECAR(WAVECAR, quiet = true)
     kpt = parse.(Int, split(readlines(KPOINTS)[4]))
@@ -66,12 +76,32 @@ function raMOInput(
     return raMOInput(xtal, wave, fermi) 
 end
 
-function raMOInput(directory::AbstractString, ::FromVASP)
+function raMOInput(;
+    POSCAR = "POSCAR",
+    WAVECAR = "WAVECAR",
+    KPOINTS = "KPOINTS",
+    OUTCAR = "OUTCAR"
+)
+    return raMOInput(POSCAR, WAVECAR, KPOINTS, OUTCAR, FromVASP())
+end
+
+"""
+    raMOInput(directory, FromVASP(); CONTCAR=false)
+    raMOInput(FromVASP(); CONTCAR=false)
+
+Reads VASP output files required for DFT-raMO from the given directory. If no directory is given,
+the current directory is checked.
+    
+If `CONTCAR` is set to true, the CONTCAR file will be used instead of the POSCAR.
+"""
+function raMOInput(directory, ::FromVASP; CONTCAR = false)
     return raMOInput(
-        FromVASP();
-        POSCAR = joinpath(directory, POSCAR),
-        WAVECAR = joinpath(directory, WAVECAR),
-        KPOINTS = joinpath(directory, KPOINTS),
-        OUTCAR = joinpath(directory, OUTCAR),
+        joinpath(directory, CONTCAR ? "CONTCAR" : "POSCAR"),
+        joinpath(directory, "WAVECAR"),
+        joinpath(directory, "KPOINTS"),
+        joinpath(directory, "OUTCAR"),
+        FromVASP()
     )
 end
+
+raMOInput(::FromVASP; CONTCAR) = raMOInput(".", FromVASP(); CONTCAR)
