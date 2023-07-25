@@ -101,8 +101,8 @@ function make_target_hybrid(
 end
 
 """
-    make_target_salc(
-        site_list::AbstractVector{<:AbstractVector{<:Int}},
+    make_target_salcs(
+        site::AbstractVector{<:Int},
         target::AbstractVector{Dict},
         super::Supercell
     )
