@@ -99,3 +99,33 @@ function make_target_hybrid(
     end
     return psi_target
 end
+
+"""
+    make_target_salc(
+        site_list::AbstractVector{<:AbstractVector{<:Int}},
+        target::AbstractVector{Dict},
+        super::Supercell
+    )
+
+Returns a vector of length total_num_orbitals with the corresponding SALC target
+"""
+function make_target_salc(site_list::AbstractVector{<:AbstractVector{<:Int}}, target::AbstractVector{Dict{Any, Any}}, super::Supercell)
+    psi_target = zeros(sum(super.orbitals))
+    for site in site_list
+        for n in eachindex(site)
+            #==
+            1. find atom at listed site
+            2. check that atomic orbitals in target match those of atom
+            3. put number in right index of psi_target
+            ==#
+            atom = super.atomlist[site[n]]
+            for k in keys(target[n])
+                ao = get(AO_RUNS, k, nothing)
+                ao > super.orbitals[site[n]] && error("Orbital ", k, " is unavailable for atom ", n, " (", name(atom), ")") 
+                AO_number = sum(super.orbitals[1:site[n]])-super.orbitals[site[n]]
+                psi_target[AO_number+ao] = get(target[n], k, 0)
+            end
+        end
+    end
+    return psi_target/norm(psi_target)
+end
