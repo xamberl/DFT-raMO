@@ -87,3 +87,13 @@ end
 function psphere_graph(psphere::AbstractVector{<:Real}, num_raMO::Integer, rsphere::Real)
     @info "UnicodePlots not loaded: consider loading it for Psphere logging."
 end
+
+"""
+Calculate the midpoint for salcs. See https://en.wikipedia.org/wiki/Center_of_mass#Systems_with_periodic_boundary_conditions
+"""
+function mp_salc(sites::Vector{Int}, xtal::PeriodicAtomList)
+    θ = reshape(reduce(vcat, [(xtal[s].pos*2*pi) for s in sites]), 3, length(sites))
+    ξ = cos.(θ); ξ = [mean(ξ[x, :]) for x in 1:3]
+    ζ = sin.(θ); ζ = [mean(ζ[x, :]) for x in 1:3]
+    return [atan(-ζ[x], -ξ[x]) + pi for x in 1:3]./(2*pi)
+end
