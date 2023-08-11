@@ -156,7 +156,8 @@ function loop_SALC(
             isosurf = psi_to_isosurf(occ_states, psi_up, kpt, grange)
             # TODO: find center for psphere
             # temporarily, salc is available only for 1 atom
-            pos = Vector(super.atomlist.basis*Electrum.BOHR2ANG*super.atomlist[site_list[i][1]].pos)
+            pos = super.atomlist.basis*mp_salc(site_list[i], super.atomlist)*Electrum.BOHR2ANG
+            #pos = Vector(super.atomlist.basis*Electrum.BOHR2ANG*super.atomlist[site_list[i][1]].pos)
             (sphere, total, psphere[i]) = Psphere(RealDataGrid(real(isosurf),super.atomlist.basis), pos, rsphere)
             print_psphere_terminal(iter, num_raMO+i, psphere[i], pos)
             output_files(run_name, num_electrons_left, num_raMO+i, super, isosurf, psi_previous, psi_up)

@@ -1,6 +1,6 @@
 module DFTraMO
 
-using LinearAlgebra, StaticArrays, Electrum
+using LinearAlgebra, StaticArrays, Electrum, Statistics
 using Random, Distributions
 using Printf, DelimitedFiles, YAML
 using ProgressBars, Crayons
@@ -30,7 +30,7 @@ include("outputs.jl")
 export write_to_XSF, psi_to_isosurf
 
 include("Psphere.jl")
-export Psphere, psphere_eval, print_psphere_terminal, psphere_graph
+export Psphere, psphere_eval, print_psphere_terminal, psphere_graph, mp_salc
 
 include("ehtparams.jl")
 
