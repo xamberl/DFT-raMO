@@ -30,7 +30,7 @@ include("outputs.jl")
 export write_to_XSF, psi_to_isosurf
 
 include("Psphere.jl")
-export Psphere, psphere_eval, print_psphere_terminal, psphere_graph, mp_salc
+export Psphere, psphere_eval, print_psphere_terminal, psphere_graph, mp_lcao
 
 include("ehtparams.jl")
 

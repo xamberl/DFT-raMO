@@ -89,9 +89,9 @@ function psphere_graph(psphere::AbstractVector{<:Real}, num_raMO::Integer, rsphe
 end
 
 """
-Calculate the midpoint for salcs. See https://en.wikipedia.org/wiki/Center_of_mass#Systems_with_periodic_boundary_conditions
+Calculate the midpoint for LCAOs. See https://en.wikipedia.org/wiki/Center_of_mass#Systems_with_periodic_boundary_conditions
 """
-function mp_salc(sites::Vector{Int}, xtal::PeriodicAtomList)
+function mp_lcao(sites::Vector{Int}, xtal::PeriodicAtomList)
     θ = reshape(reduce(vcat, [(xtal[s].pos*2*pi) for s in sites]), 3, length(sites))
     ξ = cos.(θ); ξ = [mean(ξ[x, :]) for x in 1:3]
     ζ = sin.(θ); ζ = [mean(ζ[x, :]) for x in 1:3]

@@ -101,15 +101,15 @@ function make_target_hybrid(
 end
 
 """
-    make_target_salcs(
+    make_target_lcao(
         site::AbstractVector{<:Int},
         target::AbstractVector{Dict},
         super::Supercell
     )
 
-Returns a vector of length total_num_orbitals with the corresponding SALC target
+Returns a vector of length total_num_orbitals with the corresponding LCAO target
 """
-function make_target_salcs(site::AbstractVector{<:Int}, target::AbstractVector{Dict{Any, Any}}, super::Supercell)
+function make_target_lcao(site::AbstractVector{<:Int}, target::AbstractVector{Dict{Any, Any}}, super::Supercell)
     psi_target = zeros(sum(super.orbitals))
     for n in eachindex(site)
         atom = super.atomlist[site[n]]
