@@ -51,9 +51,9 @@ function read_run_yaml(file::AbstractString, software::AbstractString="vasp")
                 !isfile(site_file) ? error(site_file, " does not exist. Check filename.") : nothing 
                 if in(type, CAGE_RUNS)
                     site_list = read_site_list(site_file)
-                elseif type == "salc"
-                    salc_yaml = YAML.load_file(site_file)
-                    site_list = get(salc_yaml, "salcs", nothing)
+                elseif type == "lcao"
+                    lcao_yaml = YAML.load_file(site_file)
+                    site_list = get(lcao_yaml, "lcao", nothing)
                 end
                 println("   site_file: ", cr_b, site_file, cr_d)
             end
