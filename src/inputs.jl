@@ -52,7 +52,7 @@ function read_run_yaml(file::AbstractString, software::AbstractString="vasp")
                 if in(type, CAGE_RUNS)
                     site_list = read_site_list(site_file)
                 elseif type == "lcao"
-                    salc_yaml = YAML.load_file(site_file)
+                    lcao_yaml = YAML.load_file(site_file)
                     site_list = get(lcao_yaml, "lcao", nothing)
                 end
                 println("   site_file: ", cr_b, site_file, cr_d)
