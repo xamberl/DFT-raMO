@@ -137,7 +137,7 @@ function loop_SALC(
         remainders = []
         iter = ProgressBar(1:length(site_list), unit="raMOs")
         for i in iter
-            target = make_target_salcs(site_list[i], target_orbital, super)
+            target = make_target_lcao(site_list[i], target_orbital, super)
             (psi_previous, psi_up, e_up, num_electrons_left) = reconstruct_targets_DFT(
                 target,
                 num_electrons_left,
@@ -154,9 +154,7 @@ function loop_SALC(
                 "",
             )
             isosurf = psi_to_isosurf(occ_states, psi_up, kpt, grange)
-            # TODO: find center for psphere
-            # temporarily, salc is available only for 1 atom
-            pos = super.atomlist.basis*mp_salc(site_list[i], super.atomlist)*Electrum.BOHR2ANG
+            pos = super.atomlist.basis*mp_lcao(site_list[i], super.atomlist)*Electrum.BOHR2ANG
             #pos = Vector(super.atomlist.basis*Electrum.BOHR2ANG*super.atomlist[site_list[i][1]].pos)
             (sphere, total, psphere[i]) = Psphere(RealDataGrid(real(isosurf),super.atomlist.basis), pos, rsphere)
             print_psphere_terminal(iter, num_raMO+i, psphere[i], pos)
@@ -237,18 +235,18 @@ function dftramo_run(filename::AbstractString, software::AbstractString="vasp")
                     H,
                     r.rsphere
                 )
-            elseif r.type == "salc"
-                salc_yaml = YAML.load_file(r.site_file)
-                target = get(salc_yaml, "target", nothing)
+            elseif r.type == "lcao"
+                lcao_yaml = YAML.load_file(r.site_file)
+                target = get(lcao_yaml, "target", nothing)
                 isnothing(target) && error("Target cannot be blank for SALCs")
                 for t in target
                     !issubset(keys(t), keys(AO_RUNS)) && error("Target does not contain atomic orbitals. Please check.")
                 end
-                site_list = get(salc_yaml, "salcs", nothing)
+                site_list = get(lcao_yaml, "lcao", nothing)
                 if isa(site_list, Vector{Vector{Int}})
                     for n in site_list
-                        # TODO check the num atoms in salc list match num targets
-                        length(n) != length(target) && error("Mismatch between length of SALC ", n, " and specified target.")
+                        # TODO check the num atoms in lcao list match num targets
+                        length(n) != length(target) && error("Mismatch between length of LCAO ", n, " and specified target.")
                     end
                 end
                 (low_psphere, psi_previous2, num_raMO2, num_electrons_left2) = loop_SALC(

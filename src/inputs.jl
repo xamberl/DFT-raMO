@@ -36,7 +36,7 @@ function read_run_yaml(file::AbstractString, software::AbstractString="vasp")
 
         type = lowercase(get(runs[n], "type", ""))
         isempty(type) ? error("type for run ", n, " is empty") : nothing
-        !in(type, union(keys(AO_RUNS), CAGE_RUNS, ["salc"])) ? error("type ", type, " is an invalid entry.") : nothing
+        !in(type, union(keys(AO_RUNS), CAGE_RUNS, ["lcao"])) ? error("type ", type, " is an invalid entry.") : nothing
         println("   type: ", cr_b, type, cr_d)
 
         site_file = get(runs[n], "site_file", nothing)
