@@ -20,7 +20,7 @@ include("make_targets.jl")
 export make_target_AO, make_target_cluster_sp, make_target_hybrid
 
 include("runs.jl")
-export loop_target_cluster_sp, loop_AO, dftramo_run
+export loop_target_cluster_sp, loop_AO, loop_LCAO, dftramo_run
 
 include("inputs.jl")
 export import_VASP, track_kpoint_repeating, read_eht_params, read_site_list, get_occupied_states,
