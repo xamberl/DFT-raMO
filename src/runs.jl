@@ -183,7 +183,7 @@ function dftramo_run(filename::AbstractString, software::AbstractString="vasp")
         H = DFTraMO.generate_H(super, DFTRAMO_EHT_PARAMS)
         
         if !isnothing(checkpoint)
-            (psi_previous, num_electrons_left, num_raMO) = import_psi_previous(checkpoint)
+            (psi_previous, num_electrons_left, num_raMO) = import_chkpt(checkpoint)
         else
             num_electrons_left = sum([get(e_dict, n.atom.name, 0) for n in dftinfo.xtal.atoms])
             num_raMO = 0
@@ -278,7 +278,7 @@ function dftramo_run(filename::AbstractString, software::AbstractString="vasp")
                 deleteat!(site_list, collect(1:low_psphere[1]-1))
                 e = num_electrons_left - (low_psphere[1]-1)*2
                 raMO = num_raMO + (low_psphere[1]-1)
-                (psi_previous, num_electrons_left, num_raMO) = import_psi_previous(string(r.name, "/", r.name, "_psi_prev_", raMO, "_", e, ".txt"))
+                (psi_previous, num_electrons_left, num_raMO) = import_chkpt(string(r.name, "/", r.name, "_", raMO, "_", e, ".chkpt"))
                 # If the last raMOs were the only ones with low_psphere, no need to rerun
                 isempty(site_list) ? next = iterate(runs, state) : r.name = string(r.name, "_aps")
             else

@@ -301,32 +301,31 @@ function read_site_list(filename::AbstractString)
 end
 
 """
-    import_psi_previous(filename::AbstractString)
+    import_chkpt(filename::AbstractString)
 
-Imports a remainder matrix of coefficients to use for raMO runs.
+Imports a matrix of remainder coefficients to use for raMO runs.
 """
-function import_psi_previous(filename::AbstractString)
-    file = readdlm(filename, '\t')
-    psi_previous = Array{ComplexF32}(undef, size(file))
-    for i in eachindex(file)
-       f = split(file[i],[' ', 'f', 'i', 'm'])
-       real = parse(Float32,f[1])*10^parse(Float32,f[2])
-       imag = parse(Float32,string(f[3],f[4]))*10^parse(Float32,f[5])
-       psi_previous[i] = real+imag*im
-    end
+function import_chkpt(filename::AbstractString)
     num_electrons_left = parse(Int,split(filename, ['.', '_'])[end-1])
     num_raMO = parse(Int,split(filename, ['.', '_'])[end-2])
+    io = open(filename, "r")
+    dims = [read(io, Int64) for n in 1:3]
+    psi_previous = Array{ComplexF32}(undef, (dims[1], dims[2], dims[3]))
+    read!(io, psi_previous)
+    close(io)
     return (psi_previous, num_electrons_left, num_raMO)
 end
 
-function import_psi(filename::AbstractString)
-    file = readdlm(filename)
-    psi = Vector{ComplexF64}(undef, size(file)[1])
-    for i in eachindex(psi)
-       real = file[i,1]
-       file[i,2] == "+" ? n = 1 : n = -1
-       imag = parse.(Float64,split(file[i,3],[' ', 'f', 'i', 'm'])[1])*n
-       psi[i] = real+imag*im
-    end
-    return (psi)
+"""
+    import_raMO(filename::AbstractString)
+
+Imports a vector of coefficients corresponding to each raMO.
+"""
+function import_raMO(filename::AbstractString)
+    io = open(filename, "r")
+    sz = Int(stat(io).size/sizeof(ComplexF32))
+    psi = Vector{ComplexF32}(undef, sz)
+    read!(io, psi)
+    close(io)
+    return psi
 end

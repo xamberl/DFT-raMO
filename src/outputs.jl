@@ -85,7 +85,13 @@ function output_files(
     )
     write_to_XSF(isosurf, super.atomlist, string(run_name, "_", num_raMO, "_", num_electrons_left, ".xsf"))
     # for now, write only one spin as save state
-    writedlm(string(run_name, "_psi_prev_", num_raMO, "_", num_electrons_left, ".txt"), psi_previous[:,:,1])
+    open(string(run_name, "_", num_raMO, "_", num_electrons_left, ".chkpt"), "w") do io
+        sz = Int64.(size(psi_previous))
+        write(io, sz[1], sz[2], sz[3])
+        write(io, psi_previous)
+    end
     # same with the raMO function itself
-    writedlm(string(run_name, "_psi_", num_raMO, "_", num_electrons_left, ".txt"), psi_up)
+    open(string(run_name, "_", num_raMO, "_", num_electrons_left, ".raMO"), "w") do io
+        write(io, psi_up)
+    end
 end

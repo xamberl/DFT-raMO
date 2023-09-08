@@ -24,7 +24,7 @@ export loop_target_cluster_sp, loop_AO, dftramo_run
 
 include("inputs.jl")
 export import_VASP, track_kpoint_repeating, read_eht_params, read_site_list, get_occupied_states,
-import_psi_previous, read_run_yaml
+import_chkpt, import_raMO, read_run_yaml
 
 include("outputs.jl")
 export write_to_XSF, psi_to_isosurf
