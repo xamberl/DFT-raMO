@@ -2,7 +2,7 @@ module DFTraMO
 
 using LinearAlgebra, StaticArrays, Electrum, Statistics
 using Random, Distributions
-using Printf, DelimitedFiles, YAML
+using Printf, YAML
 using ProgressBars, Crayons
 using Requires
 

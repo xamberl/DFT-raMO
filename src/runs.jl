@@ -54,7 +54,6 @@ function loop_target_cluster_sp(
             output_files(run_name, num_electrons_left, num_raMO+i, super, isosurf, psi_previous, psi_up)
             remainders = psi_previous
         end
-        #writedlm(string(run_name, "_psphere_", rsphere, ".txt"), psphere)
         cd("..")
         p = psphere_graph(psphere, num_raMO, rsphere); display(p)
         low_psphere = psphere_eval(psphere, super, voids_list)
@@ -120,7 +119,6 @@ function loop_AO(
             output_files(run_name, num_electrons_left, num_raMO+i, super, isosurf, psi_previous, psi_up)
             remainders = psi_previous
         end
-        #writedlm(string(run_name, "_psphere_", rsphere, ".txt"), psphere)
         cd("..")
         p = psphere_graph(psphere, num_raMO, rsphere); display(p)
         low_psphere = psphere_eval(psphere, super, atom_list)
@@ -186,7 +184,6 @@ function loop_LCAO(
             output_files(run_name, num_electrons_left, num_raMO+i, super, isosurf, psi_previous, psi_up)
             remainders = psi_previous
         end
-        #writedlm(string(run_name, "_psphere_", rsphere, ".txt"), psphere)
         cd("..")
         p = psphere_graph(psphere, num_raMO, rsphere); display(p)
         low_psphere = psphere_eval(psphere, super, site_list)
