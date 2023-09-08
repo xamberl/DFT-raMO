@@ -20,6 +20,12 @@ function loop_target_cluster_sp(
         mkdir(run_name)
     end
     cd(run_name) do
+        if !isempty(readdir())
+            @warn "Directory is not empty. Files will be deleted/overwritten."
+            for n in readdir()
+                rm(n, force=true)
+            end
+        end
         psphere = Vector{Float64}(undef, size(voids_list))
         remainders = []
         iter = ProgressBar(1:length(voids_list), unit="raMOs")
@@ -42,11 +48,13 @@ function loop_target_cluster_sp(
             )
             isosurf = psi_to_isosurf(occ_states, psi_up, kpt, grange)
             (sphere, total, psphere[i]) = Psphere(RealDataGrid(real(isosurf),super.atomlist.basis), voids_list[i], rsphere)
-            print_psphere_terminal(iter, num_raMO+i, psphere[i], voids_list[i])
+            open(string(run_name, "_psphere_", rsphere, ".txt"), "a") do io
+                print_psphere_terminal(iter, num_raMO+i, psphere[i], voids_list[i], io)
+            end
             output_files(run_name, num_electrons_left, num_raMO+i, super, isosurf, psi_previous, psi_up)
             remainders = psi_previous
         end
-        writedlm(string(run_name, "_psphere_", rsphere, ".txt"), psphere)
+        #writedlm(string(run_name, "_psphere_", rsphere, ".txt"), psphere)
         cd("..")
         p = psphere_graph(psphere, num_raMO, rsphere); display(p)
         low_psphere = psphere_eval(psphere, super, voids_list)
@@ -76,6 +84,13 @@ function loop_AO(
         mkdir(run_name)
     end
     cd(run_name) do 
+        # check to see if directory is empty. if not, send warning before deleting
+        if !isempty(readdir())
+            @warn "Directory is not empty. Files will be deleted/overwritten."
+            for n in readdir()
+                rm(n, force=true)
+            end
+        end
         psphere = Vector{Float64}(undef, size(atom_list))
         remainders = []
         iter = ProgressBar(1:length(atom_list), unit="raMOs")
@@ -99,11 +114,13 @@ function loop_AO(
             isosurf = psi_to_isosurf(occ_states, psi_up, kpt, grange)
             pos = Vector(super.atomlist.basis*Electrum.BOHR2ANG*super.atomlist[atom_list[i]].pos)
             (sphere, total, psphere[i]) = Psphere(RealDataGrid(real(isosurf),super.atomlist.basis), pos, rsphere)
-            print_psphere_terminal(iter, num_raMO+i, psphere[i], pos)
+            open(string(run_name, "_psphere_", rsphere, ".txt"), "a") do io
+                print_psphere_terminal(iter, num_raMO+i, psphere[i], pos, io)
+            end
             output_files(run_name, num_electrons_left, num_raMO+i, super, isosurf, psi_previous, psi_up)
             remainders = psi_previous
         end
-        writedlm(string(run_name, "_psphere_", rsphere, ".txt"), psphere)
+        #writedlm(string(run_name, "_psphere_", rsphere, ".txt"), psphere)
         cd("..")
         p = psphere_graph(psphere, num_raMO, rsphere); display(p)
         low_psphere = psphere_eval(psphere, super, atom_list)
@@ -133,6 +150,12 @@ function loop_LCAO(
         mkdir(run_name)
     end
     cd(run_name) do 
+        if !isempty(readdir())
+            @warn "Directory is not empty. Files will be deleted/overwritten."
+            for n in readdir()
+                rm(n, force=true)
+            end
+        end
         psphere = Vector{Float64}(undef, length(site_list))
         remainders = []
         iter = ProgressBar(1:length(site_list), unit="raMOs")
@@ -157,11 +180,13 @@ function loop_LCAO(
             pos = super.atomlist.basis*mp_lcao(site_list[i], super.atomlist)*Electrum.BOHR2ANG
             #pos = Vector(super.atomlist.basis*Electrum.BOHR2ANG*super.atomlist[site_list[i][1]].pos)
             (sphere, total, psphere[i]) = Psphere(RealDataGrid(real(isosurf),super.atomlist.basis), pos, rsphere)
-            print_psphere_terminal(iter, num_raMO+i, psphere[i], pos)
+            open(string(run_name, "_psphere_", rsphere, ".txt"), "a") do io
+                print_psphere_terminal(iter, num_raMO+i, psphere[i], pos, io)
+            end
             output_files(run_name, num_electrons_left, num_raMO+i, super, isosurf, psi_previous, psi_up)
             remainders = psi_previous
         end
-        writedlm(string(run_name, "_psphere_", rsphere, ".txt"), psphere)
+        #writedlm(string(run_name, "_psphere_", rsphere, ".txt"), psphere)
         cd("..")
         p = psphere_graph(psphere, num_raMO, rsphere); display(p)
         low_psphere = psphere_eval(psphere, super, site_list)
