@@ -71,7 +71,7 @@ Prints Psphere values to the terminal while raMO loops. The color of Psphere
     Yellow: 0.1 ≤ Psphere < 0.5
     Red:          Psphere < 0.1
 """
-function print_psphere_terminal(iter, num_raMO, psphere, site)
+function print_psphere_terminal(iter, num_raMO, psphere, site, io)
     col = Crayon(foreground = :green)
     psphere < 0.5 ? col = Crayon(foreground = :light_yellow) : nothing
     psphere < 0.1 ? col = Crayon(foreground = :light_red) : nothing
@@ -82,6 +82,8 @@ function print_psphere_terminal(iter, num_raMO, psphere, site)
         col, @sprintf("%.3f", psphere),
         Crayon(foreground = :default),
         @sprintf(" at site [%.3f, %.3f, %.3f]", site[1], site[2], site[3]))
+    println(io, num_raMO, "\t", psphere, "\t", @sprintf(" at site [%.3f, %.3f, %.3f]", site[1], site[2], site[3]))
+    flush(stdout)
 end
     
 function psphere_graph(psphere::AbstractVector{<:Real}, num_raMO::Integer, rsphere::Real)
