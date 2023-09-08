@@ -111,7 +111,7 @@ function loop_AO(
     end
 end
 
-function loop_SALC(
+function loop_LCAO(
     super,
     site_list, #atom_list,
     target_orbital,
@@ -249,7 +249,7 @@ function dftramo_run(filename::AbstractString, software::AbstractString="vasp")
                         length(n) != length(target) && error("Mismatch between length of LCAO ", n, " and specified target.")
                     end
                 end
-                (low_psphere, psi_previous2, num_raMO2, num_electrons_left2) = loop_SALC(
+                (low_psphere, psi_previous2, num_raMO2, num_electrons_left2) = loop_LCAO(
                     super,
                     site_list,
                     target,
