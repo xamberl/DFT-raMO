@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><title>Usage · DFT-raMO.jl</title><script data-outdated-warner src="assets/warner.js"></script><link href="https://cdnjs.cloudflare.com/ajax/libs/lato-font/3.0.0/css/lato-font.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/juliamono/0.045/juliamono.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/fontawesome.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/solid.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/brands.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.13.24/katex.min.css" rel="stylesheet" type="text/css"/><script>documenterBaseURL="."</script><script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js" data-main="assets/documenter.js"></script><script src="siteinfo.js"></script><script src="../versions.js"></script><link class="docs-theme-link" rel="stylesheet" type="text/css" href="assets/themes/documenter-dark.css" data-theme-name="documenter-dark" data-theme-primary-dark/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="assets/themes/documenter-light.css" data-theme-name="documenter-light" data-theme-primary/><script src="assets/themeswap.js"></script></head><body><div id="documenter"><nav class="docs-sidebar"><a class="docs-logo" href="index.html"><img src="assets/logo.png" alt="DFT-raMO.jl logo"/></a><div class="docs-package-name"><span class="docs-autofit"><a href="index.html">DFT-raMO.jl</a></span></div><form class="docs-search" action="search.html"><input class="docs-search-query" id="documenter-search-query" name="q" type="text" placeholder="Search docs"/></form><ul class="docs-menu"><li><a class="tocitem" href="index.html">Home</a></li><li><a class="tocitem" href="theory.html">Theory</a></li><li class="is-active"><a class="tocitem" href="usage.html">Usage</a><ul class="internal"><li><a class="tocitem" href="#Basic-input-file"><span>Basic input file</span></a></li><li><a class="tocitem" href="#LCAO-sites-file"><span>LCAO sites file</span></a></li><li class="toplevel"><a class="tocitem" href="#Running-DFT-raMO"><span>Running DFT-raMO</span></a></li></ul></li><li><a class="tocitem" href="api/index.html">API</a></li></ul><div class="docs-version-selector field has-addons"><div class="control"><span class="docs-label button is-static is-size-7">Version</span></div><div class="docs-selector control is-expanded"><div class="select is-fullwidth is-size-7"><select id="documenter-version-selector"></select></div></div></div></nav><div class="docs-main"><header class="docs-navbar"><nav class="breadcrumb"><ul class="is-hidden-mobile"><li class="is-active"><a href="usage.html">Usage</a></li></ul><ul class="is-hidden-tablet"><li class="is-active"><a href="usage.html">Usage</a></li></ul></nav><div class="docs-right"><a class="docs-edit-link" href="https://github.com/xamberl/DFT-raMO/blob/main/docs/src/usage.md" title="Edit on GitHub"><span class="docs-icon fab"></span><span class="docs-label is-hidden-touch">Edit on GitHub</span></a><a class="docs-settings-button fas fa-cog" id="documenter-settings-button" href="#" title="Settings"></a><a class="docs-sidebar-button fa fa-bars is-hidden-desktop" id="documenter-sidebar-button" href="#"></a></div></header><article class="content" id="documenter-page"><h1 id="Input-files"><a class="docs-heading-anchor" href="#Input-files">Input files</a><a id="Input-files-1"></a><a class="docs-heading-anchor-permalink" href="#Input-files" title="Permalink"></a></h1><h2 id="Basic-input-file"><a class="docs-heading-anchor" href="#Basic-input-file">Basic input file</a><a id="Basic-input-file-1"></a><a class="docs-heading-anchor-permalink" href="#Basic-input-file" title="Permalink"></a></h2><p>Currently, DFT-raMO supports VASP inputs, and the required VASP outputs are the <code>OUTCAR</code>, <code>POSCAR</code>, <code>KPOINTS</code>, and <code>WAVECAR</code> files. Future versions will support abinit (likely to be tested on versions 8.10.3 and 9.10.1), and this will require a <code>WFK</code> output.</p><p>Regardless of the software used to generate the wavefunction, DFT-raMO uses a YAML file as input which contains information about the desired target reconstruction.</p><p>Here is an example YAML file (available at <code>examples/ScAl3.yaml</code> and <code>test/input/ScAl3.yaml</code>):</p><pre><code class="language-yaml hljs">checkpoint:
+auto_psphere: true
+runs:
+  - name: 1_Sc-Sc
+    type: sp
+    site_file: Sc-Sc_reordered.xyz
+    sites: all
+    radius: 2.2
+    rsphere: 2.2
+  - name: 2_Sc_dxy
+    type: dxy
+    site_file: 
+    sites: Sc
+    radius: 
+    rsphere: 2.2
+  - name: 3_Sc_dxz
+    type: dxz
+    site_file: 
+    sites: Sc
+    radius: 
+    rsphere: 2.2
+  - name: 4_Sc_dyz
+    type: dyz
+    site_file: 
+    sites: Sc
+    radius: 
+    rsphere: 2.2
+  - name: 5_Al_oct
+    type: sp
+    site_file: Al-Al_reordered.xyz
+    sites: all
+    radius: 2.1
+    rsphere: 4.11</code></pre><p>Here are some of the important components of this example file:</p><ul><li>The <code>checkpoint</code> key can be left blank when starting a new calculation, but a path to a file can</li></ul><p>be given to resume the calculation. Checkpoint files are automatically written.</p><ul><li>The <code>auto_psphere</code> key automatically reruns calculations where the Psphere values are less than 15% of the maxium when set to <code>true</code>.</li><li>The <code>runs</code> key is the bread and butter of the sequence.<ul><li>The <code>name</code> key can be used to name the output directory and the output files it creates. By default, the name is <code>run_&lt;number&gt;</code> where <code>&lt;number&gt;</code> is the number in the order.</li><li>The <code>type</code> key determines the target orbital shapes to reconstruct. By default, it accepts atomic orbital designations (<code>s</code>, <code>px</code>, <code>py</code>, <code>pz</code>, <code>dx2y2</code> or <code>dx2-y2</code>, <code>dz2</code>, <code>dxy</code>,  <code>dxz</code>, and <code>dyz</code>), or hybrid designations ( <code>sp</code>, which includes p-orbitals with any directionality, or user-defined linear combinations of atomic orbitals with <code>lcao</code>) . These designations are not case-sensitive.</li><li><code>site_file</code> is only used for <code>sp</code> cage and <code>lcao</code> runs. The input is an XYZ file (Cartesian coordinates in angstroms).</li><li><code>sites</code> can accept multiple arguments. By default, this is <code>all</code>, which runs the whole list of atoms. However, this can be limited if desired: the atom names from the POSCAR can be included, and can be postpended with lists of individual sites or ranges of sites.</li><li>The <code>radius</code> is only relevant for <code>sp</code> hybrids, and it is the length (in angstroms) used to search for atoms that contribute to that hybrid.</li><li><code>rsphere</code> is the radius for the Psphere metric.</li></ul></li></ul><h2 id="LCAO-sites-file"><a class="docs-heading-anchor" href="#LCAO-sites-file">LCAO sites file</a><a id="LCAO-sites-file-1"></a><a class="docs-heading-anchor-permalink" href="#LCAO-sites-file" title="Permalink"></a></h2><p>Here is an example YAML file for user-defined linear combinations of atomic orbitals (LCAO).</p><pre><code class="language-yaml hljs">target:
+  - px: -1
+    py: 1
+lcao:
+  - [1]
+  - [2]
+  - [17]
+  - [18]
+  - [33]
+  - [34]
+  - [49]
+  - [50]
+  - [65]
+  - [66]
+  - [81]
+  - [82]
+  - [97]
+  - [98]
+  - [113]
+  - [114]</code></pre><p>Here are some of the important components of this example file:</p><ul><li>The <code>target:</code> key indicates that a list of LCAOs will follow. Each atomic site is indicated with a <code>-</code>, and relative contributions of each atomic orbital follow each atomic orbital key.<ul><li>Relative contributions of each atomic orbital will be normalized such that the total contribution equals 1.</li><li>Any atomic orbital keys that are notdefined are ignored.</li></ul></li><li>The <code>lcao</code> key indicates the list of targets in the run.<ul><li>Each list item must be a vector of integers indicating the number corresponding to the atom in the supercell. These atomic positions can usually be found by checking the xsfs of a previously run.</li><li>The number of integers in the list <em>must</em> match the number of atomic sites in <code>target</code>.</li></ul></li></ul><h1 id="Running-DFT-raMO"><a class="docs-heading-anchor" href="#Running-DFT-raMO">Running DFT-raMO</a><a id="Running-DFT-raMO-1"></a><a class="docs-heading-anchor-permalink" href="#Running-DFT-raMO" title="Permalink"></a></h1><p>After configuring the basic input file, ensure that you are in your working directory, which includes the <code>OUTCAR</code>, <code>POSCAR</code>, <code>KPOINTS</code>, and <code>WAVECAR</code> files. Open the Julia REPL. <code>julia using DFTraMO dftramo_run(&quot;input.yaml&quot;)</code>```</p></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="theory.html">« Theory</a><a class="docs-footer-nextpage" href="api/index.html">API »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 0.27.25 on <span class="colophon-date" title="Tuesday 12 September 2023 23:24">Tuesday 12 September 2023</span>. Using Julia version 1.9.3.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
