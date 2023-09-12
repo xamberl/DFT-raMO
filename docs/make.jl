@@ -2,11 +2,6 @@
 using Documenter
 using DFTraMO
 
-makedocs(
-    sitename = "DFT-raMO.jl",
-    format = Documenter.HTML(),
-    modules = [DFTraMO]
-)
 
 makedocs(
     sitename = "DFT-raMO.jl",
@@ -23,6 +18,6 @@ makedocs(
 # Documenter can also automatically deploy documentation to gh-pages.
 # See "Hosting Documentation" and deploydocs() in the Documenter manual
 # for more information.
-#=deploydocs(
-    repo = "<repository url>"
-)=#
+deploydocs(
+    repo = "github.com/xamberl/DFT-raMO.git"
+)
