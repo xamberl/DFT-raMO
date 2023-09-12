@@ -1,7 +1,5 @@
-# Usage
-
-## Input files
-
+# Input files
+## Basic input file
 Currently, DFT-raMO supports VASP inputs, and the required VASP outputs are the `OUTCAR`, `POSCAR`,
 `KPOINTS`, and `WAVECAR` files. Future versions will support abinit (likely to be tested on versions
 8.10.3 and 9.10.1), and this will require a `WFK` output.
@@ -56,9 +54,10 @@ Here are some of the important components of this example file:
         default, the name is `run_<number>` where `<number>` is the number in the order.
       + The `type` key determines the target orbital shapes to reconstruct. By default, it accepts
         atomic orbital designations (`s`, `px`, `py`, `pz`, `dx2y2` or `dx2-y2`, `dz2`, `dxy`, 
-        `dxz`, and `dyz`), or hybrid designations (currently just `sp`, which includes p-orbitals
-        with any directionality). These designations are not case-sensitive.
-      + `site_file` is only used for `sp` cage runs, and currently, this is ignored. The input is an
+        `dxz`, and `dyz`), or hybrid designations ( `sp`, which includes p-orbitals
+        with any directionality, or user-defined linear combinations of atomic orbitals with `lcao`)
+        . These designations are not case-sensitive.
+      + `site_file` is only used for `sp` cage and `lcao` runs. The input is an
         XYZ file (Cartesian coordinates in angstroms).
       + `sites` can accept multiple arguments. By default, this is `all`, which runs the whole list
         of atoms. However, this can be limited if desired: the atom names from the POSCAR can be
@@ -66,3 +65,50 @@ Here are some of the important components of this example file:
       + The `radius` is only relevant for `sp` hybrids, and it is the length (in angstroms) used to
         search for atoms that contribute to that hybrid.
       + `rsphere` is the radius for the Psphere metric.
+
+
+## LCAO sites file
+Here is an example YAML file for user-defined linear combinations of atomic orbitals (LCAO).
+
+```yaml
+target:
+  - px: -1
+    py: 1
+lcao:
+  - [1]
+  - [2]
+  - [17]
+  - [18]
+  - [33]
+  - [34]
+  - [49]
+  - [50]
+  - [65]
+  - [66]
+  - [81]
+  - [82]
+  - [97]
+  - [98]
+  - [113]
+  - [114]
+```
+
+Here are some of the important components of this example file:
+  - The `target:` key indicates that a list of LCAOs will follow. Each atomic site is indicated with
+    a `-`, and relative contributions of each atomic orbital follow each atomic orbital key.
+      + Relative contributions of each atomic orbital will be normalized such that the total
+        contribution equals 1.
+      + Any atomic orbital keys that are notdefined are ignored.
+  - The `lcao` key indicates the list of targets in the run.
+      + Each list item must be a vector of integers indicating the number corresponding to the atom
+        in the supercell. These atomic positions can usually be found by checking the xsfs of a
+        previously run.
+      + The number of integers in the list *must* match the number of atomic sites in `target`.
+
+# Running DFT-raMO
+After configuring the basic input file, ensure that you are in your working directory, which includes
+the `OUTCAR`, `POSCAR`, `KPOINTS`, and `WAVECAR` files. Open the Julia REPL.
+```julia
+using DFTraMO
+dftramo_run("input.yaml")
+``````

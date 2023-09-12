@@ -3,13 +3,13 @@ using Documenter
 using DFTraMO
 
 makedocs(
-    sitename = "DFTraMO",
+    sitename = "DFT-raMO.jl",
     format = Documenter.HTML(),
     modules = [DFTraMO]
 )
 
 makedocs(
-    sitename = "DFT-raMO",
+    sitename = "DFT-raMO.jl",
     format = Documenter.HTML(prettyurls = (get(ENV, "CI", nothing) == true)),
     modules = [DFTraMO],
     pages = [
