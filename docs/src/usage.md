@@ -1,13 +1,19 @@
 # Input files
+
 ## Basic input file
+
 Currently, DFT-raMO supports VASP inputs, and the required VASP outputs are the `OUTCAR`, `POSCAR`,
 `KPOINTS`, and `WAVECAR` files. Future versions will support abinit (likely to be tested on versions
 8.10.3 and 9.10.1), and this will require a `WFK` output.
+
+In most cases, you will want to use an optimized geometry and a gamma-centered k-point mesh which
+corresponds to the size of the supercell you want to reconstruct the orbitals in.
 
 Regardless of the software used to generate the wavefunction, DFT-raMO uses a YAML file as input
 which contains information about the desired target reconstruction.
 
 Here is an example YAML file (available at `examples/ScAl3.yaml` and `test/input/ScAl3.yaml`):
+
 ```yaml
 checkpoint:
 auto_psphere: true
