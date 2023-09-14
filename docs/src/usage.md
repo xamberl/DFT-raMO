@@ -111,4 +111,4 @@ the `OUTCAR`, `POSCAR`, `KPOINTS`, and `WAVECAR` files. Open the Julia REPL.
 ```julia
 using DFTraMO
 dftramo_run("input.yaml")
-``````
+```
