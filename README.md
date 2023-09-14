@@ -4,6 +4,8 @@
 [![Documentation (dev)][docs-dev-img]][docs-dev-url]
 [![CI status][ci-status-img]][ci-status-url]
 
+[![DFTraMO.jl logo][dftramo-logo]][dftramo-url]
+
 DFT-raMO, a Wannier-type analysis, and its supporting tools.
 
 # The original DFT-raMO (written in MATLAB)
@@ -37,3 +39,5 @@ Then you can start a Julia instance, enter package mode (right bracket),  and us
 [docs-dev-url]:     https://xamberl.github.io/DFT-raMO/dev
 [ci-status-img]:    https://github.com/xamberl/DFT-raMO/workflows/CI/badge.svg
 [ci-status-url]:    https://github.com/xamberl/DFT-raMO/actions
+[dftramo-logo]:     docs/src/assets/dftramologo_500.png
+[dftramo-url]:      https://github.com/xamberl/DFT-raMO
