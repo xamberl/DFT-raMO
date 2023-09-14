@@ -22,16 +22,13 @@ support for both abinit and VASP inputs. Runs are specified through YAML files
 This package also contains Psphere analysis, a tool to determine the degree of localization for
 reconstructed orbitals.
 
-## Usage
-This package is not currently registered in the Julia package registry, and is located in a private
-Git repo as of this writing. You'll need to clone the package from Git over SSH first:
-
-```bash
-[user@host]$ git clone git@github.com:xamberl/DFT-raMO
+## Installation
+This package is not currently registered in the Julia package registry, so you'll need to add the
+package by the URL directly:
 ```
-
-Then you can start a Julia instance, enter package mode (right bracket),  and use `activate 
-[clone directory]` to use and modify the package.
+(v1.8+ pkg)> add https://github.com/xamberl/DFT-raMO#main
+```
+The `#main` portion is optional, and can be changed to track a different branch.
 
 [docs-stable-img]:  https://img.shields.io/badge/docs-stable-blue.svg
 [docs-stable-url]:  https://xamberl.github.io/DFT-raMO/stable
