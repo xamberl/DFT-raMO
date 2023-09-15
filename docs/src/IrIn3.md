@@ -1,11 +1,11 @@
-# Example system: IrIn3
+# Example system: IrIn₃
 
 In this example, we're going to demonstrate a DFT-raMO run for an intermetallic binary compound in
 the iridium-indium system, using data from a VASP 4.6 calculation.
 
 ## Setup
 
-Assuming that you have Julia and DFTraMO.jl installed, download the IrIn3 VASP 4.6 data, a link to
+Assuming that you have Julia and DFTraMO.jl installed, download the IrIn₃ VASP 4.6 data, a link to
 which will be provided in the future. This includes the following files:
   
   - `KPOINTS`
@@ -15,28 +15,48 @@ which will be provided in the future. This includes the following files:
   - `WAVECAR`
   - `step1.yaml` - the DFT-raMO input file.
   - `qdftramo` and `qdftramo-kestrel` - submission scripts for internal use, can be adapted.
+  - `step2.tar`
+  - `step3.tar`
+  - `step4.tar` - tarballs for later steps in the tutorial.
 
-!!! warn The tarball is a large file due to the `WAVECAR` (over 400 MB).
+!!! warning "Large files"
 
-## Constructing the YAML input
+    The tarball is a large file due to the `WAVECAR` (over 400 MB).
+
+## 1. Ir ``d_{x^2+y^2}`` orbitals
+### Constructing the YAML input
 
 You'll find that `step1.yaml` is a blank template. The [Usage] section of the manual contains
 information on each of the keys and values in the file.
 
 Since we're starting from scratch, the `checkpoint` key should be blank. Leave `auto_psphere` as
 `true`, as this will automatically rerun poor reconstructions (less than 15% of the maximum
-``P_sphere`` value).
+``P_{sphere}`` value).
 
 For the first run, let's reconstruct the Ir ``d_{x^2+y^2}`` orbitals, so set `type` to `dx2y2` and
-`sites` to `Ir`. `site_file` and `radius` can be blank, as these are only used for AO type runs.
-As a rule of thumb, you can use the distance from the reconstruction site to the farthest atom in
-the first coordination sphere, which is 2.65 angstroms (this does not have to be precise, but
-overshooting is generally better than undershooting).
+`sites` to `Ir`. `site_file` and `radius` can be blank, as these are not used for AO type runs.
+For `rsphere`, as a rule of thumb, you can use the distance from the reconstruction site to the
+farthest atom in the first coordination sphere, which is `2.65` Å in this case. This does not have
+to be precise, and overshooting is generally better than undershooting.
 
 The `name` field can be set at your convenience (here we use `1_Ir_dx2y2`) and becomes the name of
 the directory where the outputs are written.
 
-## Running DFT-raMO for the first time
+Your `step1.yaml` file should look as below:
+
+```yaml
+checkpoint:
+auto_psphere: true
+runs:
+  - name: 1_Ir_dx2y2
+    type: dx2y2
+    site_file: 
+    sites: Ir
+    radius:
+    rsphere: 2.65
+```
+
+### Running DFT-raMO for the first time
 
 In the directory you extracted the tarball, run julia, use the DFTraMO.jl package, and start the
 run:
@@ -47,18 +67,84 @@ julia> using DFTraMO
 julia> dftramo_run("step1.yaml")
 ```
 
-Optionally, you can use the `UnicodePlots` package to visualize the Psphere data. If you don't load
-the package
+You should see the beginnings of the DFT-raMO analysis printed to the terminal.
+```
+No checkpoint file specified. Run will start from beginning conditions.
+Auto-Psphere: true
+Number of runs: 1
+Run 1:
+   name: 1_Ir_dx2y2
+   type: dx2y2
+   sites: Ir
+   rsphere: 2.65 Å
+Run: 1_Ir_dx2y2
+1, Psphere: 0.905 at site [2.417, 2.417, 0.000]
+```
 
-## Examining the output
+!!! note "Optional"
 
-## Reconstructing sp hybrids
+    You can use the `UnicodePlots` package to visualize ``P_{sphere}`` data. If you don't
+    load the package, you will see the following message.
+    ```
+    [ Info: UnicodePlots not loaded: consider loading it for Psphere logging.
+    ```
+    This has no impact on your DFT-raMO analysis and can be ignored.
 
-In order to reconstruct sp hybrids, we want to reconstruct all of the Ir d and s orbitals. Instead
-of running all of the reconstructions yourself, to save time, the `step2.tar` file contains all of
+### Examining the output
+After `dftramo_run()` is finished, you should see lines of ``P_{sphere}`` values printed to the
+terminal.
+```
+1, Psphere: 0.905 at site [2.417, 2.417, 0.000]
+```
+* `1` - the raMO number in the sequence.
+* `0.905` - ``P_{sphere}`` value.
+* `[2.417, 2.417, 0.000]` - the site (in Cartesian coordinates) that ``P_{sphere}`` is centered on.
+
+The value of ``P_{sphere}`` indicates the degree of localization of that raMO function. Though
+higher values indicate more localization, recall that our setting of `rsphere` was an arbitrary and
+estimated value. What is more valuable is the consistency of the ``P_{sphere}`` values. Here, the
+consistent values indicates that the Ir ``d_{x^2+y^2}`` orbitals are fully occupied.
+
+See [Theory](theory) for more details on ``P_{sphere}``.
+
+If you check your working directory now, you should see a directory with the `name` you specified
+in `step1.yaml`. Within this directory are four types of files:
+
+1. `*.chkpt` - checkpoint at that step in the raMO sequence
+2. `*.raMO` - reciprocal space coefficients for the raMO
+3. `*.xsf` - real space electron density grid of the raMO in the supercell
+4. `*_psphere_*.txt` - ``P_{sphere}`` information
+
+The `.xsf` files allow us to visually inspect the raMO functions with software such as
+[VESTA](https://jp-minerals.org/vesta/en/).
+
+!!! note "File naming convention"
+    
+    `.chkpt`, `.raMO`, and `.xsf` files are formatted
+    `<name>_<raMO number>_<electrons left in supercell>`.
+
+    For example, `1_Ir_dx2y2_10_556.xsf` represents the 10th raMO in the sequence, with 556 electrons
+    remaining and unaccounted for.
+
+    ``P_{sphere}`` files have the `rsphere` value embedded in their filename.
+
+## 2. Ir-Ir isolobal bonds with  ``sp`` hybrids
+
+Before we reconstruct ``sp``-based hybrids, we want to reconstruct all of the Ir ``d`` and ``s``
+orbitals. Skip ahead in the analysis by untarring the `step2.tar` file, which contains all of
 the necessary reconstructions.
 
-For this next run, create a new YAML input with the following lines:
+```
+tar -xf step2.tar
+```
+
+This next section of the raMO sequence will target Ir-Ir isolobal bonding. We want to create
+multi-center bonding functions between pairs of Ir atoms, with expected contribution from bridging
+In atoms. For this, we will use the `sp` type run, which searches for atoms within a specified
+radius from a central site and creates a target where ``s`` and ``p`` orbitals are oriented towards
+the central site.
+
+For this next run, create a new YAML input (`step2.yaml`) with the following lines:
 ```yaml
 checkpoint: 6_Ir_s/6_Ir_s_192_192.chkpt
 auto_psphere: true
@@ -70,14 +156,15 @@ runs:
     radius: 1.6
     rsphere: 3.5
 ```
-Our previous analysis ended at the 192nd electron, and we have 192 electrons remaining, explaining
-the occurrence of 192 twice in the name of the checkpoint file. The `radius` parameter is the search
-radius for automatically including atoms in the target. 
+Our previous analysis ended at the 192nd raMO in the sequence, and we have 192 electrons remaining,
+(explaining the occurrence of 192 twice in the name of the checkpoint file). The `radius` parameter
+is the search radius for automatically including atoms in the target. 
 
 The `Ir-Ir.txt` site file should contain the midpoints of the Ir-Ir bonds in Cartesian coordinates.
 This can be done by using your preferred molecular modeling software (we've done this by converting
-the POSCAR to a CIF and adding the dummy atoms into Diamond 3). However, if you'd like to skip the
-manual creation, the contents of `Ir-Ir.txt` are given below:
+the `POSCAR` to a `CIF` and adding the dummy atoms into
+[Diamond 3](http://www.crystalimpact.com/diamond/)). However, if you'd like to skip the manual
+creation, the contents of `Ir-Ir.txt` are given below:
 ```
 X	  6.99330	  6.99330	 10.78620
 X	  0.00000	  6.99330	 10.78620
@@ -96,15 +183,14 @@ X	  3.49665	 10.48995	  0.00000
 X	 10.48995	  3.49665	  0.00000
 X	  3.49665	  3.49665	  0.00000
 ```
-The symbol `X` can be changed arbitrarily, as long as it does not match the symbol of another atom
-already present.
+The symbol `X` can be changed arbitrarily.
 
 Now that you have these files, you can just run DFT-raMO again:
 ```julia-repl
 julia> dftramo_run("step2.yaml")
 ```
 
-As before, have a look at the XSF files to see the reconstructions.
+As before, have a look at the  XSF files to see the reconstructions.
 
 ## LCAO reconstructions
 
