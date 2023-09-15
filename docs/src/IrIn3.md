@@ -138,6 +138,11 @@ the necessary reconstructions.
 tar -xf step2.tar
 ```
 
+```@raw html
+<br><center><p><img src="assets/Ir-Ir_300.png" width="150" alt="Ir-Ir isolobal bonding"></p>
+<p><i>Ir-Ir isolobal bonding</i></p></center><br>
+```
+
 This next section of the raMO sequence will target Ir-Ir isolobal bonding. We want to create
 multi-center bonding functions between pairs of Ir atoms, with expected contribution from bridging
 In atoms. For this, we will use the `sp` type run, which searches for atoms within a specified
