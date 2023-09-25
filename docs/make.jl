@@ -11,6 +11,7 @@ makedocs(
         "Home"      => "index.md",
         "Theory"    => "theory.md",
         "Usage"     => "usage.md",
+        "Tutorials"  => ["tutorials/IrIn3.md"],
         "API"       => "api/index.md"
     ]
 )
