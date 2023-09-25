@@ -1,5 +1,12 @@
-# TODO: the ordering of this function's arguments may need to be changed
-# also, maybe we want to use a file handle argument
+"""
+    function write_to_XSF(
+        isosurf::AbstractArray{ComplexF64, 3},
+        xtal::AbstractAtomList{3},
+        filename::AbstractString
+    )
+
+Writes an XSF using the real components of `isosurf`.
+"""
 function write_to_XSF(
     isosurf::AbstractArray{ComplexF64, 3},
     xtal::AbstractAtomList{3},
