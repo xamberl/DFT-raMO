@@ -63,10 +63,9 @@ function psphere_eval(psphere::AbstractVector{<:Real}, super::Supercell, site_li
 end
 
 """
-print_psphere_terminal(iter, psphere, site)
+    print_psphere_terminal(iter, psphere, site)
 
-Prints Psphere values to the terminal while raMO loops. The color of Psphere
-    is arbitrarily color-coded.
+Prints Psphere values to the terminal. The color of Psphere is arbitrarily color-coded.
     Green:        Psphere ≥ 0.5
     Yellow: 0.1 ≤ Psphere < 0.5
     Red:          Psphere < 0.1
@@ -91,7 +90,10 @@ function psphere_graph(psphere::AbstractVector{<:Real}, num_raMO::Integer, rsphe
 end
 
 """
-Calculate the midpoint for LCAOs. See https://en.wikipedia.org/wiki/Center_of_mass#Systems_with_periodic_boundary_conditions
+    mp_lcao(sites::Vector{Int}, xtal::PeriodicAtomList)
+
+Calculates the geometric midpoint for LCAOs. See
+https://en.wikipedia.org/wiki/Center_of_mass#Systems_with_periodic_boundary_conditions
 """
 function mp_lcao(sites::Vector{Int}, xtal::PeriodicAtomList)
     θ = reshape(reduce(vcat, [(xtal[s].pos*2*pi) for s in sites]), 3, length(sites))
