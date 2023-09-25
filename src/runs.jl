@@ -1,3 +1,8 @@
+"""
+    loop_target_cluster_sp()
+
+Loops and runs DFT-raMO/Psphere analysis on a set of sp-based targets.
+"""
 function loop_target_cluster_sp(
     super,
     voids_list,
@@ -61,6 +66,11 @@ function loop_target_cluster_sp(
     end
 end
 
+"""
+    loop_AO()
+
+Loops and runs DFT-raMO/Psphere analysis on a set of atomic orbital targets.
+"""
 function loop_AO(
     super,
     atom_list,
@@ -126,6 +136,11 @@ function loop_AO(
     end
 end
 
+"""
+    loop_LCAO()
+
+Loops and runs DFT-raMO/Psphere analysis on a set of LCAO targets.
+"""
 function loop_LCAO(
     super,
     site_list, #atom_list,
