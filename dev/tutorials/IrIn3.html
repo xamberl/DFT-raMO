@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><title>Example system: IrIn₃ · DFT-raMO.jl</title><script data-outdated-warner src="../assets/warner.js"></script><link href="https://cdnjs.cloudflare.com/ajax/libs/lato-font/3.0.0/css/lato-font.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/juliamono/0.045/juliamono.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/fontawesome.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/solid.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/brands.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.13.24/katex.min.css" rel="stylesheet" type="text/css"/><script>documenterBaseURL=".."</script><script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js" data-main="../assets/documenter.js"></script><script src="../siteinfo.js"></script><script src="../../versions.js"></script><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../assets/themes/documenter-dark.css" data-theme-name="documenter-dark" data-theme-primary-dark/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../assets/themes/documenter-light.css" data-theme-name="documenter-light" data-theme-primary/><script src="../assets/themeswap.js"></script></head><body><div id="documenter"><nav class="docs-sidebar"><a class="docs-logo" href="../index.html"><img src="../assets/logo.png" alt="DFT-raMO.jl logo"/></a><div class="docs-package-name"><span class="docs-autofit"><a href="../index.html">DFT-raMO.jl</a></span></div><form class="docs-search" action="../search.html"><input class="docs-search-query" id="documenter-search-query" name="q" type="text" placeholder="Search docs"/></form><ul class="docs-menu"><li><a class="tocitem" href="../index.html">Home</a></li><li><a class="tocitem" href="../theory.html">Theory</a></li><li><a class="tocitem" href="../usage.html">Usage</a></li><li><span class="tocitem">Tutorials</span><ul><li class="is-active"><a class="tocitem" href="IrIn3.html">Example system: IrIn₃</a><ul class="internal"><li><a class="tocitem" href="#Setup"><span>Setup</span></a></li><li><a class="tocitem" href="#.-Ir-d_{x2y2}-orbitals"><span>1. Ir <span>$d_{x^2+y^2}$</span> orbitals</span></a></li><li><a class="tocitem" href="#.-Ir-Ir-isolobal-bonds-with-sp-hybrids"><span>2. Ir-Ir isolobal bonds with  <span>$sp$</span> hybrids</span></a></li><li><a class="tocitem" href="#.-Ir-p-orbitals-with-LCAO-reconstructions"><span>3. Ir p orbitals with LCAO reconstructions</span></a></li><li class="toplevel"><a class="tocitem" href="#.-Remainder-analysis-of-In-cage-states-and-In-p-orbitals"><span>4. Remainder analysis of In cage states and In <span>$p$</span> orbitals</span></a></li></ul></li></ul></li><li><a class="tocitem" href="../api/index.html">API</a></li></ul><div class="docs-version-selector field has-addons"><div class="control"><span class="docs-label button is-static is-size-7">Version</span></div><div class="docs-selector control is-expanded"><div class="select is-fullwidth is-size-7"><select id="documenter-version-selector"></select></div></div></div></nav><div class="docs-main"><header class="docs-navbar"><nav class="breadcrumb"><ul class="is-hidden-mobile"><li><a class="is-disabled">Tutorials</a></li><li class="is-active"><a href="IrIn3.html">Example system: IrIn₃</a></li></ul><ul class="is-hidden-tablet"><li class="is-active"><a href="IrIn3.html">Example system: IrIn₃</a></li></ul></nav><div class="docs-right"><a class="docs-edit-link" href="https://github.com/xamberl/DFT-raMO/blob/main/docs/src/tutorials/IrIn3.md" title="Edit on GitHub"><span class="docs-icon fab"></span><span class="docs-label is-hidden-touch">Edit on GitHub</span></a><a class="docs-settings-button fas fa-cog" id="documenter-settings-button" href="#" title="Settings"></a><a class="docs-sidebar-button fa fa-bars is-hidden-desktop" id="documenter-sidebar-button" href="#"></a></div></header><article class="content" id="documenter-page"><h1 id="Example-system:-IrIn"><a class="docs-heading-anchor" href="#Example-system:-IrIn">Example system: IrIn₃</a><a id="Example-system:-IrIn-1"></a><a class="docs-heading-anchor-permalink" href="#Example-system:-IrIn" title="Permalink"></a></h1><p>In this example, we&#39;re going to demonstrate a DFT-raMO run for an intermetallic binary compound in the iridium-indium system, using data from a VASP 4.6 calculation. This example will follow the scheme outlined in <a href="https://doi.org/10.1021/acs.inorgchem.3c01496">this paper</a>.</p><h2 id="Setup"><a class="docs-heading-anchor" href="#Setup">Setup</a><a id="Setup-1"></a><a class="docs-heading-anchor-permalink" href="#Setup" title="Permalink"></a></h2><p>Assuming that you have Julia and DFTraMO.jl installed, download the IrIn₃ VASP 4.6 data, a link to which will be provided in the future. This includes the following files:</p><ul><li><code>KPOINTS</code></li><li><code>OUTCAR</code></li><li><code>POSCAR</code></li><li><code>POTCAR</code></li><li><code>WAVECAR</code></li><li><code>step1.yaml</code> - the DFT-raMO input file.</li><li><code>qdftramo</code> and <code>qdftramo-kestrel</code> - submission scripts for internal use, can be adapted.</li><li><code>step2.tar</code></li><li><code>step3.tar</code></li><li><code>step4.tar</code> - tarballs for later steps in the tutorial.</li></ul><div class="admonition is-warning"><header class="admonition-header">Large files</header><div class="admonition-body"><p>The tarball is a large file due to the <code>WAVECAR</code> (over 400 MB).</p></div></div><h2 id=".-Ir-d_{x2y2}-orbitals"><a class="docs-heading-anchor" href="#.-Ir-d_{x2y2}-orbitals">1. Ir <span>$d_{x^2+y^2}$</span> orbitals</a><a id=".-Ir-d_{x2y2}-orbitals-1"></a><a class="docs-heading-anchor-permalink" href="#.-Ir-d_{x2y2}-orbitals" title="Permalink"></a></h2><h3 id="Constructing-the-YAML-input"><a class="docs-heading-anchor" href="#Constructing-the-YAML-input">Constructing the YAML input</a><a id="Constructing-the-YAML-input-1"></a><a class="docs-heading-anchor-permalink" href="#Constructing-the-YAML-input" title="Permalink"></a></h3><p>You&#39;ll find that <code>step1.yaml</code> is a blank template. The <a href="../usage.html">Usage</a> section of the manual contains information on each of the keys and values in the file.</p><p>Since we&#39;re starting from scratch, the <code>checkpoint</code> key should be blank. Leave <code>auto_psphere</code> as <code>true</code>, as this will automatically rerun poor reconstructions (less than 15% of the maximum <span>$P_{sphere}$</span> value).</p><p>For the first run, let&#39;s reconstruct the Ir <span>$d_{x^2+y^2}$</span> orbitals, so set <code>type</code> to <code>dx2y2</code> and <code>sites</code> to <code>Ir</code>. <code>site_file</code> and <code>radius</code> can be blank, as these are not used for AO type runs. For <code>rsphere</code>, as a rule of thumb, you can use the distance from the reconstruction site to the farthest atom in the first coordination sphere, which is <code>2.65</code> Å in this case. This does not have to be precise, and overshooting is generally better than undershooting.</p><p>The <code>name</code> field can be set at your convenience (here we use <code>1_Ir_dx2y2</code>) and becomes the name of the directory where the outputs are written.</p><p>Your <code>step1.yaml</code> file should look as below:</p><pre><code class="language-yaml hljs">checkpoint:
+auto_psphere: true
+runs:
+  - name: 1_Ir_dx2y2
+    type: dx2y2
+    site_file: 
+    sites: Ir
+    radius:
+    rsphere: 2.65</code></pre><h3 id="Running-DFT-raMO-for-the-first-time"><a class="docs-heading-anchor" href="#Running-DFT-raMO-for-the-first-time">Running DFT-raMO for the first time</a><a id="Running-DFT-raMO-for-the-first-time-1"></a><a class="docs-heading-anchor-permalink" href="#Running-DFT-raMO-for-the-first-time" title="Permalink"></a></h3><p>In the directory you extracted the tarball, run julia, use the DFTraMO.jl package, and start the run:</p><pre><code class="language-julia-repl hljs">julia&gt; using DFTraMO
+
+julia&gt; dftramo_run(&quot;step1.yaml&quot;)</code></pre><p>You should see the beginnings of the DFT-raMO analysis printed to the terminal.</p><pre><code class="nohighlight hljs">No checkpoint file specified. Run will start from beginning conditions.
+Auto-Psphere: true
+Number of runs: 1
+Run 1:
+   name: 1_Ir_dx2y2
+   type: dx2y2
+   sites: Ir
+   rsphere: 2.65 Å
+Run: 1_Ir_dx2y2
+1, Psphere: 0.905 at site [2.417, 2.417, 0.000]</code></pre><div class="admonition is-info"><header class="admonition-header">Optional UnicodePlots implementation</header><div class="admonition-body"><p>You can use the <code>UnicodePlots</code> package to visualize <span>$P_{sphere}$</span> data. If you don&#39;t load the package, you will see the following message.</p><pre><code class="nohighlight hljs">[ Info: UnicodePlots not loaded: consider loading it for Psphere logging.</code></pre><p>This has no impact on your DFT-raMO analysis and can be ignored.</p></div></div><h3 id="Examining-the-output"><a class="docs-heading-anchor" href="#Examining-the-output">Examining the output</a><a id="Examining-the-output-1"></a><a class="docs-heading-anchor-permalink" href="#Examining-the-output" title="Permalink"></a></h3><p>After <code>dftramo_run()</code> is finished, you should see lines of <span>$P_{sphere}$</span> values printed to the terminal.</p><pre><code class="nohighlight hljs">1, Psphere: 0.905 at site [2.417, 2.417, 0.000]</code></pre><ul><li><code>1</code> - the raMO number in the sequence.</li><li><code>0.905</code> - <span>$P_{sphere}$</span> value.</li><li><code>[2.417, 2.417, 0.000]</code> - the site (in Cartesian coordinates) that <span>$P_{sphere}$</span> is centered on.</li></ul><p>The value of <span>$P_{sphere}$</span> indicates the degree of localization of that raMO function. Though higher values indicate more localization, recall that our setting of <code>rsphere</code> was an arbitrary and estimated value. What is more valuable is the consistency of the <span>$P_{sphere}$</span> values. Here, the consistent values indicates that the Ir <span>$d_{x^2+y^2}$</span> orbitals are fully occupied.</p><p>See <a href="../theory.html">Theory</a> for more details on <span>$P_{sphere}$</span>.</p><p>If you check your working directory now, you should see a directory with the <code>name</code> you specified in <code>step1.yaml</code>. Within this directory are four types of files:</p><ol><li><code>*.chkpt</code> - checkpoint at that step in the raMO sequence</li><li><code>*.raMO</code> - reciprocal space coefficients for the raMO</li><li><code>*.xsf</code> - real space electron density grid of the raMO in the supercell</li><li><code>*_psphere_*.txt</code> - <span>$P_{sphere}$</span> information</li></ol><p>The <code>.xsf</code> files allow us to visually inspect the raMO functions with software such as <a href="https://jp-minerals.org/vesta/en/">VESTA</a>.</p><div class="admonition is-info"><header class="admonition-header">File naming convention</header><div class="admonition-body"><p><code>.chkpt</code>, <code>.raMO</code>, and <code>.xsf</code> files are formatted <code>&lt;name&gt;_&lt;raMO number&gt;_&lt;electrons left in supercell&gt;</code>.</p><p>For example, <code>1_Ir_dx2y2_10_556.xsf</code> represents the 10th raMO in the sequence, with 556 electrons remaining and unaccounted for.</p><p><span>$P_{sphere}$</span> files have the <code>rsphere</code> value embedded in their filename.</p></div></div><h2 id=".-Ir-Ir-isolobal-bonds-with-sp-hybrids"><a class="docs-heading-anchor" href="#.-Ir-Ir-isolobal-bonds-with-sp-hybrids">2. Ir-Ir isolobal bonds with  <span>$sp$</span> hybrids</a><a id=".-Ir-Ir-isolobal-bonds-with-sp-hybrids-1"></a><a class="docs-heading-anchor-permalink" href="#.-Ir-Ir-isolobal-bonds-with-sp-hybrids" title="Permalink"></a></h2><p>Before we reconstruct <span>$sp$</span>-based hybrids, we want to reconstruct all of the Ir <span>$d$</span> and <span>$s$</span> orbitals. Skip ahead in the analysis by untarring the <code>step2.tar</code> file, which contains all of the necessary reconstructions.</p><pre><code class="nohighlight hljs">tar -xf step2.tar</code></pre><br><center><p><img src="assets/Ir-Ir_300.png" width="150" alt="Ir-Ir isolobal bonding"></p>
+<p><i>Ir-Ir isolobal bonding</i></p></center><br><p>This next section of the raMO sequence will target Ir-Ir isolobal bonding. We want to create multi-center bonding functions between pairs of Ir atoms, with expected contribution from bridging In atoms. For this, we will use the <code>sp</code> type run, which searches for atoms within a specified radius from a central site and creates a target where <span>$s$</span> and <span>$p$</span> orbitals are oriented towards the central site.</p><p>For this next run, create a new YAML input (<code>step2.yaml</code>) with the following lines:</p><pre><code class="language-yaml hljs">checkpoint: 6_Ir_s/6_Ir_s_192_192.chkpt
+auto_psphere: true
+runs:
+  - name: 7_Ir-Ir
+    type: sp
+    site_file: Ir-Ir.txt
+    sites: all
+    radius: 1.6
+    rsphere: 3.5</code></pre><p>Our previous analysis ended at the 192nd raMO in the sequence, and we have 192 electrons remaining, (explaining the occurrence of 192 twice in the name of the checkpoint file). The <code>radius</code> parameter is the search radius for automatically including atoms in the target. </p><p>The <code>Ir-Ir.txt</code> site file should contain the midpoints of the Ir-Ir bonds in Cartesian coordinates. This can be done by using your preferred molecular modeling software (we&#39;ve done this by converting the <code>POSCAR</code> to a <code>CIF</code> and adding the dummy atoms into <a href="http://www.crystalimpact.com/diamond/">Diamond 3</a>). However, if you&#39;d like to skip the manual creation, the contents of <code>Ir-Ir.txt</code> are given below:</p><pre><code class="nohighlight hljs">X	  6.99330	  6.99330	 10.78620
+X	  0.00000	  6.99330	 10.78620
+X	  6.99330	  0.00000	 10.78620
+X	  0.00000	  0.00000	 10.78620
+X	  6.99330	  6.99330	  3.59540
+X	  6.99330	  0.00000	  3.59540
+X	  0.00000	  0.00000	  3.59540
+X	 10.48995	 10.48995	  7.19080
+X	  3.49665	 10.48995	  7.19080
+X	 10.48995	  3.49665	  7.19080
+X	  0.00000	  6.99330	  3.59540
+X	  3.49665	  3.49665	  7.19080
+X	 10.48995	 10.48995	  0.00000
+X	  3.49665	 10.48995	  0.00000
+X	 10.48995	  3.49665	  0.00000
+X	  3.49665	  3.49665	  0.00000</code></pre><p>The symbol <code>X</code> can be changed arbitrarily.</p><p>Now that you have these files, you can just run DFT-raMO again:</p><pre><code class="language-julia-repl hljs">julia&gt; dftramo_run(&quot;step2.yaml&quot;)</code></pre><p>As before, have a look at the <span>$P_{sphere}$</span> values and XSF files to see the reconstructions and validate the electronic assignment.</p><h2 id=".-Ir-p-orbitals-with-LCAO-reconstructions"><a class="docs-heading-anchor" href="#.-Ir-p-orbitals-with-LCAO-reconstructions">3. Ir p orbitals with LCAO reconstructions</a><a id=".-Ir-p-orbitals-with-LCAO-reconstructions-1"></a><a class="docs-heading-anchor-permalink" href="#.-Ir-p-orbitals-with-LCAO-reconstructions" title="Permalink"></a></h2><p>When working with orbitals with nonzero orbital angular momentum (<span>$p$</span>, <span>$d$</span>, <span>$f$</span> orbitals) it may be desirable to construct an orbital with an orientation or shape that is not aligned with the coordinate system. To solve this issue, we can use linear combinations of atomic orbitals (LCAOs). LCAOs may also be used to create molecular or multi-center bonding functions, i.e. π-bonding.</p><p>To skip to the next step, untar <code>step3.tar</code> in your working directory. You should find two new input files, <code>lcao1.yaml</code> and <code>lcao2.yaml</code>. The contents of <code>lcao1.yaml</code> are given below:</p><pre><code class="language-yaml hljs">target:
+  - px: -1
+    py: 1
+lcao:
+  - [1]
+  - [2]
+  - [17]
+  - [18]
+  - [33]
+  - [34]
+  - [49]
+  - [50]
+  - [65]
+  - [66]
+  - [81]
+  - [82]
+  - [97]
+  - [98]
+  - [113]
+  - [114]</code></pre><p>As before, the description of the LCAO sites file is given in the <a href="../usage.html">Usage</a> section.</p><p>Note that <code>lcao2.yaml</code> file contains reconstructions with different orientations (<span>$p_x$</span> is positive).</p><p>The <code>step3.yaml</code> file contains the information for the LCAO reconstruction, and references both <code>lcao1.yaml</code> and <code>lcao2.yaml</code> for each run. Its contents are below:</p><pre><code class="language-yaml hljs">checkpoint: 8_Ir_pz/8_Ir_pz_240_96.chkpt
+auto_psphere: true
+runs:
+  - name: 9_Ir_p_pi1
+    type: lcao
+    site_file: lcao1.yaml
+    sites: all
+    radius:
+    rsphere: 2.65
+  - name: 10_Ir_p_pi2
+    type: lcao
+    site_file: lcao2.yaml
+    sites: all
+    radius:
+    rsphere: 2.65</code></pre><p>Run <code>step3.yaml</code> and inspect the <span>$P_{sphere}$</span> values and XSF files.</p><pre><code class="language-julia-repl hljs">julia&gt; dftramo_run(&quot;step3.yaml&quot;)</code></pre><h1 id=".-Remainder-analysis-of-In-cage-states-and-In-p-orbitals"><a class="docs-heading-anchor" href="#.-Remainder-analysis-of-In-cage-states-and-In-p-orbitals">4. Remainder analysis of In cage states and In <span>$p$</span> orbitals</a><a id=".-Remainder-analysis-of-In-cage-states-and-In-p-orbitals-1"></a><a class="docs-heading-anchor-permalink" href="#.-Remainder-analysis-of-In-cage-states-and-In-p-orbitals" title="Permalink"></a></h1><p>As you complete your DFT-raMO runs, you&#39;ll find that the <span>$P_{sphere}$</span> values of the reconstructed orbitals tends to decrease. To visualize this, untar <code>step4.tar</code> and look at the log for run 11, found at <code>11_In-In/11_In-In_psphere_4.73.txt</code>:</p><pre><code class="nohighlight hljs">273     0.6474487830205945       at site [10.490, 3.497, 3.595]
+274     0.6429286864719969       at site [0.000, 6.993, 7.191]
+275     0.6116188776692522       at site [3.497, 10.490, 3.595]
+276     0.6382205090625862       at site [10.490, 10.490, 3.595]
+277     0.6504732377051952       at site [6.993, 6.993, 7.191]
+278     0.5981010110158822       at site [3.497, 3.497, 10.786]
+279     0.5871384506957702       at site [10.490, 3.497, 10.786]
+280     0.5162750706706059       at site [3.497, 10.490, 10.786]
+281     0.33634765527327326      at site [10.490, 10.490, 10.786]
+282     0.6434855799801233       at site [0.000, 0.000, 0.000]
+283     0.6433852489950562       at site [6.993, 0.000, 0.000]
+284     0.5527474698233648       at site [0.000, 6.993, 0.000]
+285     0.49587592534638286      at site [6.993, 6.993, 0.000]
+286     0.40417825671730373      at site [0.000, 0.000, 7.191]
+287     0.16723350141820606      at site [6.993, 0.000, 7.191]
+288     0.1572312564858335       at site [3.497, 3.497, 3.595]</code></pre><p>We find that <span>$Psphere$</span> drops precipitously at some points in this run (raMOs 281, 286-288). In order to complete the analysis, we need to open the XSF files to inspect the character of the raMO functions more closely. For reference and throughness, it is recommended to inspect the raMO functions directly preceding these (raMOs 280, 285).</p><br><center><p><img src="../assets/IrIn3_remainder_analysis.png" alt="From left to right: isosurfaces
+of raMO 280, 281, 287, 288"></p>
+<p><i>From left to right: isosurfaces of raMO 280, 281, 287, 288</i></p></center><br><p>Upon inspection of these raMOs, we come to the following conclusions:</p><ul><li>raMOs 280, 281, and 286 show delocalization but expected character, so electrons are allocated to these runs.</li><li>raMOs 287 and 288 show delocalization and unexpected p-like character on the In atoms. Electrons are not assigned to these raMOs and the functions are returned to the basis set. However, the <span>$p$</span>-like character informs our next target, as raMO functions are orthogonal to each other.</li></ul><p>For the final run, we now target the In <span>$p$</span> orbitals. Create the last input file, <code>step4.yaml</code>:</p><pre><code class="language-yaml hljs">checkpoint: 11_In-In/11_In-In_286_4.chkpt
+auto_psphere: true
+runs:
+  - name: 12.1_In_px
+    type: px
+    site_file: 
+    sites: In 1
+    radius:
+    rsphere: 3.2
+  - name: 12.2_In_py
+    type: py
+    site_file: 
+    sites: In 1
+    radius:
+    rsphere: 3.2
+  - name: 12.3_In_pz
+    type: pz
+    site_file: 
+    sites: In 1
+    radius:
+    rsphere: 3.2</code></pre><p>Run DFT-raMO.</p><pre><code class="language-julia-repl hljs">julia&gt; dftramo_run(&quot;step4.yaml&quot;)</code></pre><p>The <span>$P_{sphere}$</span> values are still low, but this is expected. Isosurfaces in the XSFs show delocalized <span>$p$</span>-like functions throughout the In atoms in the cell.</p><div class="admonition is-info"><header class="admonition-header">Congratulations!</header><div class="admonition-body"><p>🌟 You performed a DFT-raMO analysis!</p></div></div></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../usage.html">« Usage</a><a class="docs-footer-nextpage" href="../api/index.html">API »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 0.27.25 on <span class="colophon-date" title="Monday 25 September 2023 20:29">Monday 25 September 2023</span>. Using Julia version 1.9.3.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
