@@ -1,7 +1,8 @@
 # Example system: IrIn₃
 
 In this example, we're going to demonstrate a DFT-raMO run for an intermetallic binary compound in
-the iridium-indium system, using data from a VASP 4.6 calculation.
+the iridium-indium system, using data from a VASP 4.6 calculation. This example will follow the
+scheme outlined in [this paper](https://doi.org/10.1021/acs.inorgchem.3c01496).
 
 ## Setup
 
@@ -26,7 +27,7 @@ which will be provided in the future. This includes the following files:
 ## 1. Ir ``d_{x^2+y^2}`` orbitals
 ### Constructing the YAML input
 
-You'll find that `step1.yaml` is a blank template. The [Usage] section of the manual contains
+You'll find that `step1.yaml` is a blank template. The [Usage](usage.md) section of the manual contains
 information on each of the keys and values in the file.
 
 Since we're starting from scratch, the `checkpoint` key should be blank. Leave `auto_psphere` as
@@ -81,7 +82,7 @@ Run: 1_Ir_dx2y2
 1, Psphere: 0.905 at site [2.417, 2.417, 0.000]
 ```
 
-!!! note "Optional"
+!!! note "Optional UnicodePlots implementation"
 
     You can use the `UnicodePlots` package to visualize ``P_{sphere}`` data. If you don't
     load the package, you will see the following message.
@@ -105,7 +106,7 @@ higher values indicate more localization, recall that our setting of `rsphere` w
 estimated value. What is more valuable is the consistency of the ``P_{sphere}`` values. Here, the
 consistent values indicates that the Ir ``d_{x^2+y^2}`` orbitals are fully occupied.
 
-See [Theory](theory) for more details on ``P_{sphere}``.
+See [Theory](theory.md) for more details on ``P_{sphere}``.
 
 If you check your working directory now, you should see a directory with the `name` you specified
 in `step1.yaml`. Within this directory are four types of files:
@@ -195,13 +196,15 @@ Now that you have these files, you can just run DFT-raMO again:
 julia> dftramo_run("step2.yaml")
 ```
 
-As before, have a look at the  XSF files to see the reconstructions.
+As before, have a look at the ``P_{sphere}`` values and XSF files to see the reconstructions
+and validate the electronic assignment.
 
 ## LCAO reconstructions
 
 When working with orbitals with nonzero orbital angular momentum (p, d, f orbitals) it may be
 desirable to construct an orbital with an orientation or shape that is not aligned with the
 coordinate system. To solve this issue, we can use linear combinations of atomic orbitals (LCAOs).
+LCAOs may also be used to create molecular or multi-center bonding functions, i.e. π-bonding.
 
 To skip to the next step, untar `step3.tar` in your working directory. You should find two new input
 files, `lcao1.yaml` and `lcao2.yaml`. The contents of `lcao1.yaml` are given below:
@@ -227,9 +230,9 @@ lcao:
   - [113]
   - [114]
 ```
-As before, the description of the LCAO sites file is given in the [Usage] section.
+As before, the description of the LCAO sites file is given in the [Usage](usage.md) section.
 
-The `lcao2.yaml` file contains reconstructions with different orientations
+Note that `lcao2.yaml` file contains reconstructions with different orientations (px is positive).
 
 The `step3.yaml` file contains the information for the LCAO reconstruction, and references both
 `lcao1.yaml` and `lcao2.yaml` for each run. Its contents are below:
@@ -249,6 +252,11 @@ runs:
     sites: all
     radius:
     rsphere: 2.65
+```
+
+Run `step3.yaml` and inspect the ``P_{sphere}`` values and XSF files.
+```julia-repl
+julia> dftramo_run("step3.yaml")
 ```
 
 # Remainder analysis
@@ -274,13 +282,25 @@ found at `11_In-In/11_In-In_psphere_4.73.txt`:
 287     0.16723350141820606      at site [6.993, 0.000, 7.191]
 288     0.1572312564858335       at site [3.497, 3.497, 3.595]
 ```
-We find that ``Psphere`` drops precipitously at some points in this run. In order to complete the
-analysis, we want to remove the orbitals from our total reconstruction and 
-We recommend that you manually inspect the orbitals to observe their
-character. When we do this, we find that orbitals 287 and 288 do not have the desired character, and
-the last run should reconstruct from orbital 286.
+We find that ``Psphere`` drops precipitously at some points in this run (raMOs 281, 286-288).
+In order to complete the analysis, we need to open the XSF files to inspect the character of the
+raMO functions more closely. For reference and throughness, it is recommended to inspect the raMO
+functions directly preceding these (raMOs 280, 285).
 
-For the final run, we can create the last input file, `step4.yaml`:
+```@raw html
+<br><center><p><img src="assets/IrIn3_remainder_analysis.png" alt="From left to right: isosurfaces
+of raMO 280, 281, 287, 288"></p>
+<p><i>From left to right: isosurfaces of raMO 280, 281, 287, 288</i></p></center><br>
+```
+
+Upon inspection of these raMOs, we come to the following conclusions:
+* raMOs 280, 281, and 286 show delocalization but expected character, so electrons are allocated to
+  these runs.
+* raMOs 287 and 288 show delocalization and unexpected p-like character on the In atoms. Electrons
+  are not assigned to these raMOs and the functions are returned to the basis set. However, the
+  p-like character informs our next target, as raMO functions are orthogonal to each other.
+
+For the final run, we now target the In p orbitals. Create the last input file, `step4.yaml`:
 ```yaml
 checkpoint: 11_In-In/11_In-In_286_4.chkpt
 auto_psphere: true
@@ -304,3 +324,13 @@ runs:
     radius:
     rsphere: 3.2
 ```
+Run DFT-raMO.
+```julia-repl
+julia> dftramo_run("step4.yaml")
+```
+
+The ``Psphere`` values are still low, but this is expected. Isosurfaces in the XSFs show
+delocalized p-like functions throughout the In atoms in the cell.
+
+!!! note "Congratulations!"
+    You performed a DFT-raMO analysis!
