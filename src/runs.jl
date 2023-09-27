@@ -51,7 +51,7 @@ function loop_target_cluster_sp(
                 false,
                 "",
             )
-            isosurf = psi_to_isosurf(occ_states, psi_up, kpt, grange)
+            isosurf = raMO_to_density(occ_states, psi_up, kpt, grange)
             (sphere, total, psphere[i]) = Psphere(RealDataGrid(real(isosurf),super.atomlist.basis), voids_list[i], rsphere)
             open(string(run_name, "_psphere_", rsphere, ".txt"), "a") do io
                 print_psphere_terminal(iter, num_raMO+i, psphere[i], voids_list[i], io)
@@ -87,13 +87,15 @@ function loop_AO(
     S,
     H,
     rsphere
-)
+) ## MUTABLE STRUCT RECOMMENDED
     # check to see which directory we're in
     if split(pwd(),'/')[end] != run_name && !isdir(run_name)
         mkdir(run_name)
     end
     cd(run_name) do 
         # check to see if directory is empty. if not, send warning before deleting
+        # TODO: in case someone puts a file in there, just wipe the necessary files rather
+        # than wiping everything.
         if !isempty(readdir())
             @warn "Directory is not empty. Files will be deleted/overwritten."
             for n in readdir()
@@ -101,8 +103,8 @@ function loop_AO(
             end
         end
         psphere = Vector{Float64}(undef, size(atom_list))
-        remainders = []
-        iter = ProgressBar(1:length(atom_list), unit="raMOs")
+        remainders = Array{ComplexF32,1}(undef, 0) # TODO
+        iter = ProgressBar(eachindex(atom_list), unit="raMOs")
         for i in iter
             target = make_target_AO(atom_list[i], target_orbital, super)
             (psi_previous, psi_up, e_up, num_electrons_left) = reconstruct_targets_DFT(
@@ -120,9 +122,9 @@ function loop_AO(
                 false,
                 "",
             )
-            isosurf = psi_to_isosurf(occ_states, psi_up, kpt, grange)
-            pos = Vector(super.atomlist.basis*Electrum.BOHR2ANG*super.atomlist[atom_list[i]].pos)
-            (sphere, total, psphere[i]) = Psphere(RealDataGrid(real(isosurf),super.atomlist.basis), pos, rsphere)
+            isosurf = raMO_to_density(occ_states, psi_up, kpt, grange)
+            pos = Vector(basis(super) * Electrum.BOHR2ANG * super[atom_list[i]].pos)
+            (sphere, total, psphere[i]) = Psphere(RealDataGrid(real(isosurf),basis(super)), pos, rsphere)
             open(string(run_name, "_psphere_", rsphere, ".txt"), "a") do io
                 print_psphere_terminal(iter, num_raMO+i, psphere[i], pos, io)
             end
@@ -189,7 +191,7 @@ function loop_LCAO(
                 false,
                 "",
             )
-            isosurf = psi_to_isosurf(occ_states, psi_up, kpt, grange)
+            isosurf = raMO_to_density(occ_states, psi_up, kpt, grange)
             pos = super.atomlist.basis*mp_lcao(site_list[i], super.atomlist)*Electrum.BOHR2ANG
             (sphere, total, psphere[i]) = Psphere(RealDataGrid(real(isosurf),super.atomlist.basis), pos, rsphere)
             open(string(run_name, "_psphere_", rsphere, ".txt"), "a") do io
@@ -213,17 +215,17 @@ Reads a run.yaml file and executes DFTraMO.
 function dftramo_run(filename::AbstractString, software::AbstractString="vasp")
     (runs, checkpoint, auto_psphere, dftinfo) = read_run_yaml(filename, software)
     occ_states = get_occupied_states(dftinfo.wave, dftinfo.fermi.fermi*Electrum.EV2HARTREE)
-    super = Supercell(dftinfo.xtal, orb_dict)
+    super = Supercell(dftinfo.xtal, orb_dict) #TODO: Make into an outer constructor
     S = make_overlap_mat(occ_states)
-    H = DFTraMO.generate_H(super, DFTRAMO_EHT_PARAMS)
+    H = generate_H(super, DFTRAMO_EHT_PARAMS)
     
     if !isnothing(checkpoint)
-        (psi_previous, num_electrons_left, num_raMO) = import_chkpt(checkpoint)
+        (psi_previous, num_electrons_left, num_raMO) = import_checkpoint(checkpoint)
     else
         num_electrons_left = sum([get(e_dict, n.atom.name, 0) for n in dftinfo.xtal.atoms])
         num_raMO = 0
         psi_previous = diagm(ones(size(occ_states.coeff)[2]))
-        psi_previous = ComplexF32.(repeat(psi_previous, 1, 1, 2))
+        psi_previous = ComplexF32.(repeat(psi_previous, 1, 1, 2)) #spin states to be implemented
     end
     
     low_psphere = Vector{Int}(undef, 0)
@@ -233,7 +235,7 @@ function dftramo_run(filename::AbstractString, software::AbstractString="vasp")
         # print run information
         println(crayon"bold", "Run: ", crayon"light_cyan", r.name, crayon"!bold default")
         if r.type in keys(AO_RUNS)
-            (low_psphere, psi_previous2, num_raMO2, num_electrons_left2) = DFTraMO.loop_AO(
+            (low_psphere, psi_previous2, num_raMO2, num_electrons_left2) = loop_AO(
             super,
             r.sites,
             get(AO_RUNS, r.type, 0),
@@ -313,7 +315,7 @@ function dftramo_run(filename::AbstractString, software::AbstractString="vasp")
             deleteat!(site_list, collect(1:low_psphere[1]-1))
             e = num_electrons_left - (low_psphere[1]-1)*2
             raMO = num_raMO + (low_psphere[1]-1)
-            (psi_previous, num_electrons_left, num_raMO) = import_chkpt(string(r.name, "/", r.name, "_", raMO, "_", e, ".chkpt"))
+            (psi_previous, num_electrons_left, num_raMO) = import_checkpoint(string(r.name, "/", r.name, "_", raMO, "_", e, ".chkpt"))
             # If the last raMOs were the only ones with low_psphere, no need to rerun
             isempty(site_list) ? next = iterate(runs, state) : r.name = string(r.name, "_aps")
         else

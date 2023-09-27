@@ -16,54 +16,52 @@ function read_run_yaml(file::AbstractString, software::AbstractString="vasp")
     if isnothing(checkpoint)
         println("No checkpoint file specified. Run will start from beginning conditions.")
     elseif !isfile(checkpoint)
-        error(checkpoint, " does not exist. Check path to file.") : nothing
+        error(checkpoint, " does not exist. Check path to file.")
     else
         println("Using checkpoint file ", cr_b, checkpoint, cr_d)
     end 
     
     auto_psphere = get(data, "auto_psphere", false)
-    typeof(auto_psphere) != Bool ? error("Invalid entry for auto_psphere.") : nothing
+    typeof(auto_psphere) != Bool && error("Invalid entry for auto_psphere.")
     println("Auto-Psphere: ", auto_psphere)
     
     runs = get(data, "runs", nothing)
     println("Number of runs: ", length(runs))
     runlist = Vector{RunInfo}(undef, length(runs))
-    for n in eachindex(runs)
+    for n in eachindex(runs) # TODO: Refactor into a function or multiple functions
         println("Run ", n, ":")
         # Checks type, site_file, sites, radius, rsphere
         name = get(runs[n], "name", string("run_", n))
         println("   name: ", cr_b, name, cr_d)
 
         type = lowercase(get(runs[n], "type", ""))
-        isempty(type) ? error("type for run ", n, " is empty") : nothing
-        !in(type, union(keys(AO_RUNS), CAGE_RUNS, ["lcao"])) ? error("type ", type, " is an invalid entry.") : nothing
+        isempty(type) && error("type for run ", n, " is empty")
+        !in(type, union(keys(AO_RUNS), CAGE_RUNS, ["lcao"])) && error("type ", type, " is an invalid entry.")
         println("   type: ", cr_b, type, cr_d)
 
-        site_file = get(runs[n], "site_file", nothing)
-        if isnothing(site_file)
+        site_file = get(runs[n], "site_file", "")
+
+        # site_file is not needed for an AO run
+        if in(type, keys(AO_RUNS))
+            println("   AO type run. site_file will be ignored.")
             site_file = ""
         else
-            # site_file is not needed for an AO run
-            if in(type, keys(AO_RUNS))
-                println("   AO type run. site_file will be ignored.")
-                site_file = ""
-            else
-                !isfile(site_file) ? error(site_file, " does not exist. Check filename.") : nothing 
-                if in(type, CAGE_RUNS)
-                    site_list = read_site_list(site_file)
-                elseif type == "lcao"
-                    lcao_yaml = YAML.load_file(site_file)
-                    site_list = get(lcao_yaml, "lcao", nothing)
-                end
-                println("   site_file: ", cr_b, site_file, cr_d)
+            !isfile(site_file) && error(site_file, " does not exist. Check filename.")
+            if in(type, CAGE_RUNS)
+                site_list = read_site_list(site_file) #
+            elseif type == "lcao"
+                lcao_yaml = YAML.load_file(site_file)
+                site_list = get(lcao_yaml, "lcao", nothing)
             end
+            println("   site_file: ", cr_b, site_file, cr_d)
         end
+
 
         sites = get(runs[n], "sites", nothing)
         isnothing(sites) ? error("sites cannot be empty.") : nothing
-        site_final = Vector{Int}(undef, 0)
+        #site_final = Vector{Int}(undef, 0)
         if sites == "all"
-            in(type, keys(AO_RUNS)) ? error("'all' is not valid for atomic orbital type runs.") : nothing
+            in(type, keys(AO_RUNS)) && error("'all' is not valid for atomic orbital type runs.")
             sites_final = collect(1:length(site_list))
         else
             sites = split(sites, [' ', ','], keepempty=false)
@@ -72,35 +70,30 @@ function read_run_yaml(file::AbstractString, software::AbstractString="vasp")
             # If AO_RUNS, an element must be the first item in the list.
             if in(type, keys(AO_RUNS))
                 e = string(sites[1])
-                !in(e, Electrum.ELEMENTS) ? error(e, " is not a valid element.") : nothing
+                !in(e, Electrum.ELEMENTS) && error(e, " is not a valid element.")
                 valid_atoms = findall(x -> Electrum.name(x) == e, dftinfo.xtal.atoms)
-                isempty(valid_atoms) ? error("Element ", e, "was not found in the system.") : nothing
+                isempty(valid_atoms) && error("Element ", e, "was not found in the system.") 
                 length(sites) > 1 ? sites_final = valid_atoms[parse_sites(sites[2:end])] : sites_final = valid_atoms
             else
                 sites_final = parse_sites(sites)
-                length(sites_final) > length(site_list) ? error("Number of sites specified exceeds site_list length.") : nothing
+                length(sites_final) > length(site_list) && error("Number of sites specified exceeds site_list length.")
             end
         end
         println("   sites: ", cr_b, get(runs[n], "sites", nothing), cr_d)
         
         radius = get(runs[n], "radius", 0.0)
-        if isnothing(radius)
-            radius = 0.0
+        if in(type, keys(AO_RUNS))
+            println("   Radius is ignored for atomic orbital type runs.")
         else
-            if in(type, keys(AO_RUNS))
-                println("   Radius is ignored for atomic orbital type runs.")
-            else
-                typeof(radius) == String ? error("Radius must be a number.") : nothing
-                println("   radius: ", cr_b, radius, " Å", cr_d)
-            end
+            !isa(radius, Number) && error("Radius must be a number.")
+            println("   radius: ", cr_b, radius, " Å", cr_d)
         end
 
-        rsphere = get(runs[n], "rsphere", nothing)
-        if isnothing(rsphere) 
-            rsphere = 3.0
+        rsphere = get(runs[n], "rsphere") do
             println(cr_y, "   rsphere was not specified. Default value of 3.0 Å is applied.", cr_d)
+            return 3.0
         end
-        typeof(rsphere) == String ? error("rsphere must be a number.") : Float64(rsphere)
+        !isa(rsphere, Number) && error("rsphere must be a number.")
         println("   rsphere: ", cr_b, rsphere, " Å", cr_d)
 
         runlist[n] = RunInfo(name, type, site_file, sites_final, radius, rsphere)
@@ -109,12 +102,12 @@ function read_run_yaml(file::AbstractString, software::AbstractString="vasp")
 end
 
 """
-    parse_sites(sites::Vector{SubString{String}}) -> site_final::Vector{Int}
+    parse_sites(sites::AbstractVector{<:AbstractString}) -> site_final::Vector{Int}
 
 Parses a portion of the "sites" lines in the yaml file to return a Vector{Int} with valid
 indices for targets. e.g. ["1:3", "3", "18:2:20"] -> [1, 2, 3, 18, 20, 22]
 """
-function parse_sites(sites::Vector{SubString{String}})
+function parse_sites(sites::AbstractVector{<:AbstractString})
     site_final = Vector{Int}(undef, 0)
     for s in sites
         # process ranges of Ints, i.e. "1:3"
@@ -242,6 +235,7 @@ end
 Reads an eHtuner parameter file and returns it as an ehtParams object.
 If argument is left empty, it will read the DFT_raMO_eht_parms.dat file by default.
 """
+# Remove from export list
 function read_eht_params(paramsfile::AbstractString="testfiles/DFT_raMO_eht_parms.dat")
     # Skips header
     ln = readlines(open(paramsfile,"r"))
@@ -285,14 +279,15 @@ end
 
 Reads in a txt file with coordinates, typically for specifing midpoints for isolobal bonds or cage states.
 """
+#TODO: predict length of list, change to matrices instead of vector of vector (will need to check other method)
 function read_site_list(filename::AbstractString)
     sitelist = Vector{Vector{Float64}}(undef,0)
     open(filename,"r") do io
         ln = readlines(io)
         ln = filter(!isempty,split.(ln))
-        length(ln[1]) > 4 ? error("Check that your file is in the format 'Atom  0.0  0.0  0.0'") : nothing
+        length(ln[1]) > 4 && error("Check that your file is in the format 'Atom  0.0  0.0  0.0'")
         # Removes first column of atomic labels, if any
-        length(ln[1])==4 ? has_label = 1 : has_label = 0
+        has_label = (length(ln[1]) == 4)
         for i in ln
             push!(sitelist,parse.(Float64,i[1+has_label:3+has_label]))
         end
@@ -301,18 +296,19 @@ function read_site_list(filename::AbstractString)
 end
 
 """
-    import_chkpt(filename::AbstractString)
+    import_checkpoint(filename::AbstractString)
 
 Imports a matrix of remainder coefficients to use for raMO runs.
 """
-function import_chkpt(filename::AbstractString)
+function import_checkpoint(filename::AbstractString)
     num_electrons_left = parse(Int,split(filename, ['.', '_'])[end-1])
     num_raMO = parse(Int,split(filename, ['.', '_'])[end-2])
-    io = open(filename, "r")
-    dims = [read(io, Int64) for n in 1:3]
-    psi_previous = Array{ComplexF32}(undef, (dims[1], dims[2], dims[3]))
-    read!(io, psi_previous)
-    close(io)
+    psi_previous = open(filename, "r") do io
+        dims = [read(io, Int64) for n in 1:3] # first three Ints are the dimensions of the matrix
+        psi_previous = Array{ComplexF32}(undef, (dims[1], dims[2], dims[3]))
+        read!(io, psi_previous)
+        return psi_previous
+    end
     return (psi_previous, num_electrons_left, num_raMO)
 end
 
@@ -322,10 +318,11 @@ end
 Imports a vector of coefficients corresponding to each raMO.
 """
 function import_raMO(filename::AbstractString)
-    io = open(filename, "r")
-    sz = Int(stat(io).size/sizeof(ComplexF32))
-    psi = Vector{ComplexF32}(undef, sz)
-    read!(io, psi)
-    close(io)
+    psi = open(filename, "r") do io
+        sz = Int(stat(io).size/sizeof(ComplexF32))
+        psi = Vector{ComplexF32}(undef, sz)
+        read!(io, psi)
+        return psi
+    end
     return psi
 end
