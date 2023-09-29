@@ -82,6 +82,9 @@ function read_run_yaml(file::AbstractString, software::AbstractString="vasp")
         println("   sites: ", cr_b, get(runs[n], "sites", nothing), cr_d)
         
         radius = get(runs[n], "radius", 0.0)
+        if isnothing(radius)
+            radius = 0.0
+        end
         if in(type, keys(AO_RUNS))
             println("   Radius is ignored for atomic orbital type runs.")
         else
@@ -116,11 +119,11 @@ function parse_sites(sites::AbstractVector{<:AbstractString})
             length(ln) == 2 ? site_final = vcat(site_final, collect(ln[1]:ln[2])) : nothing
             if length(ln) == 3
                 check_range = collect(ln[1]:ln[2]:ln[3])
-                typeof(check_range) == Vector{Float64} ? error("Atom range ", ln, "is invalid.") : nothing
+                typeof(check_range) == Vector{Float64} && error("Atom range ", ln, "is invalid.")
                 site_final = vcat(site_final, collect(ln[1]:ln[2]:ln[3]))
             end            
             # account for erroneous cases
-            length(ln) == 1 || length(ln) > 3 ? error("Error in sites input: ", s, ". Please fix.") : nothing
+            (length(ln) == 1 || length(ln) > 3) && error("Error in sites input: ", s, ". Please fix.")
         else
             site_final = vcat(site_final, parse(Int, s))
         end
