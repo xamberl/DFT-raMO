@@ -9,7 +9,6 @@ function read_run_yaml(file::AbstractString, software::AbstractString="vasp")
 
     # crayons for color
     cr_b = crayon"light_cyan"
-    cr_y = crayon"yellow"
     cr_d = crayon"default"
 
     checkpoint = get(data, "checkpoint", nothing)
@@ -70,10 +69,8 @@ function parse_runs(runs::Vector{Dict{Any, Any}}, dftinfo)
             println("   site_file: ", cr_b, site_file, cr_d)
         end
 
-
         sites = get(runs[n], "sites", nothing)
         isnothing(sites) ? error("sites cannot be empty.") : nothing
-        #site_final = Vector{Int}(undef, 0)
         if sites == "all"
             in(type, keys(AO_RUNS)) && error("'all' is not valid for atomic orbital type runs.")
             sites_final = collect(1:length(site_list))
@@ -314,8 +311,14 @@ end
 
 """
     import_checkpoint(filename::AbstractString)
+        -> (
+            psi_previous::Array{ComplexF32},
+            num_electrons_left::Int,
+            num_raMO::Int
+            )
 
-Imports a matrix of remainder coefficients to use for raMO runs.
+Imports a matrix of remainder coefficients to use for raMO runs, as well as the number of remaining
+electrons and the number of the raMO in the sequence.
 """
 function import_checkpoint(filename::AbstractString)
     num_electrons_left = parse(Int,split(filename, ['.', '_'])[end-1])
@@ -330,7 +333,7 @@ function import_checkpoint(filename::AbstractString)
 end
 
 """
-    import_raMO(filename::AbstractString)
+    import_raMO(filename::AbstractString) -> psi::Vector{ComplexF32}
 
 Imports a vector of coefficients corresponding to each raMO.
 """
