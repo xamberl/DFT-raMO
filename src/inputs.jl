@@ -25,24 +25,25 @@ function read_run_yaml(file::AbstractString, software::AbstractString="vasp")
     typeof(auto_psphere) != Bool ? error("Invalid entry for auto_psphere.") : nothing
     println("Auto-Psphere: ", auto_psphere)
 
-    # Get energy range. Need to convert to Hartree
-    software == "vasp" ? e = Electrum.EV2HARTREE : e = 1
+    # Get energy range in Ha
     emin = get(data, "emin", nothing)
     if isnothing(emin)
-        emin = minimum(dftinfo.wave.energies)/e
-    elseif !isreal(emin)
-        error("emin is not a real number.")
+        println("No minimum energy specified. All bands below emax will be included.")
+        emin = minimum(dftinfo.wave.energies)
+    else
+        emin = parse_energy(software, emin)
     end
-    emin = emin*e
-    emin > maximum(dftinfo.wave.energies) && error("emin cannot be greater than ", maximum(dftinfo.wave.energies)/e)
+    emin > maximum(dftinfo.wave.energies) && error("emin cannot be greater than ", maximum(dftinfo.wave.energies), "Ha.")   
     emax = get(data, "emax", nothing)
     if isnothing(emax)
+        println("No maximum energy specified. emax will be set to the Fermi energy.")
         emax = dftinfo.fermi.fermi
-    elseif !isreal(emax)
-        error("emax is not a real number.")
+        software == "vasp" ? emax = emax*Electrum.EV2HARTREE : nothing
+    else
+        emax = parse_energy(software, emax)
     end
-    emax = emax*e
-    emax < emin && error("emax cannot be less than emin (", emin/e, ").")
+    emax < emin && error("emax cannot be less than emin.")
+    println("Energy range: ", @sprintf("%.3f", emin), " to ", @sprintf("%.3f", emax), " Ha.")
     
     runs = get(data, "runs", nothing)
     println("Number of runs: ", length(runs))
@@ -125,6 +126,38 @@ function read_run_yaml(file::AbstractString, software::AbstractString="vasp")
         runlist[n] = RunInfo(name, type, site_file, sites_final, radius, rsphere)
     end
     return(runlist, checkpoint, auto_psphere, dftinfo, emin, emax)
+end
+
+"""
+    parse_energy()
+
+Parse energy values of the input yaml files and returns energies in Ha.
+"""
+function parse_energy(software, energy)
+    # Get energy range. Need to convert to Hartree
+    if typeof(energy) == String
+        ln = split(energy)
+        length(ln) > 2 && error("Check energy range.")
+        n = parse(Float64, ln[1])
+        if lowercase(ln[2]) == "ev"
+            n = n*Electrum.EV2HARTREE
+        elseif !(lowercase(ln[2]) == "ha")
+            error(ln[2], " is not a valid energy unit. Use Ha or eV.")
+        end
+    elseif typeof(energy) <: Real
+        if software == "vasp"
+            e = Electrum.EV2HARTREE
+            units = "eV"
+        else
+            e = 1
+            units = "Ha"
+        end
+        warn("No energy units are specified. Defaulting to ", units, " (", software, ")")
+        n = energy*e
+    else
+        error("Unable to parse energy. Check energy range.")
+    end
+    return n
 end
 
 """
