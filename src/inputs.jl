@@ -43,7 +43,7 @@ function read_run_yaml(file::AbstractString, software::AbstractString="vasp")
         emax = parse_energy(software, emax)
     end
     emax < emin && error("emax cannot be less than emin.")
-    println("Energy range: ", @sprintf("%.3f", emin), " to ", @sprintf("%.3f", emax), " Ha.")
+    println("Energy range: ", @sprintf("%.3f", emin), " to ", @sprintf("%.3f", emax), " Ha (", @sprintf("%.3f", emin*Electrum.HARTREE2EV), " to ", @sprintf("%.3f", emax*Electrum.HARTREE2EV), " eV)")
     
     runs = get(data, "runs", nothing)
     println("Number of runs: ", length(runs))
@@ -129,34 +129,38 @@ function read_run_yaml(file::AbstractString, software::AbstractString="vasp")
 end
 
 """
-    parse_energy()
+    parse_energy(software::AbstractString, energy::AbstractString) -> n::Float64
 
 Parse energy values of the input yaml files and returns energies in Ha.
 """
-function parse_energy(software, energy)
+function parse_energy(software::AbstractString, energy::AbstractString)
     # Get energy range. Need to convert to Hartree
-    if typeof(energy) == String
-        ln = split(energy)
-        length(ln) > 2 && error("Check energy range.")
-        n = parse(Float64, ln[1])
-        if lowercase(ln[2]) == "ev"
-            n = n*Electrum.EV2HARTREE
-        elseif !(lowercase(ln[2]) == "ha")
-            error(ln[2], " is not a valid energy unit. Use Ha or eV.")
-        end
-    elseif typeof(energy) <: Real
-        if software == "vasp"
-            e = Electrum.EV2HARTREE
-            units = "eV"
-        else
-            e = 1
-            units = "Ha"
-        end
-        warn("No energy units are specified. Defaulting to ", units, " (", software, ")")
-        n = energy*e
-    else
-        error("Unable to parse energy. Check energy range.")
+    ln = split(energy)
+    length(ln) > 2 && error("Check energy range.")
+    n = parse(Float64, ln[1])
+    if lowercase(ln[2]) == "ev"
+        n = n*Electrum.EV2HARTREE
+    elseif !(lowercase(ln[2]) == "ha")
+        error(ln[2], " is not a valid energy unit. Use Ha or eV.")
     end
+    return n
+end
+
+"""
+    parse_energy(software::AbstractString, energy::Real) -> n::Float64
+
+Parse energy values of the input yaml files and returns energies in Ha.
+"""
+function parse_energy(software::AbstractString, energy::Real)
+    if software == "vasp"
+        e = Electrum.EV2HARTREE
+        units = "eV"
+    else
+        e = 1
+        units = "Ha"
+    end
+    warn("No energy units are specified. Defaulting to ", units, " (", software, ")")
+    n = energy*e
     return n
 end
 
