@@ -27,8 +27,22 @@ function read_run_yaml(file::AbstractString, software::AbstractString="vasp")
     
     runs = get(data, "runs", nothing)
     println("Number of runs: ", length(runs))
+    runlist = parse_runs(runs, dftinfo)
+
+    return(runlist, checkpoint, auto_psphere, dftinfo)
+end
+
+"""
+    parse_runs(runs::Vector{Dict{Any, Any}}) -> runlist::Vector{RunInfo}
+
+Parse the run section of the input yaml file and returns Vector{RunInfo}.
+"""
+function parse_runs(runs::Vector{Dict{Any, Any}}, dftinfo)
+    cr_b = crayon"light_cyan"
+    cr_y = crayon"yellow"
+    cr_d = crayon"default"
     runlist = Vector{RunInfo}(undef, length(runs))
-    for n in eachindex(runs) # TODO: Refactor into a function or multiple functions
+    for n in eachindex(runs)
         println("Run ", n, ":")
         # Checks type, site_file, sites, radius, rsphere
         name = get(runs[n], "name", string("run_", n))
@@ -101,7 +115,7 @@ function read_run_yaml(file::AbstractString, software::AbstractString="vasp")
 
         runlist[n] = RunInfo(name, type, site_file, sites_final, radius, rsphere)
     end
-    return(runlist, checkpoint, auto_psphere, dftinfo)
+    return runlist
 end
 
 """
