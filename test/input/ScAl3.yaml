@@ -1,5 +1,7 @@
 checkpoint:
 auto_psphere: true
+emin: -100
+emax:
 runs:
   - name: 1_Sc-Sc
     type: sp

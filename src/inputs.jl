@@ -24,6 +24,25 @@ function read_run_yaml(file::AbstractString, software::AbstractString="vasp")
     auto_psphere = get(data, "auto_psphere", false)
     typeof(auto_psphere) != Bool ? error("Invalid entry for auto_psphere.") : nothing
     println("Auto-Psphere: ", auto_psphere)
+
+    # Get energy range. Need to convert to Hartree
+    software == "vasp" ? e = Electrum.EV2HARTREE : e = 1
+    emin = get(data, "emin", nothing)
+    if isnothing(emin)
+        emin = minimum(dftinfo.wave.energies)/e
+    elseif !isreal(emin)
+        error("emin is not a real number.")
+    end
+    emin = emin*e
+    emin > maximum(dftinfo.wave.energies) && error("emin cannot be greater than ", maximum(dftinfo.wave.energies)/e)
+    emax = get(data, "emax", nothing)
+    if isnothing(emax)
+        emax = dftinfo.fermi.fermi
+    elseif !isreal(emax)
+        error("emax is not a real number.")
+    end
+    emax = emax*e
+    emax < emin && error("emax cannot be less than emin (", emin/e, ").")
     
     runs = get(data, "runs", nothing)
     println("Number of runs: ", length(runs))
@@ -105,7 +124,7 @@ function read_run_yaml(file::AbstractString, software::AbstractString="vasp")
 
         runlist[n] = RunInfo(name, type, site_file, sites_final, radius, rsphere)
     end
-    return(runlist, checkpoint, auto_psphere, dftinfo)
+    return(runlist, checkpoint, auto_psphere, dftinfo, emin, emax)
 end
 
 """
@@ -190,11 +209,11 @@ has the dimensions n (number of occupied states) by m (number of nonzero
 planewaves). Each OccupiedState element holds information about the coefficient,
 kpoint, and G vector.
 """
-function get_occupied_states(wave::PlanewaveWavefunction, energy::Real)
+function get_occupied_states(wave::PlanewaveWavefunction, emin::Real, emax::Real)
     hkl_list = [SVector(v.I) for v in FFTBins(wave)]
 
-    # Filters occupied states below specified energy
-    num_occ_states = wave.energies .< energy # Bit array
+    # Filters occupied states within energy range
+    num_occ_states = emin .< wave.energies .< emax # Bit array
     occ_states = reshape(
         [
             (wave.data[n], wave.kpoints.points[CartesianIndices(wave.data)[n].I[3]].point, hkl_list[CartesianIndices(wave.data)[n].I[1]])
