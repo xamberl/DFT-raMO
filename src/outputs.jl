@@ -19,11 +19,11 @@ function write_to_XSF(
 end
 
 """
-    psi_to_isosurf(occ_states, psi, kpt, grange)
+    raMO_to_density(occ_states, psi, kpt, grange)
 
 Converts the raMO (psi) into an electron density grid using FFT.
 """
-function psi_to_isosurf(
+function raMO_to_density(
     occ_states,
     psi,
     kpt,
@@ -57,12 +57,13 @@ function psi_to_isosurf(
         phase = [exp(2*pi*im*r) for r in kr]
         isosurf .+= u.*phase
     end
-    isosurf = vec(isosurf)
+    #==isosurf = vec(isosurf)
     realimag = hcat(real(isosurf), imag(isosurf))
     (evalue, evec) = eigen(realimag'*realimag)
     isosurf *= complex(evec[2], evec[1])
     isosurf = reshape(ComplexF64.(isosurf), Tuple(real_gridsize))
-    return isosurf
+    return isosurf==#
+    return abs2.(isosurf)
 end
 
 """
