@@ -213,9 +213,9 @@ end
 Reads a run.yaml file and executes DFTraMO.
 """
 function dftramo_run(filename::AbstractString, software::AbstractString="vasp")
-    (runs, checkpoint, auto_psphere, dftinfo) = read_run_yaml(filename, software)
-    occ_states = get_occupied_states(dftinfo.wave, dftinfo.fermi.fermi*Electrum.EV2HARTREE)
-    super = Supercell(dftinfo.xtal, orb_dict) #TODO: Make into an outer constructor
+    (runs, checkpoint, auto_psphere, dftinfo, emin, emax) = read_run_yaml(filename, software)
+    occ_states = get_occupied_states(dftinfo.wave, emin, emax)
+    super = Supercell(dftinfo.xtal, orb_dict)
     S = make_overlap_mat(occ_states)
     H = generate_H(super, DFTRAMO_EHT_PARAMS)
     

@@ -23,12 +23,32 @@ function read_run_yaml(file::AbstractString, software::AbstractString="vasp")
     auto_psphere = get(data, "auto_psphere", false)
     typeof(auto_psphere) != Bool && error("Invalid entry for auto_psphere.")
     println("Auto-Psphere: ", auto_psphere)
+
+    # Get energy range in Ha
+    emin = get(data, "emin", nothing)
+    if isnothing(emin)
+        println("No minimum energy specified. All bands below emax will be included.")
+        emin = minimum(dftinfo.wave.energies)
+    else
+        emin = parse_energy(software, emin)
+    end
+    emin > maximum(dftinfo.wave.energies) && error("emin cannot be greater than ", maximum(dftinfo.wave.energies), "Ha.")   
+    emax = get(data, "emax", nothing)
+    if isnothing(emax)
+        println("No maximum energy specified. emax will be set to the Fermi energy.")
+        emax = dftinfo.fermi.fermi
+        software == "vasp" ? emax = emax*Electrum.EV2HARTREE : nothing
+    else
+        emax = parse_energy(software, emax)
+    end
+    emax < emin && error("emax cannot be less than emin.")
+    println("Energy range: ", @sprintf("%.3f", emin), " to ", @sprintf("%.3f", emax), " Ha (", @sprintf("%.3f", emin*Electrum.HARTREE2EV), " to ", @sprintf("%.3f", emax*Electrum.HARTREE2EV), " eV)")
     
     runs = get(data, "runs", nothing)
     println("Number of runs: ", length(runs))
     runlist = parse_runs(runs, dftinfo)
 
-    return(runlist, checkpoint, auto_psphere, dftinfo)
+    return(runlist, checkpoint, auto_psphere, dftinfo, emin, emax)
 end
 
 """
@@ -116,6 +136,42 @@ function parse_runs(runs::Vector{Dict{Any, Any}}, dftinfo)
 end
 
 """
+    parse_energy(software::AbstractString, energy::AbstractString) -> n::Float64
+
+Parse energy values of the input yaml files and returns energies in Ha.
+"""
+function parse_energy(software::AbstractString, energy::AbstractString)
+    # Get energy range. Need to convert to Hartree
+    ln = split(energy)
+    length(ln) > 2 && error("Check energy range.")
+    n = parse(Float64, ln[1])
+    if lowercase(ln[2]) == "ev"
+        n = n*Electrum.EV2HARTREE
+    elseif !(lowercase(ln[2]) == "ha")
+        error(ln[2], " is not a valid energy unit. Use Ha or eV.")
+    end
+    return n
+end
+
+"""
+    parse_energy(software::AbstractString, energy::Real) -> n::Float64
+
+Parse energy values of the input yaml files and returns energies in Ha.
+"""
+function parse_energy(software::AbstractString, energy::Real)
+    if software == "vasp"
+        e = Electrum.EV2HARTREE
+        units = "eV"
+    else
+        e = 1
+        units = "Ha"
+    end
+    warn("No energy units are specified. Defaulting to ", units, " (", software, ")")
+    n = energy*e
+    return n
+end
+
+"""
     parse_sites(sites::AbstractVector{<:AbstractString}) -> site_final::Vector{Int}
 
 Parses a portion of the "sites" lines in the yaml file to return a Vector{Int} with valid
@@ -197,11 +253,11 @@ has the dimensions n (number of occupied states) by m (number of nonzero
 planewaves). Each OccupiedState element holds information about the coefficient,
 kpoint, and G vector.
 """
-function get_occupied_states(wave::PlanewaveWavefunction, energy::Real)
+function get_occupied_states(wave::PlanewaveWavefunction, emin::Real, emax::Real)
     hkl_list = [SVector(v.I) for v in FFTBins(wave)]
 
-    # Filters occupied states below specified energy
-    num_occ_states = wave.energies .< energy # Bit array
+    # Filters occupied states within energy range
+    num_occ_states = emin .< wave.energies .< emax # Bit array
     occ_states = reshape(
         [
             (wave.data[n], wave.kpoints.points[CartesianIndices(wave.data)[n].I[3]].point, hkl_list[CartesianIndices(wave.data)[n].I[1]])
