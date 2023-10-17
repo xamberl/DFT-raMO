@@ -20,14 +20,14 @@ include("make_targets.jl")
 export make_target_AO, make_target_cluster_sp, make_target_hybrid
 
 include("runs.jl")
-export loop_target_cluster_sp, loop_AO, loop_LCAO, dftramo_run
+export loop_target_cluster_sp, loop_AO, loop_LCAO
 
 include("inputs.jl")
 export import_VASP, import_abinit,get_occupied_states, read_eht_params, read_site_list, 
 import_checkpoint, import_raMO
 
 include("yaml.jl")
-export read_run_yaml, parse_energy, parse_sites
+export dftramo_run, read_run_yaml, parse_energy, parse_sites
 
 include("outputs.jl")
 export write_to_XSF, raMO_to_density
