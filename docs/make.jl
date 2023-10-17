@@ -12,7 +12,7 @@ makedocs(
         "Theory"    => "theory.md",
         "Usage"     => "usage.md",
         "Tutorials"  => ["tutorials/IrIn3.md"],
-        "API"       => "api/index.md"
+        "API"       => ["api/index.md", "api/yaml.md"]
     ]
 )
 
