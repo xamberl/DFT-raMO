@@ -10,7 +10,7 @@ include("data.jl")
 export OrbitalParams, ehtParams, Supercell, OccupiedStates
 
 include("software.jl")
-export raMOinput, FromABINIT, FromVASP
+export raMOinput, InputOrigin, FromABINIT, FromVASP
 
 include("raMO.jl")
 export get_eht_params, make_overlap_mat,
