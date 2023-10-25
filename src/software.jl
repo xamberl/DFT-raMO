@@ -17,30 +17,32 @@ Electrum.fermi(x::raMOInput) = x.fermi
 kptmesh(x::raMOInput) = x.xtal.set_transform
 
 """
-    DFTraMO.InputOrigin
+    DFTraMO.InputOrigin{S}
 
-Dispatch type for various computational chemistry packages (for a complete list, run
-`subtypes(DFTraMO.InputOrigin)` in the REPL).
+Dispatch type to indicate the software package which generated the input files for DFT-raMO. The
+type parameter `S` is a `Symbol`, all lowercase, which contains the name of the software package.
+
+To see a list of the supported software packages, evaluate `DFTraMO.SUPPORTED_SOFTWARE`.
 """
-abstract type InputOrigin
+struct InputOrigin{S}
 end
+
+const SUPPORTED_SOFTWARE = (:abinit, :vasp)
 
 """
     DFTraMO.FromABINIT
 
 Dispatch type for reading abinit WFK outputs.
 """
-struct FromABINIT
-end
+const FromABINIT = InputOrigin{:abinit}
 
 """
     DFTraMO.FromVASP
-
+ 
 Dispatch type for reading VASP calculation outputs (specifically, the `POSCAR`, `WAVECAR`,
 `KPOINTS`, and `OUTCAR` files.)
 """
-struct FromVASP
-end
+const FromVASP = InputOrigin{:vasp}
 
 function raMOInput(io::IO, ::FromABINIT)
     h = Electrum.read_abinit_header(io)
