@@ -30,6 +30,22 @@ end
 const SUPPORTED_SOFTWARE = (:abinit, :vasp)
 
 """
+    DFTraMO.length_conversion(i::InputOrigin) -> Real
+
+Provides the conversion factor for the default length units for the software package indicated by
+`i` to Bohr. By default, this is equal to 1 (we assume most packages use Hartree atomic units).
+"""
+length_conversion(::InputOrigin) = 1
+
+"""
+    DFTraMO.energy_conversion(i::InputOrigin) -> Real
+
+Provides the conversion factor for the default energy units for the software package indicated by
+`i` to Hartree. By default, this is equal to 1 (we assume most packages use Hartree atomic units).
+"""
+energy_conversion(::InputOrigin) = 1
+
+"""
     DFTraMO.FromABINIT
 
 Dispatch type for reading abinit WFK outputs.
@@ -43,6 +59,9 @@ Dispatch type for reading VASP calculation outputs (specifically, the `POSCAR`, 
 `KPOINTS`, and `OUTCAR` files.)
 """
 const FromVASP = InputOrigin{:vasp}
+# Default units for VASP are angstroms and electron-volts
+energy_conversion(::FromVASP) = Electrum.EV2HARTREE
+length_conversion(::FromVASP) = Electrum.ANG2BOHR
 
 function raMOInput(io::IO, ::FromABINIT)
     h = Electrum.read_abinit_header(io)
