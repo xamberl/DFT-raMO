@@ -102,9 +102,9 @@ struct Supercell
     end
 end
 
-basis(s::Supercell) = basis(s.atomlist)
-PeriodicAtomList(s::Supercell) = s.atomlist
-getindex(s::Supercell, i...) = getindex(s.atomlist, i...)
+Electrum.basis(s::Supercell) = basis(s.atomlist)
+Electrum.PeriodicAtomList(s::Supercell) = s.atomlist
+Base.getindex(s::Supercell, i...) = getindex(s.atomlist, i...)
 
 """
     OccupiedStates(
