@@ -327,3 +327,124 @@ function parse_sites(sites::AbstractVector{<:AbstractString})
     end
     return unique(site_final)
 end
+
+"""
+    DFTraMO.parse_yaml_energy(x, i::InputOrigin)
+
+Converts a string or number representing an energy input, possibly with units given, into an energy
+in hartrees usable by DFTraMO. Units are not case-sensitive, and abbreviations are accepted as well
+as full unit names.
+
+DFT-raMO will automatically assume quantities without explicit unit specification match the units of
+the software package which generated the input. If the software package is not specified or
+supported, DFT-raMO will assume Hartree atomic units.
+"""
+parse_yaml_energy(x::Real, i::InputOrigin) = x * energy_conversion(i)
+
+function parse_yaml_energy(x::AbstractString, i::InputOrigin)
+    s = split(x)
+    e = parse(Float64, first(s))
+    # Strings which split into one substring likely don't contain units
+    isone(length(s)) && return parse_yaml_energy(e, i)
+    # Otherwise treat the units explicitly
+    unit_str = s[2]
+    conversion = if isempty(unit_str) || occursin(r"^au|ha|hartree"i, unit_str)
+        1
+    elseif occursin(r"^e(lectron-?)?v(olt)?"i, unit_str)
+        Electrum.EV2HARTREE
+    else
+        error("Unit $unit_str was not recognized.")
+    end
+    return e * conversion
+end
+
+"""
+    DFTraMO.parse_yaml_length(x, i::InputOrigin)
+
+Converts a string or number representing an length input, possibly with units given, into a length
+in bohr usable by DFTraMO. Units are not case-sensitive, and abbreviations are accepted as well as
+full unit names.
+
+Currently supported units are bohr (`bohr`, `a0`, or `au`), angstrom (`Å`, `ang`, or `angstrom`),
+nanometer (`nm`), and picometer (`pm`).
+
+DFT-raMO will automatically assume quantities without explicit unit specification match the units of
+the software package which generated the input. If the software package is not specified or
+supported, DFT-raMO will assume Hartree atomic units.
+"""
+parse_yaml_length(x::Real, i::InputOrigin) = x * length_conversion(i)
+
+function parse_yaml_length(x::AbstractString, i::InputOrigin)
+    s = split(x)
+    e = parse(Float64, first(s))
+    # Strings which split into one substring likely don't contain units
+    isone(length(s)) && return parse_yaml_length(e, i)
+    # Otherwise treat the units explicitly
+    unit_str = s[2]
+    conversion = if isempty(unit_str) || occursin(r"^(bohr|a[0u])"i, unit_str)
+        1
+    elseif occursin(r"^(Å|[AÅ]ng|[AÅ]ngstrom)"i, unit_str)
+        Electrum.ANG2BOHR
+    elseif unitstr == "nm"
+        Electrum.ANG2BOHR * 10
+    elseif unitstr == "pm"
+        Electurm.ANG2BOHR / 100
+    else
+        error("Unit $unit_str was not recognized.")
+    end
+    return e * conversion
+end
+
+"""
+    DFTraMO.read_yaml(file)
+
+Reimplementation of `DFTraMO.read_run_yaml`.
+"""
+function read_yaml(io::IO)
+    yaml = YAML.load(io)
+    path = haskey(yaml, "path") ? yaml["path"] : "."
+    origin = InputOrigin{Symbol(yaml["software"])}()
+    dftinfo = raMOInput(path, origin)
+    checkpoint = get(yaml, "checkpoint", nothing)
+    # Check for empty string for robustness
+    if isnothing(checkpoint) || isempty(checkpoint)
+        @info "No checkpoint file found, starting new run from the beginning"
+        checkpoint = ""
+    elseif !isfile(checkpoint)
+        error("Specified checkpoint $checkpoint is not a file.")
+    else
+        @info "Restarting calculation using checkpoint file $checkpoint"
+    end
+    # Use automatic conversion/type assertion for error
+    auto_psphere::Bool = get(yaml, "auto_sphere", false)
+    @info "Auto Psphere is " * (auto_psphere ? "en" : "dis") * "abled"
+    # Get energy ranges (will need to perform unit inference)
+    emin = get(yaml, "emin", nothing)
+    emax = get(yaml, "emax", nothing)
+    if isnothing(emin)
+        emin = minimum(dftinfo.wave.energies)
+        @info "No minimum energy specified: all bands below the maximum energy will be included."
+    else
+        emin = parse_yaml_energy(emin, origin)
+    end
+    if isnothing(emax)
+        emax = fermi(dftinfo)
+        @info "No maximum energy specified: all bands up to the Fermi energy will be included."
+    else
+        emax = parse_yaml_energy(emax, origin)
+    end
+    @assert emin < emax "emin ($emin Ha) is not less than emax ($emax Ha)!"
+    @info string(
+        "Energy range for reconstruction:\n",
+        @sprintf("Minimum energy: %.3f Ha (%.3f eV)\n", emin, emin * Electrum.HARTREE2EV),
+        @sprintf("Maximum energy: %.3f Ha (%.3f eV)\n", emax, emax * Electrum.HARTREE2EV)
+    )
+    # Get runs
+    runs = get(data, "runs", nothing)
+    @info "Performing $(length(runs)) runs."
+    runlist = parse_runs(runs, dftinfo)
+    # TODO: convert to a struct
+    return (runlist, checkpoint, auto_psphere, dftinfo, emin, emax)
+end
+
+read_yaml(file) = open(read_yaml, file)
