@@ -286,7 +286,7 @@ function parse_energy(software::AbstractString, energy::Real)
         e = 1
         units = "Ha"
     end
-    warn("No energy units are specified. Defaulting to ", units, " (", software, ")")
+    warning("No energy units are specified. Defaulting to ", units, " (", software, ")")
     n = energy*e
     return n
 end
