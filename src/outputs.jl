@@ -1,6 +1,6 @@
 """
     function write_to_XSF(
-        isosurf::AbstractArray{ComplexF64, 3},
+        isosurf::AbstractArray{<:Number, 3},
         xtal::AbstractAtomList{3},
         filename::AbstractString
     )
@@ -8,7 +8,7 @@
 Writes an XSF using the real components of `isosurf`.
 """
 function write_to_XSF(
-    isosurf::AbstractArray{ComplexF64, 3},
+    isosurf::AbstractArray{<:Number, 3},
     xtal::AbstractAtomList{3},
     filename::AbstractString
 )
