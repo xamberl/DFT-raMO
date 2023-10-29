@@ -6,14 +6,14 @@ Automatically runs DFTraMO from a configuration yaml file.
 function dftramo_run(filename::AbstractString, software::AbstractString="vasp")
     (runs, checkpoint, auto_psphere, dftinfo, emin, emax) = read_run_yaml(filename, software)
     occ_states = get_occupied_states(dftinfo.wave, emin, emax)
-    super = Supercell(dftinfo.xtal, orb_dict)
+    super = Supercell(dftinfo.xtal, ORB_DICT)
     S = make_overlap_mat(occ_states)
     H = generate_H(super, DFTRAMO_EHT_PARAMS)
     
     if !isnothing(checkpoint)
         (psi_previous, num_electrons_left, num_raMO) = import_checkpoint(checkpoint)
     else
-        num_electrons_left = sum([get(e_dict, n.atom.name, 0) for n in dftinfo.xtal.atoms])
+        num_electrons_left = sum([get(E_DICT, n.atom.name, 0) for n in dftinfo.xtal.atoms])
         num_raMO = 0
         psi_previous = diagm(ones(size(occ_states.coeff)[2]))
         psi_previous = ComplexF32.(repeat(psi_previous, 1, 1, 2)) #spin states to be implemented
