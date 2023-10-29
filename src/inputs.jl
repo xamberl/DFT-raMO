@@ -99,6 +99,9 @@ function get_occupied_states(wave::PlanewaveWavefunction, emin::Real, emax::Real
     return OccupiedStates(coeff, kpt, hkl_list)
 end
 
+get_occupied_states(x::raMOInput, emin::Real, emax::Real) = get_occupied_states(x.wave, emin, emax)
+get_occupied_states(r::raMORuns) = get_occupied_states(PlanewaveWavefunction(r), r.emin, r.emax)
+
 """
     read_eht_params(paramsfile::AbstractString) -> mat::ehtParams 
 
