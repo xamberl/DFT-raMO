@@ -143,24 +143,18 @@ struct OccupiedStates
 end
 
 """
-    RunInfo(
-        name::AbstractString,
-        type::AbstractString,
-        site_file::AbstractString,
-        sites::AbstractVector{<:Integer},
-        radius::Number,
-        rsphere::Number
-    )
+    DFTraMO.RunInfo
+
+Contains information from a run entry in the YAML input file. All runs in the file are collected
+a single `Vector{RunInfo}` object when `dftramo_run()` is called.
 """
-# TODO: add documentation describing what this does
-# Also, does this need to be mutable?
-mutable struct RunInfo
+struct RunInfo
     name::String
-    const type::String
-    const site_file::String
+    type::String
+    site_file::String
     sites::Vector{Int}
-    const radius::Float64
-    const rsphere::Float64
+    radius::Float64
+    rsphere::Float64
     function RunInfo(
         name::AbstractString,
         type::AbstractString,
