@@ -1,22 +1,4 @@
 """
-    raMOInput
-
-Contains all of the crystal and wavefunction information needed to perform a DFT-raMO run.
-"""
-struct raMOInput
-    xtal::Crystal
-    wave::PlanewaveWavefunction
-    fermi::Float64
-end
-
-Electrum.basis(x::raMOInput) = basis(x.xtal.atoms)
-Electrum.Crystal(x::raMOInput) = x.xtal
-Electrum.PeriodicAtomList(x::raMOInput) = x.xtal.atoms
-Electrum.PlanewaveWavefunction(x::raMOInput) = x.wave
-Electrum.fermi(x::raMOInput) = x.fermi
-kptmesh(x::raMOInput) = x.xtal.set_transform
-
-"""
     DFTraMO.InputOrigin{S}
 
 Dispatch type to indicate the software package which generated the input files for DFT-raMO. The
