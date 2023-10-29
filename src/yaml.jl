@@ -443,8 +443,7 @@ function read_yaml(io::IO)
     runs = get(data, "runs", nothing)
     @info "Performing $(length(runs)) runs."
     runlist = parse_runs(runs, dftinfo)
-    # TODO: convert to a struct
-    return (runlist, checkpoint, auto_psphere, dftinfo, emin, emax)
+    return raMORuns(dftinfo, runlist, emin, emax, checkpoint, auto_psphere)
 end
 
 read_yaml(file) = open(read_yaml, file)
