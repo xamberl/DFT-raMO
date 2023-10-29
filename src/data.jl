@@ -125,8 +125,8 @@ Base.getindex(s::Supercell, i...) = getindex(s.atomlist, i...)
 Contains all of the crystal and wavefunction information needed to perform a DFT-raMO run.
 """
 struct raMOInput
-    xtal::Crystal
-    wave::PlanewaveWavefunction
+    xtal::Crystal{3}
+    wave::PlanewaveWavefunction{3,Float32}
     fermi::Float64
 end
 
@@ -294,7 +294,7 @@ Base.getindex(x::raMORuns, i) = x.runlist[i]
     xtal::PeriodicAtomList{3}
     geo::PeriodicAtomList{3}
     kpt::AbstractVector{Int}
-    wave::Planewavefunction
+    wave::PlanewaveWavefunction{3,Float32}
     num_raMO::Int
     num_electrons_left::Int
 end==#
