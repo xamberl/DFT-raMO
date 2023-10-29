@@ -1,3 +1,4 @@
+# TODO: is there a reason why neither orb nor val_e are constants/have no docstring?
 orb = [
     1, 1, 1, 1, 4, 4, 4, 4, 4, 4,
     1, 1, 4, 4, 4, 4, 4, 4,
@@ -21,11 +22,11 @@ val_e = [
     4, 5, 6, 7, 8, 9, 10, 11, 12, 3, 4, 5, 6, 7, 8,
 ]
 
-const orb_dict = Dict{String, Int}(
+const ORB_DICT = Dict{String, Int}(
     [Electrum.ELEMENTS[n] => orb[n] for n in eachindex(orb)]
 )
 
-const e_dict = Dict{String, Int}(
+const E_DICT = Dict{String, Int}(
     [Electrum.ELEMENTS[n] => val_e[n] for n in eachindex(val_e)]
 )
 
