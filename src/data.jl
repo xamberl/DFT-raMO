@@ -30,7 +30,19 @@ const E_DICT = Dict{String, Int}(
     [Electrum.ELEMENTS[n] => val_e[n] for n in eachindex(val_e)]
 )
 
-const AO_RUNS = Dict("s"=>1, "px"=>2, "py"=>3, "pz"=>4, "dx2y2"=>5, "dx2-y2"=>5, "dz2"=>6, "dxy"=>7, "dxz"=>8, "dyz"=>9)
+# TODO: can we use regex to handle this more efficiently?
+const AO_RUNS = Dict(
+    "s"     => 1,
+    "px"    => 2,
+    "py"    => 3,
+    "pz"    => 4,
+    "dx2y2" => 5,
+    "dx2-y2"=> 5,
+    "dz2"   => 6,
+    "dxy"   => 7,
+    "dxz"   => 8,
+    "dyz"   => 9
+)
 
 const CAGE_RUNS = [
     "sp" # hybrid cage states by distance
