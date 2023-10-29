@@ -189,6 +189,38 @@ struct RunInfo
 end
 
 """
+    raMOCheckpoint{T}
+
+Contains checkpoint data, a 3D array of remainder coefficients, as well as the number of electrons
+left and the number of the current raMO in the sequence.
+"""
+struct raMOCheckpoint{T<:Number} <: AbstractArray{T,3}
+    coeff::Array{T,3}
+    electrons_left::Int
+    num_ramos::Int
+    function raMOCheckpoint{T}(
+        coeff::AbstractArray{3},
+        electrons_left::Integer,
+        num_ramos::Integer
+    ) where T
+        @assert electrons_left >= 0 "The number of electrons left is a negative value."
+        @assert num_ramos >= 0 "The number of raMOs reconstructed is a negative value."
+        return new(coeff, electrons_left, num_ramos)
+    end
+end
+
+function raMOCheckpoint(
+    psi::AbstractArray{T,3},
+    electrons_left::Integer,
+    num_ramos::Integer
+) where T
+    return raMOCheckpoint{T}(psi, electrons_left, num_ramos)
+end
+
+Base.size(x::raMOCheckpoint) = size(x.coeff)
+Base.getindex(x::raMOCheckpoint, i...) = x.coeff[i]
+
+"""
     raMORuns
 
 Contains all of the information supplied by the user in the YAML file with raMO input data. This
