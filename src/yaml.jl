@@ -404,7 +404,7 @@ function read_yaml(io::IO)
     yaml = YAML.load(io)
     path = haskey(yaml, "path") ? yaml["path"] : "."
     origin = InputOrigin{Symbol(yaml["software"])}()
-    dftinfo = raMOInput(path, origin)
+    dftinfo = raMODFTData(path, origin)
     checkpoint = get(yaml, "checkpoint", nothing)
     # Check for empty string for robustness
     if isnothing(checkpoint) || isempty(checkpoint)

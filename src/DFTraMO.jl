@@ -7,7 +7,7 @@ using ProgressBars, Crayons
 using Requires
 
 include("data.jl")
-export OrbitalParams, ehtParams, Supercell, OccupiedStates, raMOInput
+export OrbitalParams, ehtParams, Supercell, OccupiedStates, raMODFTData
 
 include("software.jl")
 export InputOrigin, FromABINIT, FromVASP
