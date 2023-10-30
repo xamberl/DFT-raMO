@@ -45,17 +45,17 @@ const FromVASP = InputOrigin{:vasp}
 energy_conversion(::FromVASP) = Electrum.EV2HARTREE
 length_conversion(::FromVASP) = Electrum.ANG2BOHR
 
-function raMOInput(io::IO, ::FromABINIT)
+function raMODFTData(io::IO, ::FromABINIT)
     h = Electrum.read_abinit_header(io)
     seekstart(io)
-    return raMOinput(Crystal(h), read_abinit_WFK(io)["wavefunction"], h[:fermi])
+    return raMODFTData(Crystal(h), read_abinit_WFK(io)["wavefunction"], h[:fermi])
 end
 
-raMOInput(file, ::FromABINIT) = open(io -> raMOInput(io, FromABINIT()), file)
+raMODFTData(file, ::FromABINIT) = open(io -> raMODFTData(io, FromABINIT()), file)
 
 """
-    raMOInput(POSCAR, WAVECAR, KPOINTS, OUTCAR, ::FromVASP)
-    raMOInput(;
+    raMODFTData(POSCAR, WAVECAR, KPOINTS, OUTCAR, ::FromVASP)
+    raMODFTData(;
         POSCAR = "POSCAR",
         WAVECAR = "WAVECAR",
         KPOINTS = "KPOINTS",
@@ -69,36 +69,36 @@ or path types if another package provides them (for more details, see the Electr
 File names may be specified through the argument order given above, or with keyword arguments which
 have no fixed order.
 """
-function raMOInput(POSCAR, WAVECAR, KPOINTS, OUTCAR, ::FromVASP)
+function raMODFTData(POSCAR, WAVECAR, KPOINTS, OUTCAR, ::FromVASP)
     fermi = get_fermi(OUTCAR) * Electrum.EV2HARTREE
     geo = readPOSCAR(POSCAR)
     wave = readWAVECAR(WAVECAR, quiet = true)
     kpt = parse.(Int, split(readlines(KPOINTS)[4]))
     # Use a Crystal to lazily reference the supercell
     xtal = set_transform!(Crystal(geo), kpt)
-    return raMOInput(xtal, wave, fermi) 
+    return raMODFTData(xtal, wave, fermi) 
 end
 
-function raMOInput(;
+function raMODFTData(;
     POSCAR = "POSCAR",
     WAVECAR = "WAVECAR",
     KPOINTS = "KPOINTS",
     OUTCAR = "OUTCAR"
 )
-    return raMOInput(POSCAR, WAVECAR, KPOINTS, OUTCAR, FromVASP())
+    return raMODFTData(POSCAR, WAVECAR, KPOINTS, OUTCAR, FromVASP())
 end
 
 """
-    raMOInput(directory, FromVASP(); CONTCAR=false)
-    raMOInput(FromVASP(); CONTCAR=false)
+    raMODFTData(directory, FromVASP(); CONTCAR=false)
+    raMODFTData(FromVASP(); CONTCAR=false)
 
 Reads VASP output files required for DFT-raMO from the given directory. If no directory is given,
 the current directory is checked.
     
 If `CONTCAR` is set to true, the CONTCAR file will be used instead of the POSCAR.
 """
-function raMOInput(directory, ::FromVASP; CONTCAR = false)
-    return raMOInput(
+function raMODFTData(directory, ::FromVASP; CONTCAR = false)
+    return raMODFTData(
         joinpath(directory, CONTCAR ? "CONTCAR" : "POSCAR"),
         joinpath(directory, "WAVECAR"),
         joinpath(directory, "KPOINTS"),
@@ -107,4 +107,4 @@ function raMOInput(directory, ::FromVASP; CONTCAR = false)
     )
 end
 
-raMOInput(::FromVASP; CONTCAR) = raMOInput(".", FromVASP(); CONTCAR)
+raMODFTData(::FromVASP; CONTCAR) = raMODFTData(".", FromVASP(); CONTCAR)

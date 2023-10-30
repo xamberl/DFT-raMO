@@ -120,22 +120,22 @@ Electrum.PeriodicAtomList(s::Supercell) = s.atomlist
 Base.getindex(s::Supercell, i...) = getindex(s.atomlist, i...)
 
 """
-    raMOInput
+    raMODFTData
 
 Contains all of the crystal and wavefunction information needed to perform a DFT-raMO run.
 """
-struct raMOInput
+struct raMODFTData
     xtal::Crystal{3}
     wave::PlanewaveWavefunction{3,Float32}
     fermi::Float64
 end
 
-Electrum.basis(x::raMOInput) = basis(x.xtal.atoms)
-Electrum.Crystal(x::raMOInput) = x.xtal
-Electrum.PeriodicAtomList(x::raMOInput) = x.xtal.atoms
-Electrum.PlanewaveWavefunction(x::raMOInput) = x.wave
-Electrum.fermi(x::raMOInput) = x.fermi
-kptmesh(x::raMOInput) = x.xtal.transform
+Electrum.basis(x::raMODFTData) = basis(x.xtal.atoms)
+Electrum.Crystal(x::raMODFTData) = x.xtal
+Electrum.PeriodicAtomList(x::raMODFTData) = x.xtal.atoms
+Electrum.PlanewaveWavefunction(x::raMODFTData) = x.wave
+Electrum.fermi(x::raMODFTData) = x.fermi
+kptmesh(x::raMODFTData) = x.xtal.transform
 
 """
     OccupiedStates(
@@ -228,14 +228,14 @@ includes the DFT data (crystal, wavefunction, Fermi energy), run list, energy ra
 reconstruction, path to the checkpoint file, and whether to automatically use `Psphere`.
 """
 struct raMORuns
-    dftdata::raMOInput
+    dftdata::raMODFTData
     runlist::Vector{RunInfo}
     emin::Float64
     emax::Float64
     checkpoint::String  # TODO: should we use some sort of IO type? or checkpoint container?
     auto_psphere::Bool
     function raMORuns(
-        dftdata::raMOInput,
+        dftdata::raMODFTData,
         runlist,
         emin::Real,
         emax::Real,
@@ -250,7 +250,7 @@ end
 
 """
     raMORuns(
-        dftdata::raMOInput,
+        dftdata::raMODFTData,
         runlist;
         auto_psphere = false,
         checkpoint = "",
@@ -266,12 +266,12 @@ If `checkpoint` is unset, the checkpoint path is the empty string, corresponding
 file being used.
 
 If `emin` is unset, then the value is automatically set to the lowest energy in the range of the
-`PlanewaveWavefunction` within the `raMOInput`.
+`PlanewaveWavefunction` within the `raMODFTData`.
 
 If `emax` is unset, then the value is automatically set to the Fermi energy of the wavefunction.
 """
 function raMORuns(
-    dftdata::raMOInput,
+    dftdata::raMODFTData,
     runlist;
     auto_psphere = false,
     checkpoint::AbstractString = "",
@@ -281,7 +281,7 @@ function raMORuns(
     return raMORuns(dftdata, runlist, emin, emax, checkpoint, auto_psphere)
 end
 
-raMOInput(x::raMORuns) = x.dftdata
+raMODFTData(x::raMORuns) = x.dftdata
 
 Electrum.Crystal(x::raMORuns) = x.dftdata.xtal
 Electrum.basis(x::raMORuns) = basis(x.dftdata.xtal)
