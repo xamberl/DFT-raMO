@@ -221,20 +221,20 @@ Base.size(x::raMOCheckpoint) = size(x.coeff)
 Base.getindex(x::raMOCheckpoint, i...) = x.coeff[i]
 
 """
-    raMORuns
+    raMOInput
 
 Contains all of the information supplied by the user in the YAML file with raMO input data. This
 includes the DFT data (crystal, wavefunction, Fermi energy), run list, energy ranges for orbital
 reconstruction, path to the checkpoint file, and whether to automatically use `Psphere`.
 """
-struct raMORuns
+struct raMOInput
     dftdata::raMODFTData
     runlist::Vector{RunInfo}
     emin::Float64
     emax::Float64
     checkpoint::String  # TODO: should we use some sort of IO type? or checkpoint container?
     auto_psphere::Bool
-    function raMORuns(
+    function raMOInput(
         dftdata::raMODFTData,
         runlist,
         emin::Real,
@@ -249,7 +249,7 @@ struct raMORuns
 end
 
 """
-    raMORuns(
+    raMOInput(
         dftdata::raMODFTData,
         runlist;
         auto_psphere = false,
@@ -258,7 +258,7 @@ end
         emax = fermi(dftdata)
     )
 
-Constructs a `raMORuns` object with some assumptions implemented as keyword arguments.
+Constructs a `raMOInput` object with some assumptions implemented as keyword arguments.
 
 `auto_psphere` is set to false if not specified.
 
@@ -270,7 +270,7 @@ If `emin` is unset, then the value is automatically set to the lowest energy in 
 
 If `emax` is unset, then the value is automatically set to the Fermi energy of the wavefunction.
 """
-function raMORuns(
+function raMOInput(
     dftdata::raMODFTData,
     runlist;
     auto_psphere = false,
@@ -278,16 +278,16 @@ function raMORuns(
     emin::Real = minimum(dftdata.wave.energies),
     emax::Real = fermi(dftdata)
 )
-    return raMORuns(dftdata, runlist, emin, emax, checkpoint, auto_psphere)
+    return raMOInput(dftdata, runlist, emin, emax, checkpoint, auto_psphere)
 end
 
-raMODFTData(x::raMORuns) = x.dftdata
+raMODFTData(x::raMOInput) = x.dftdata
 
-Electrum.Crystal(x::raMORuns) = x.dftdata.xtal
-Electrum.basis(x::raMORuns) = basis(x.dftdata.xtal)
-Electrum.PlanewaveWavefunction(x::raMORuns) = x.dftdata.wave
+Electrum.Crystal(x::raMOInput) = x.dftdata.xtal
+Electrum.basis(x::raMOInput) = basis(x.dftdata.xtal)
+Electrum.PlanewaveWavefunction(x::raMOInput) = x.dftdata.wave
 # Index by run
-Base.getindex(x::raMORuns, i) = x.runlist[i]
+Base.getindex(x::raMOInput, i) = x.runlist[i]
 
 #==struct raMOStatus
     fermi::NamedTuple{(:fermi, :alphabeta), Tuple{Float64, Float64}}
