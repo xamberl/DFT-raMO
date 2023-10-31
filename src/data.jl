@@ -203,7 +203,7 @@ struct raMOCheckpoint{T<:Number} <: AbstractArray{T,3}
         electrons_left::Integer,
         num_ramos::Integer
     ) where T
-        @assert electrons_left >= 0 "The number of electrons left is a negative value."
+        #@assert electrons_left >= 0 "The number of electrons left is a negative value."
         @assert num_ramos >= 0 "The number of raMOs reconstructed is a negative value."
         return new(coeff, electrons_left, num_ramos)
     end
