@@ -70,7 +70,7 @@ File names may be specified through the argument order given above, or with keyw
 have no fixed order.
 """
 function raMODFTData(POSCAR, WAVECAR, KPOINTS, OUTCAR, ::FromVASP)
-    fermi = get_fermi(OUTCAR) * Electrum.EV2HARTREE
+    fermi = get_fermi(OUTCAR).fermi
     geo = readPOSCAR(POSCAR)
     wave = readWAVECAR(WAVECAR, quiet = true)
     kpt = parse.(Int, split(readlines(KPOINTS)[4]))
