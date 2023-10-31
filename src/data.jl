@@ -183,7 +183,7 @@ Electrum.supercell(x::raMODFTData) = supercell(x.xtal.atoms, kptmesh(x))
 Returns an `OccupiedStates` struct. The coeff matrix is `num_occupied_states` by `num_occupied_pw`
 in dimensions, while kpt is `num_occupied_states` in length, and G is `num_occupied_pw` in length.
 """
-struct OccupiedStates
+struct OccupiedStates <: DenseMatrix{ComplexF32}
     coeff::Matrix{ComplexF32}
     kpt::Matrix{SVector{3, Float64}}
     G::Matrix{SVector{3, Int64}}
@@ -197,6 +197,9 @@ struct OccupiedStates
 end
 
 num_states(x::OccupiedStates) = size(x.coeff)[2]
+Base.size(o::OccupiedStates) = size(o.coeff)
+Base.getindex(o::OccupiedStates, i...) = getindex(o.coeff, i...)
+Base.setindex!(o::OccupiedStates, x, i...) = setindex!(o.coeff, x, i...)
 
 """
     raMOInput
