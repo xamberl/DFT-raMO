@@ -19,8 +19,19 @@ Statistics = "10745b16-79ce-11e8-11f9-7d13ad32a3b2"
 YAML = "ddb6d928-2868-570f-bddf-ab3f9cf99eb6"
 
 [compat]
-Electrum = "0.1"
+Crayons = "4"
+Distributions = "0.25"
+Documenter = "1"
+DocumenterTools = "0.1"
+Electrum = "0.1.12"
+LinearAlgebra = "1.8"
+Printf = "1.8"
+ProgressBars = "1"
+Random = "1.8"
+Requires = "1"
 StaticArrays = "1"
+Statistics = "1.8"
+YAML = "0.4"
 julia = "1.8"
 
 [extras]
