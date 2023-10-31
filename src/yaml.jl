@@ -440,7 +440,7 @@ function read_yaml(io::IO)
         @sprintf("Maximum energy: %.3f Ha (%.3f eV)\n", emax, emax * Electrum.HARTREE2EV)
     )
     # Get runs
-    runs = get(data, "runs", nothing)
+    runs = get(yaml, "runs", nothing)
     @info "Performing $(length(runs)) runs."
     runlist = parse_runs(runs, dftinfo)
     return raMOInput(dftinfo, runlist, emin, emax, checkpoint, auto_psphere)
