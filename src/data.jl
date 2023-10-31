@@ -181,7 +181,7 @@ struct RunInfo
         radius::Number,
         rsphere::Number
     )
-        @assert all(sign.(sites) > 0) "Some site values are not positive integers."
+        @assert all(sign.(sites) .> 0) "Some site values are not positive integers."
         @assert sign(radius) >= 0 "Radius is a negative value."
         @assert sign(rsphere) >= 0 "Rsphere is a negative value."
         return new(name, type, site_file, sites, radius, rsphere)
