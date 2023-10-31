@@ -126,7 +126,7 @@ Contains all of the crystal and wavefunction information needed to perform a DFT
 """
 struct raMODFTData
     xtal::Crystal{3}
-    wave::PlanewaveWavefunction{3,Float32}
+    wave::PlanewaveWavefunction{3,ComplexF32}
     fermi::Float64
 end
 
