@@ -244,7 +244,7 @@ struct raMOInput
     )
         @assert emin < emax "Minimum energy is not less than maximum energy"
         isnothing(auto_psphere) && (auto_psphere = false)
-        return new(dftdata, collect(runlist), checkpoint, emin, emax, auto_psphere)
+        return new(dftdata, collect(runlist), emin, emax, checkpoint, auto_psphere)
     end
 end
 
