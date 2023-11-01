@@ -289,9 +289,10 @@ Electrum.basis(x::raMOInput) = basis(x.dftdata.xtal)
 Electrum.PlanewaveWavefunction(x::raMOInput) = x.dftdata.wave
 Electrum.PeriodicAtomList(x::raMOInput) = x.dftdata.xtal.atoms
 Electrum.supercell(x::raMOInput) = supercell(x.dftdata)
-# Index by run
+
+# Size and indexing depend on the run list.
+Base.size(x::raMOInput) = size(x.runlist)
 Base.getindex(x::raMOInput, i) = x.runlist[i]
-Base.iterate(x::raMOInput, i=1) = i > length(x.runlist) ? nothing : (x.runlist[i], i+1)
 
 #==struct raMOStatus
     fermi::NamedTuple{(:fermi, :alphabeta), Tuple{Float64, Float64}}
