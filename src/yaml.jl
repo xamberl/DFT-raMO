@@ -119,59 +119,6 @@ function dftramo_run(filename::AbstractString)
 end
 
 """
-    read_run_yaml(run_name::AbstractString)
-
-Loads options for the run specified by a file.
-"""
-function read_run_yaml(file::AbstractString, software::AbstractString="vasp")
-    data = YAML.load_file(file)
-    software == "vasp" ? dftinfo = import_VASP() : error("Other DFT packages are not implement yet.")
-
-    # crayons for color
-    cr_b = crayon"light_cyan"
-    cr_d = crayon"default"
-
-    checkpoint = get(data, "checkpoint", nothing)
-    if isnothing(checkpoint)
-        println("No checkpoint file specified. Run will start from beginning conditions.")
-    elseif !isfile(checkpoint)
-        error(checkpoint, " does not exist. Check path to file.")
-    else
-        println("Using checkpoint file ", cr_b, checkpoint, cr_d)
-    end 
-    
-    auto_psphere = get(data, "auto_psphere", false)
-    typeof(auto_psphere) != Bool && error("Invalid entry for auto_psphere.")
-    println("Auto-Psphere: ", auto_psphere)
-
-    # Get energy range in Ha
-    emin = get(data, "emin", nothing)
-    if isnothing(emin)
-        println("No minimum energy specified. All bands below emax will be included.")
-        emin = minimum(dftinfo.wave.energies)
-    else
-        emin = parse_energy(software, emin)
-    end
-    emin > maximum(dftinfo.wave.energies) && error("emin cannot be greater than ", maximum(dftinfo.wave.energies), "Ha.")   
-    emax = get(data, "emax", nothing)
-    if isnothing(emax)
-        println("No maximum energy specified. emax will be set to the Fermi energy.")
-        emax = dftinfo.fermi.fermi
-        software == "vasp" ? emax = emax*Electrum.EV2HARTREE : nothing
-    else
-        emax = parse_energy(software, emax)
-    end
-    emax < emin && error("emax cannot be less than emin.")
-    println("Energy range: ", @sprintf("%.3f", emin), " to ", @sprintf("%.3f", emax), " Ha (", @sprintf("%.3f", emin*Electrum.HARTREE2EV), " to ", @sprintf("%.3f", emax*Electrum.HARTREE2EV), " eV)")
-    
-    runs = get(data, "runs", nothing)
-    println("Number of runs: ", length(runs))
-    runlist = parse_runs(runs, dftinfo)
-
-    return(runlist, checkpoint, auto_psphere, dftinfo, emin, emax)
-end
-
-"""
     parse_runs(runs::Vector{Dict{Any, Any}}) -> runlist::Vector{RunInfo}
 
 Parse the run section of the input yaml file and returns Vector{RunInfo}.
