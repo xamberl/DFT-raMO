@@ -135,7 +135,8 @@ Electrum.Crystal(x::raMODFTData) = x.xtal
 Electrum.PeriodicAtomList(x::raMODFTData) = x.xtal.atoms
 Electrum.PlanewaveWavefunction(x::raMODFTData) = x.wave
 Electrum.fermi(x::raMODFTData) = x.fermi
-kptmesh(x::raMODFTData) = x.xtal.transform
+kptmesh(x::raMODFTData) = diag(x.xtal.transform)
+Electrum.supercell(x::raMODFTData) = supercell(x.xtal.atoms, kptmesh(x))
 
 """
     OccupiedStates(
@@ -286,8 +287,11 @@ raMODFTData(x::raMOInput) = x.dftdata
 Electrum.Crystal(x::raMOInput) = x.dftdata.xtal
 Electrum.basis(x::raMOInput) = basis(x.dftdata.xtal)
 Electrum.PlanewaveWavefunction(x::raMOInput) = x.dftdata.wave
+Electrum.PeriodicAtomList(x::raMOInput) = x.dftdata.xtal.atoms
+Electrum.supercell(x::raMOInput) = supercell(x.dftdata)
 # Index by run
 Base.getindex(x::raMOInput, i) = x.runlist[i]
+Base.iterate(x::raMOInput, i=1) = i > length(x.runlist) ? nothing : (x.runlist[i], i+1)
 
 #==struct raMOStatus
     fermi::NamedTuple{(:fermi, :alphabeta), Tuple{Float64, Float64}}

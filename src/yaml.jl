@@ -1,26 +1,26 @@
 """
-    dftramo_run(filename::AbstractString, software::AbstractString="vasp")
+    dftramo_run(filename::AbstractString)
 
 Automatically runs DFTraMO from a configuration yaml file.
 """
-function dftramo_run(filename::AbstractString, software::AbstractString="vasp")
-    (runs, checkpoint, auto_psphere, dftinfo, emin, emax) = read_run_yaml(filename, software)
-    occ_states = get_occupied_states(dftinfo.wave, emin, emax)
-    super = Supercell(dftinfo.xtal, ORB_DICT)
+function dftramo_run(filename::AbstractString)
+    ramoinput = read_yaml(filename)
+    occ_states = get_occupied_states(Electrum.PlanewaveWavefunction(ramoinput), ramoinput.emin, ramoinput.emax)
+    super = Supercell(Electrum.supercell(ramoinput), ORB_DICT)
     S = make_overlap_mat(occ_states)
     H = generate_H(super, DFTRAMO_EHT_PARAMS)
     
-    if !isnothing(checkpoint)
-        (psi_previous, num_electrons_left, num_raMO) = import_checkpoint(checkpoint)
+    if !isnothing(ramoinput.checkpoint) && length(ramoinput.checkpoint) > 0
+        (psi_previous, num_electrons_left, num_raMO) = import_checkpoint(ramoinput.checkpoint)
     else
-        num_electrons_left = sum([get(E_DICT, n.atom.name, 0) for n in dftinfo.xtal.atoms])
+        num_electrons_left = sum([get(E_DICT, n.atom.name, 0) for n in Electrum.PeriodicAtomList(Electrum.Crystal(ramoinput))])
         num_raMO = 0
         psi_previous = diagm(ones(size(occ_states.coeff)[2]))
         psi_previous = ComplexF32.(repeat(psi_previous, 1, 1, 2)) #spin states to be implemented
     end
     
     low_psphere = Vector{Int}(undef, 0)
-    next = iterate(runs)
+    next = iterate(ramoinput)
     while next!==nothing
         (r, state) = next
         # print run information
@@ -35,9 +35,9 @@ function dftramo_run(filename::AbstractString, software::AbstractString="vasp")
             r.name,
             DFTRAMO_EHT_PARAMS,
             occ_states,
-            dftinfo.geo.basis,
-            dftinfo.kpt,
-            length.(collect.(dftinfo.wave.grange)),
+            Electrum.basis(ramoinput),
+            kptmesh(raMODFTData(ramoinput)),
+            length.(collect.(Electrum.PlanewaveWavefunction(ramoinput).grange)),
             psi_previous,
             S,
             H,
@@ -55,9 +55,9 @@ function dftramo_run(filename::AbstractString, software::AbstractString="vasp")
             r.name,
             DFTRAMO_EHT_PARAMS,
             occ_states,
-            dftinfo.geo.basis,
-            dftinfo.kpt,
-            length.(collect.(dftinfo.wave.grange)),
+            Electrum.basis(ramoinput),
+            kptmesh(raMODFTData(ramoinput)),
+            length.(collect.(Electrum.PlanewaveWavefunction(ramoinput).grange)),
             psi_previous,
             S,
             H,
@@ -86,9 +86,9 @@ function dftramo_run(filename::AbstractString, software::AbstractString="vasp")
             r.name,
             DFTRAMO_EHT_PARAMS,
             occ_states,
-            dftinfo.geo.basis,
-            dftinfo.kpt,
-            length.(collect.(dftinfo.wave.grange)),
+            Electrum.basis(ramoinput),
+            kptmesh(raMODFTData(ramoinput)),
+            length.(collect.(Electrum.PlanewaveWavefunction(ramoinput).grange)),
             psi_previous,
             S,
             H,
@@ -96,7 +96,7 @@ function dftramo_run(filename::AbstractString, software::AbstractString="vasp")
             )
         end
         # If auto_psphere is enabled, rerun and use the new run
-        if auto_psphere && !isempty(low_psphere)
+        if ramoinput.auto_psphere && !isempty(low_psphere)
             # delete targets with low pspheres
             for i in reverse(low_psphere)
                 deleteat!(site_list, i)
@@ -108,9 +108,9 @@ function dftramo_run(filename::AbstractString, software::AbstractString="vasp")
             raMO = num_raMO + (low_psphere[1]-1)
             (psi_previous, num_electrons_left, num_raMO) = import_checkpoint(string(r.name, "/", r.name, "_", raMO, "_", e, ".chkpt"))
             # If the last raMOs were the only ones with low_psphere, no need to rerun
-            isempty(site_list) ? next = iterate(runs, state) : r.name = string(r.name, "_aps")
+            isempty(site_list) ? next = iterate(ramoinput, state) : r.name = string(r.name, "_aps")
         else
-            next = iterate(runs, state)
+            next = iterate(ramoinput, state)
             num_electrons_left = num_electrons_left2
             num_raMO = num_raMO2
             psi_previous = psi_previous2
@@ -222,7 +222,7 @@ function parse_runs(runs::Vector{Dict{Any, Any}}, dftinfo)
             if in(type, keys(AO_RUNS))
                 e = string(sites[1])
                 !in(e, Electrum.ELEMENTS) && error(e, " is not a valid element.")
-                valid_atoms = findall(x -> Electrum.name(x) == e, dftinfo.xtal.atoms)
+                valid_atoms = findall(x -> Electrum.name(x) == e, Electrum.supercell(dftinfo))
                 isempty(valid_atoms) && error("Element ", e, "was not found in the system.") 
                 length(sites) > 1 ? sites_final = valid_atoms[parse_sites(sites[2:end])] : sites_final = valid_atoms
             else
