@@ -94,7 +94,8 @@ function dftramo_run(filename::AbstractString)
             psi_previous,
             S,
             H,
-            r.rsphere
+            r.rsphere,
+            discard
             )
         end
         ## If discard is enabled, print output files but discard functions and return to basis.
