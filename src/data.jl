@@ -281,8 +281,9 @@ Returns a supercell struct AtomList{3} and a Vector{Int} with number of orbitals
 struct Supercell
     atomlist::PeriodicAtomList{3}
     orbitals::Vector{Int}
-    function Supercell(atomlist::PeriodicAtomList{3}, orblist_by_type::Dict{String,Int64})
+    function Supercell(ramoinput::raMOInput, orblist_by_type::Dict{String,Int64})
         orbitals = Vector{Int}(undef,0)
+        atomlist = supercell(ramoinput)
         for atom in atomlist
             if !haskey(orblist_by_type, name(atom))
                 error("Number of orbitals for atom", name(atom),"cannot be found.")
