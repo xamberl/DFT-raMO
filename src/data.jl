@@ -90,34 +90,69 @@ struct ehtParams <: AbstractMatrix{OrbitalParams}
     ehtParams(data::AbstractMatrix{OrbitalParams}) = new(data)
 end
 
+"""
+    DFTraMO.RunInfo
+
+Contains information from a run entry in the YAML input file. All runs in the file are collected
+a single `Vector{RunInfo}` object when `dftramo_run()` is called.
+"""
+struct RunInfo
+    name::String
+    type::String
+    site_file::String
+    sites::Vector{Int}
+    radius::Float64
+    rsphere::Float64
+    function RunInfo(
+        name::AbstractString,
+        type::AbstractString,
+        site_file::AbstractString,
+        sites::AbstractVector{<:Integer},
+        radius::Number,
+        rsphere::Number
+    )
+        @assert all(sign.(sites) .> 0) "Some site values are not positive integers."
+        @assert sign(radius) >= 0 "Radius is a negative value."
+        @assert sign(rsphere) >= 0 "Rsphere is a negative value."
+        return new(name, type, site_file, sites, radius, rsphere)
+    end
+end
+
 Base.size(e::ehtParams) = size(e.data)
 Base.axes(e::ehtParams) = axes(e.data)
 Base.getindex(e::ehtParams, i...) = e.data[i...]
 
 """
-    Supercell(atomlist::Atomlist{3}, orblist_by_type::Dict{String,Int64})
+    raMOCheckpoint{T}
 
-Returns a supercell struct AtomList{3} and a Vector{Int} with number of orbitals associated with each atom
+Contains checkpoint data, a 3D array of remainder coefficients, as well as the number of electrons
+left and the number of the current raMO in the sequence.
 """
-struct Supercell
-    atomlist::PeriodicAtomList{3}
-    orbitals::Vector{Int}
-    function Supercell(atomlist::PeriodicAtomList{3}, orblist_by_type::Dict{String,Int64})
-        orbitals = Vector{Int}(undef,0)
-        for atom in atomlist.atoms
-            if !haskey(orblist_by_type, atom.atom.name)
-                error("Number of orbitals for atom", atom.atom.name,"cannot be found.")
-            end
-            # Get the number of orbitals for current atom and add to sum
-            push!(orbitals,get(orblist_by_type,atom.atom.name,0))
-        end
-        return new(atomlist,orbitals)
+struct raMOCheckpoint{T<:Number} <: AbstractArray{T,3}
+    coeff::Array{T,3}
+    electrons_left::Int
+    num_ramos::Int
+    function raMOCheckpoint{T}(
+        coeff::AbstractArray{3},
+        electrons_left::Integer,
+        num_ramos::Integer
+    ) where T
+        #@assert electrons_left >= 0 "The number of electrons left is a negative value."
+        @assert num_ramos >= 0 "The number of raMOs reconstructed is a negative value."
+        return new(coeff, electrons_left, num_ramos)
     end
 end
 
-Electrum.basis(s::Supercell) = basis(s.atomlist)
-Electrum.PeriodicAtomList(s::Supercell) = s.atomlist
-Base.getindex(s::Supercell, i...) = getindex(s.atomlist, i...)
+function raMOCheckpoint(
+    psi::AbstractArray{T,3},
+    electrons_left::Integer,
+    num_ramos::Integer
+) where T
+    return raMOCheckpoint{T}(psi, electrons_left, num_ramos)
+end
+
+Base.size(x::raMOCheckpoint) = size(x.coeff)
+Base.getindex(x::raMOCheckpoint, i...) = x.coeff[i]
 
 """
     raMODFTData
@@ -162,66 +197,6 @@ struct OccupiedStates
 end
 
 """
-    DFTraMO.RunInfo
-
-Contains information from a run entry in the YAML input file. All runs in the file are collected
-a single `Vector{RunInfo}` object when `dftramo_run()` is called.
-"""
-struct RunInfo
-    name::String
-    type::String
-    site_file::String
-    sites::Vector{Int}
-    radius::Float64
-    rsphere::Float64
-    function RunInfo(
-        name::AbstractString,
-        type::AbstractString,
-        site_file::AbstractString,
-        sites::AbstractVector{<:Integer},
-        radius::Number,
-        rsphere::Number
-    )
-        @assert all(sign.(sites) .> 0) "Some site values are not positive integers."
-        @assert sign(radius) >= 0 "Radius is a negative value."
-        @assert sign(rsphere) >= 0 "Rsphere is a negative value."
-        return new(name, type, site_file, sites, radius, rsphere)
-    end
-end
-
-"""
-    raMOCheckpoint{T}
-
-Contains checkpoint data, a 3D array of remainder coefficients, as well as the number of electrons
-left and the number of the current raMO in the sequence.
-"""
-struct raMOCheckpoint{T<:Number} <: AbstractArray{T,3}
-    coeff::Array{T,3}
-    electrons_left::Int
-    num_ramos::Int
-    function raMOCheckpoint{T}(
-        coeff::AbstractArray{3},
-        electrons_left::Integer,
-        num_ramos::Integer
-    ) where T
-        #@assert electrons_left >= 0 "The number of electrons left is a negative value."
-        @assert num_ramos >= 0 "The number of raMOs reconstructed is a negative value."
-        return new(coeff, electrons_left, num_ramos)
-    end
-end
-
-function raMOCheckpoint(
-    psi::AbstractArray{T,3},
-    electrons_left::Integer,
-    num_ramos::Integer
-) where T
-    return raMOCheckpoint{T}(psi, electrons_left, num_ramos)
-end
-
-Base.size(x::raMOCheckpoint) = size(x.coeff)
-Base.getindex(x::raMOCheckpoint, i...) = x.coeff[i]
-
-"""
     raMOInput
 
 Contains all of the information supplied by the user in the YAML file with raMO input data. This
@@ -235,17 +210,20 @@ struct raMOInput
     emax::Float64
     checkpoint::String  # TODO: should we use some sort of IO type? or checkpoint container?
     auto_psphere::Bool
+    discard::Bool
     function raMOInput(
         dftdata::raMODFTData,
         runlist,
         emin::Real,
         emax::Real,
         checkpoint::AbstractString,
-        auto_psphere
+        auto_psphere,
+        discard
     )
         @assert emin < emax "Minimum energy is not less than maximum energy"
         isnothing(auto_psphere) && (auto_psphere = false)
-        return new(dftdata, collect(runlist), emin, emax, checkpoint, auto_psphere)
+        isnothing(discard) && (discard = false)
+        return new(dftdata, collect(runlist), emin, emax, checkpoint, auto_psphere, discard)
     end
 end
 
@@ -275,11 +253,12 @@ function raMOInput(
     dftdata::raMODFTData,
     runlist;
     auto_psphere = false,
+    discard = false,
     checkpoint::AbstractString = "",
     emin::Real = minimum(dftdata.wave.energies),
     emax::Real = fermi(dftdata)
 )
-    return raMOInput(dftdata, runlist, emin, emax, checkpoint, auto_psphere)
+    return raMOInput(dftdata, runlist, emin, emax, checkpoint, auto_psphere, discard)
 end
 
 raMODFTData(x::raMOInput) = x.dftdata
@@ -294,12 +273,27 @@ Electrum.supercell(x::raMOInput) = supercell(x.dftdata)
 Base.size(x::raMOInput) = size(x.runlist)
 Base.getindex(x::raMOInput, i) = x.runlist[i]
 
-#==struct raMOStatus
-    fermi::NamedTuple{(:fermi, :alphabeta), Tuple{Float64, Float64}}
-    xtal::PeriodicAtomList{3}
-    geo::PeriodicAtomList{3}
-    kpt::AbstractVector{Int}
-    wave::PlanewaveWavefunction{3,Float32}
-    num_raMO::Int
-    num_electrons_left::Int
-end==#
+"""
+    Supercell(atomlist::Atomlist{3}, orblist_by_type::Dict{String,Int64})
+
+Returns a supercell struct AtomList{3} and a Vector{Int} with number of orbitals associated with each atom
+"""
+struct Supercell
+    atomlist::PeriodicAtomList{3}
+    orbitals::Vector{Int}
+    function Supercell(atomlist::PeriodicAtomList{3}, orblist_by_type::Dict{String,Int64})
+        orbitals = Vector{Int}(undef,0)
+        for atom in atomlist
+            if !haskey(orblist_by_type, name(atom))
+                error("Number of orbitals for atom", name(atom),"cannot be found.")
+            end
+            # Get the number of orbitals for current atom and add to sum
+            push!(orbitals,get(orblist_by_type, name(atom),0))
+        end
+        return new(atomlist, orbitals)
+    end
+end
+
+Electrum.basis(s::Supercell) = basis(s.atomlist)
+Electrum.PeriodicAtomList(s::Supercell) = s.atomlist
+Base.getindex(s::Supercell, i...) = getindex(s.atomlist, i...)
