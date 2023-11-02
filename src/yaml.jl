@@ -6,7 +6,7 @@ Automatically runs DFTraMO from a configuration yaml file.
 function dftramo_run(filename::AbstractString)
     ramoinput = read_yaml(filename)
     occ_states = get_occupied_states(ramoinput)
-    super = Supercell(supercell(ramoinput), ORB_DICT)
+    super = Supercell(ramoinput, ORB_DICT)
     S = make_overlap_mat(occ_states)
     H = generate_H(super, DFTRAMO_EHT_PARAMS)
     
@@ -95,8 +95,11 @@ function dftramo_run(filename::AbstractString)
             r.rsphere
             )
         end
+        ## If discard is enabled, print output files but discard functions and return to basis.
+        ## We looks like this must be implemented in the loop_fxn level.
+        
         # If auto_psphere is enabled, rerun and use the new run
-        if ramoinput.auto_psphere && !isempty(low_psphere)
+        if !ramoinput.discard && ramoinput.auto_psphere && !isempty(low_psphere)
             # delete targets with low pspheres
             for i in reverse(low_psphere)
                 deleteat!(site_list, i)
@@ -362,9 +365,16 @@ function read_yaml(io::IO)
     else
         @info "Restarting calculation using checkpoint file $checkpoint"
     end
+    # check for discard option
+    discard::Bool = get(yaml, "discard", false)
+    @info "Discard option is " * (discard ? "en" : "dis") * "abled."
     # Use automatic conversion/type assertion for error
     auto_psphere::Bool = get(yaml, "auto_sphere", false)
-    @info "Auto Psphere is " * (auto_psphere ? "en" : "dis") * "abled"
+    if discard
+        @info "Auto Psphere will be ignored."
+    else
+        @info "Auto Psphere is " * (auto_psphere ? "en" : "dis") * "abled"
+    end
     # Get energy ranges (will need to perform unit inference)
     emin = get(yaml, "emin", nothing)
     emax = get(yaml, "emax", nothing)
@@ -390,7 +400,7 @@ function read_yaml(io::IO)
     runs = get(yaml, "runs", nothing)
     @info "Performing $(length(runs)) runs."
     runlist = parse_runs(runs, dftinfo)
-    return raMOInput(dftinfo, runlist, emin, emax, checkpoint, auto_psphere)
+    return raMOInput(dftinfo, runlist, emin, emax, checkpoint, auto_psphere, discard)
 end
 
 read_yaml(file) = open(read_yaml, file)
