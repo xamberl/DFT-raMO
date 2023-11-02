@@ -41,7 +41,8 @@ function dftramo_run(filename::AbstractString)
             psi_previous,
             S,
             H,
-            r.rsphere
+            r.rsphere,
+            ramoinput.discard
             )
             site_list = r.sites # necessary for auto_psphere
         elseif r.type in CAGE_RUNS
@@ -61,7 +62,8 @@ function dftramo_run(filename::AbstractString)
             psi_previous,
             S,
             H,
-            r.rsphere
+            r.rsphere,
+            ramoinput.discard
             )
         elseif r.type == "lcao"
             lcao_yaml = YAML.load_file(r.site_file)
