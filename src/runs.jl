@@ -18,7 +18,8 @@ function loop_target_cluster_sp(
     psi_previous,
     S,
     H,
-    rsphere
+    rsphere,
+    discard
 )
     # check to see which directory we're in
     if split(pwd(),'/')[end] != run_name && !isdir(run_name)
@@ -32,11 +33,11 @@ function loop_target_cluster_sp(
             end
         end
         psphere = Vector{Float64}(undef, size(voids_list))
-        remainders = []
+        remainders = Array{ComplexF32,1}(undef, 0)
         iter = ProgressBar(1:length(voids_list), unit="raMOs")
         for i in iter
             target = make_target_cluster_sp(voids_list, void_radius, i, super)
-            (psi_previous, psi_up, e_up, num_electrons_left) = reconstruct_targets_DFT(
+            (psi_previous2, psi_up, e_up, num_electrons_left2) = reconstruct_targets_DFT(
                 target,
                 num_electrons_left,
                 run_name,
@@ -56,7 +57,18 @@ function loop_target_cluster_sp(
             open(string(run_name, "_psphere_", rsphere, ".txt"), "a") do io
                 print_psphere_terminal(iter, num_raMO+i, psphere[i], voids_list[i], io)
             end
-            output_files(run_name, num_electrons_left, num_raMO+i, super, isosurf, psi_previous, psi_up)
+            # Check if we are in discard ramo mode
+            if discard
+                # print out raMO but not checkpoint
+                write_to_XSF(isosurf, super.atomlist, string(run_name, "_", i, ".xsf"))
+                open(string(run_name, "_", i, ".raMO"), "w") do io
+                    write(io, psi_up)
+                end
+            else
+                # update remainders and number of electrons left
+                psi_previous = psi_previous2; num_electrons_left = Int(num_electrons_left2)
+                output_files(run_name, num_electrons_left, num_raMO+i, super, isosurf, psi_previous, psi_up)
+            end
             remainders = psi_previous
         end
         cd("..")
@@ -86,7 +98,8 @@ function loop_AO(
     psi_previous,
     S,
     H,
-    rsphere
+    rsphere,
+    discard
 ) ## MUTABLE STRUCT RECOMMENDED
     # check to see which directory we're in
     if split(pwd(),'/')[end] != run_name && !isdir(run_name)
@@ -107,7 +120,7 @@ function loop_AO(
         iter = ProgressBar(eachindex(atom_list), unit="raMOs")
         for i in iter
             target = make_target_AO(atom_list[i], target_orbital, super)
-            (psi_previous, psi_up, e_up, num_electrons_left) = reconstruct_targets_DFT(
+            (psi_previous2, psi_up, e_up, num_electrons_left2) = reconstruct_targets_DFT(
                 target,
                 num_electrons_left,
                 run_name,
@@ -128,7 +141,18 @@ function loop_AO(
             open(string(run_name, "_psphere_", rsphere, ".txt"), "a") do io
                 print_psphere_terminal(iter, num_raMO+i, psphere[i], pos, io)
             end
-            output_files(run_name, num_electrons_left, num_raMO+i, super, isosurf, psi_previous, psi_up)
+            # Check if we are in discard ramo mode
+            if discard
+                # print out raMO but not checkpoint
+                write_to_XSF(isosurf, super.atomlist, string(run_name, "_", i, ".xsf"))
+                open(string(run_name, "_", i, ".raMO"), "w") do io
+                    write(io, psi_up)
+                end
+            else
+                # update remainders and number of electrons left
+                psi_previous = psi_previous2; num_electrons_left = Int(num_electrons_left2)
+                output_files(run_name, num_electrons_left, num_raMO+i, super, isosurf, psi_previous, psi_up)
+            end
             remainders = psi_previous
         end
         cd("..")
@@ -158,7 +182,8 @@ function loop_LCAO(
     psi_previous,
     S,
     H,
-    rsphere
+    rsphere,
+    discard
 )
     # check to see which directory we're in
     if split(pwd(),'/')[end] != run_name && !isdir(run_name)
@@ -172,11 +197,11 @@ function loop_LCAO(
             end
         end
         psphere = Vector{Float64}(undef, length(site_list))
-        remainders = []
+        remainders = Array{ComplexF32,1}(undef, 0)
         iter = ProgressBar(1:length(site_list), unit="raMOs")
         for i in iter
             target = make_target_lcao(site_list[i], target_orbital, super)
-            (psi_previous, psi_up, e_up, num_electrons_left) = reconstruct_targets_DFT(
+            (psi_previous2, psi_up, e_up, num_electrons_left2) = reconstruct_targets_DFT(
                 target,
                 num_electrons_left,
                 run_name,
@@ -197,7 +222,18 @@ function loop_LCAO(
             open(string(run_name, "_psphere_", rsphere, ".txt"), "a") do io
                 print_psphere_terminal(iter, num_raMO+i, psphere[i], pos, io)
             end
-            output_files(run_name, num_electrons_left, num_raMO+i, super, isosurf, psi_previous, psi_up)
+            # Check if we are in discard ramo mode
+            if discard
+                # print out raMO but not checkpoint
+                write_to_XSF(isosurf, super.atomlist, string(run_name, "_", i, ".xsf"))
+                open(string(run_name, "_", i, ".raMO"), "w") do io
+                    write(io, psi_up)
+                end
+            else
+                # update remainders and number of electrons left
+                psi_previous = psi_previous2; num_electrons_left = Int(num_electrons_left2)
+                output_files(run_name, num_electrons_left, num_raMO+i, super, isosurf, psi_previous, psi_up)
+            end
             remainders = psi_previous
         end
         cd("..")
@@ -206,4 +242,3 @@ function loop_LCAO(
         return (low_psphere, remainders, num_raMO+length(site_list), num_electrons_left)
     end
 end
-

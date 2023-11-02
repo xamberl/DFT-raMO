@@ -272,6 +272,7 @@ Electrum.supercell(x::raMOInput) = supercell(x.dftdata)
 # Size and indexing depend on the run list.
 Base.size(x::raMOInput) = size(x.runlist)
 Base.getindex(x::raMOInput, i) = x.runlist[i]
+Base.iterate(x::raMOInput, i=1) = i > length(x.runlist) ? nothing : (x.runlist[i], i+1)
 
 """
     Supercell(atomlist::Atomlist{3}, orblist_by_type::Dict{String,Int64})
