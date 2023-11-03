@@ -13,7 +13,7 @@ function dftramo_run(filename::AbstractString)
     if !isnothing(ramoinput.checkpoint) && length(ramoinput.checkpoint) > 0
         (psi_previous, num_electrons_left, num_raMO) = import_checkpoint(ramoinput.checkpoint)
     else
-        num_electrons_left = sum([get(E_DICT, n.atom.name, 0) for n in PeriodicAtomList(ramoinput)])
+        num_electrons_left = sum([get(E_DICT, n.atom.name, 0) for n in PeriodicAtomList(super)])
         num_raMO = 0
         psi_previous = diagm(ones(size(occ_states.coeff)[2]))
         psi_previous = ComplexF32.(repeat(psi_previous, 1, 1, 2)) #spin states to be implemented
@@ -39,76 +39,12 @@ function dftramo_run(filename::AbstractString)
         println(crayon"bold", "Run: ", crayon"light_cyan", r.name, crayon"!bold default")
         if r.type in keys(AO_RUNS)
             (low_psphere, psi_previous2, num_raMO2, num_electrons_left2) = loop_AO(ramostatus)
-            #==super,
-            r.sites,
-            get(AO_RUNS, r.type, 0),
-            num_electrons_left,
-            num_raMO,
-            r.name,
-            DFTRAMO_EHT_PARAMS,
-            occ_states,
-            basis(ramoinput),
-            kptmesh(raMODFTData(ramoinput)),
-            length.(collect.(PlanewaveWavefunction(ramoinput).grange)),
-            psi_previous,
-            S,
-            H,
-            r.rsphere,
-            ramoinput.discard
-            )==#
             site_list = r.sites # necessary for auto_psphere
         elseif r.type in CAGE_RUNS
             site_list = read_site_list(r.site_file)
-            (low_psphere, psi_previous2, num_raMO2, num_electrons_left2) = loop_target_cluster_sp(
-            super,
-            site_list,
-            r.radius,
-            num_electrons_left,
-            num_raMO,
-            r.name,
-            DFTRAMO_EHT_PARAMS,
-            occ_states,
-            basis(ramoinput),
-            kptmesh(raMODFTData(ramoinput)),
-            length.(collect.(PlanewaveWavefunction(ramoinput).grange)),
-            psi_previous,
-            S,
-            H,
-            r.rsphere,
-            ramoinput.discard
-            )
+            (low_psphere, psi_previous2, num_raMO2, num_electrons_left2) = loop_target_cluster_sp(ramostatus, site_list)
         elseif r.type == "lcao"
-            lcao_yaml = YAML.load_file(r.site_file)
-            target = get(lcao_yaml, "target", nothing)
-            isnothing(target) && error("Target cannot be blank for SALCs")
-            for t in target
-                !issubset(keys(t), keys(AO_RUNS)) && error("Target does not contain atomic orbitals. Please check.")
-            end
-            site_list = get(lcao_yaml, "lcao", nothing)
-            if isa(site_list, Vector{Vector{Int}})
-                for n in site_list
-                    # TODO check the num atoms in lcao list match num targets
-                    length(n) != length(target) && error("Mismatch between length of LCAO ", n, " and specified target.")
-                end
-            end
-            (low_psphere, psi_previous2, num_raMO2, num_electrons_left2) = loop_LCAO(
-            super,
-            site_list,
-            target,
-            num_electrons_left,
-            num_raMO,
-            r.name,
-            DFTRAMO_EHT_PARAMS,
-            occ_states,
-            basis(ramoinput),
-            kptmesh(raMODFTData(ramoinput)),
-            length.(collect.(PlanewaveWavefunction(ramoinput).grange)),
-            psi_previous,
-            S,
-            H,
-            r.rsphere,
-            discard
-            )
+            (low_psphere, psi_previous2, num_raMO2, num_electrons_left2) = loop_LCAO(ramostatus)
         end
         ## If discard is enabled, print output files but discard functions and return to basis.
         ## We looks like this must be implemented in the loop_fxn level.
@@ -129,9 +65,8 @@ function dftramo_run(filename::AbstractString)
             isempty(site_list) ? next = iterate(ramoinput, state) : r.name = string(r.name, "_aps")
         else
             next = iterate(ramoinput, state)
-            num_electrons_left = num_electrons_left2
-            num_raMO = num_raMO2
-            psi_previous = psi_previous2
+            ramostatus.num_electrons_left = num_electrons_left2
+            ramostatus.num_raMO = num_raMO2
         end
     end
 end
