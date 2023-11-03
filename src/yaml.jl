@@ -19,15 +19,27 @@ function dftramo_run(filename::AbstractString)
         psi_previous = ComplexF32.(repeat(psi_previous, 1, 1, 2)) #spin states to be implemented
     end
     
+    ramostatus = raMOStatus(
+        num_electrons_left,
+        num_raMO,
+        psi_previous,
+        0,
+        ramoinput,
+        occ_states,
+        H,
+        S
+    )
+
     low_psphere = Vector{Int}(undef, 0)
     next = iterate(ramoinput)
     while next!==nothing
         (r, state) = next
+        ramostatus.num_run = state-1
         # print run information
         println(crayon"bold", "Run: ", crayon"light_cyan", r.name, crayon"!bold default")
         if r.type in keys(AO_RUNS)
-            (low_psphere, psi_previous2, num_raMO2, num_electrons_left2) = loop_AO(
-            super,
+            (low_psphere, psi_previous2, num_raMO2, num_electrons_left2) = loop_AO(ramostatus)
+            #==super,
             r.sites,
             get(AO_RUNS, r.type, 0),
             num_electrons_left,
@@ -43,7 +55,7 @@ function dftramo_run(filename::AbstractString)
             H,
             r.rsphere,
             ramoinput.discard
-            )
+            )==#
             site_list = r.sites # necessary for auto_psphere
         elseif r.type in CAGE_RUNS
             site_list = read_site_list(r.site_file)
