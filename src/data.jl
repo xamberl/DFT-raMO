@@ -299,3 +299,14 @@ end
 Electrum.basis(s::Supercell) = basis(s.atomlist)
 Electrum.PeriodicAtomList(s::Supercell) = s.atomlist
 Base.getindex(s::Supercell, i...) = getindex(s.atomlist, i...)
+
+mutable struct raMOStatus
+   num_electrons_left::Int64
+   num_raMO::Int64
+   psi_previous::Array{ComplexF32}
+   num_run::Int64
+   const ramoinput::raMOInput
+   const occ_states::OccupiedStates
+   const H::Matrix{Float64}
+   const S::Matrix{ComplexF32}
+end
