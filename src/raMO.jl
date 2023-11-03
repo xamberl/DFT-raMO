@@ -65,28 +65,23 @@ end
 
 The guts of DFTraMO.
 """
-# TODO: explain what all the arguments are
-# For now, will not use the raMOSystemStatus struct. This will be a to-do to clean up the code!
 function reconstruct_targets_DFT(
     psi_target::AbstractArray{<:Real},  # array dimensionality?
-    num_electrons_left::Integer,
-    run_name::AbstractString,
-    super::Supercell,
     ehtparams::ehtParams,
-    occ_states::OccupiedStates,
-    cell::RealBasis{3},                 # TODO: change to AbstractBasis on next Electrum release
-    kpt::AbstractVector{<:Integer},
-    psi_previous::Array{<:Number},      # array dimensionality?
-    S_original::Matrix{<:Number},
-    H::Matrix{<:Number},
-    # TODO: could these be keyword arguments? and can we remove use_prev?
-    use_prev::Bool,
-    prev_mat::AbstractString="",
+    ramostatus::raMOStatus
 )
-    
+    ramoinput = ramostatus.ramoinput
+    super = Supercell(ramoinput, ORB_DICT)
+    occ_states = ramostatus.occ_states
+    cell = basis(ramoinput)
+    kpt = kptmesh(raMODFTData(ramoinput))
+    psi_previous = ramostatus.psi_previous
+    S_original = ramostatus.S
+    H = ramostatus.H
+
     # Single target run or multiple targets
     num_targets = length(size(psi_target))
-    num_electrons_left = num_electrons_left - 2*num_targets
+    num_electrons_left = ramostatus.num_electrons_left - 2*num_targets
     
     # Checks for spin states
     # num_spin_states = size(wavefxn.waves)[1]
@@ -104,7 +99,6 @@ function reconstruct_targets_DFT(
     current_orb = 1;
     overlap_target_occupied = zeros(ComplexF32, max(num_spin_up,num_spin_down), num_targets, num_spin_states)
 
-    # Not sure what's going on here just yet; still parsing matlab code (~ ln 852)
     E_mat = Vector{Float64}(undef,0)
     for i in 1:num_targets # Loop through targets
         for j in 1:length(super.atomlist) # loop through every atom
