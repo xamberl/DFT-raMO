@@ -14,6 +14,11 @@ function dftramo_run(filename::AbstractString)
         (psi_previous, num_electrons_left, num_raMO) = import_checkpoint(ramoinput.checkpoint)
     else
         num_electrons_left = sum([get(E_DICT, n.atom.name, 0) for n in PeriodicAtomList(super)])
+        if !isequal(num_electrons_left/2, num_states(occ_states))
+            x = num_states(occ_states)
+            y = num_electrons_left/2
+            @warn "The number of occupied states $x does not match with the number of electrons $num_electrons_left ($y states) calculated. Consider adjusting your energy range."
+        end
         num_raMO = 0
         psi_previous = diagm(ones(size(occ_states.coeff)[2]))
         psi_previous = ComplexF32.(repeat(psi_previous, 1, 1, 2)) #spin states to be implemented

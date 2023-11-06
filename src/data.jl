@@ -196,6 +196,8 @@ struct OccupiedStates
     end
 end
 
+num_states(x::OccupiedStates) = size(x.coeff)[2]
+
 """
     raMOInput
 
