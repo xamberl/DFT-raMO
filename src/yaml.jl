@@ -35,6 +35,7 @@ function dftramo_run(filename::AbstractString)
         S
     )
 
+    aps = ""
     low_psphere = Vector{Int}(undef, 0)
     next = iterate(ramoinput)
     while next!==nothing
@@ -46,7 +47,7 @@ function dftramo_run(filename::AbstractString)
             break
         end
         # print run information
-        println(crayon"bold", "Run: ", crayon"light_cyan", r.name, crayon"!bold default")
+        println(crayon"bold", "Run: ", crayon"light_cyan", string(r.name, aps), crayon"!bold default")
         if r.type in keys(AO_RUNS)
             (low_psphere, psi_previous2, num_raMO2, num_electrons_left2) = loop_AO(ramostatus)
             site_list = r.sites # necessary for auto_psphere
@@ -71,8 +72,9 @@ function dftramo_run(filename::AbstractString)
             e = num_electrons_left - (low_psphere[1]-1)*2
             raMO = num_raMO + (low_psphere[1]-1)
             (psi_previous, num_electrons_left, num_raMO) = import_checkpoint(string(r.name, "/", r.name, "_", raMO, "_", e, ".chkpt"))
+            aps = ""
             # If the last raMOs were the only ones with low_psphere, no need to rerun
-            isempty(site_list) ? next = iterate(ramoinput, state) : r.name = string(r.name, "_aps")
+            isempty(site_list) ? next = iterate(ramoinput, state) : aps = "_aps"
         else
             next = iterate(ramoinput, state)
             ramostatus.num_electrons_left = num_electrons_left2
