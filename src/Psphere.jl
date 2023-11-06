@@ -45,30 +45,18 @@ function Psphere(
 end
 
 """
-    psphere_eval(psphere::AbstractVector{<:Real}, super::Supercell, site_list)
+    psphere_eval(psphere::AbstractVector{<:Real}, site::AbstractVector{SVector{3, Float64}})
     
 Prints Psphere analysis to the terminal.
 """
-function psphere_eval(psphere::AbstractVector{<:Real}, super::Supercell, site_list::AbstractVector{Int})
-    m = maximum(psphere)
-    a = findall(x->x<0.15*m, psphere)
-    if !isempty(a)
-        println("The following atoms have Pspheres <15% of the maximum (", m, "):")
-        for n in a
-            site = Vector(super.atomlist.basis*Electrum.BOHR2ANG*super.atomlist[site_list[n]].pos)
-            println("Atom ", site_list[n], ": ", @sprintf("Psphere: %.3f", psphere[n]), @sprintf(" at site [%.3f, %.3f, %.3f]", site[1], site[2], site[3]))
-        end
-    end
-    return a
-end
 
-function psphere_eval(psphere::AbstractVector{<:Real}, site::AbstractVector{AbstractVector{<:Real}})
+function psphere_eval(psphere::AbstractVector{<:Real}, site::AbstractVector{SVector{3, Float64}})
     m = maximum(psphere)
     a = findall(x->x<0.15*m, psphere)
     if !isempty(a)
         println("The following sites have Pspheres <15% of the maximum (", m, "):")
         for n in a
-            println("Site ", n, ": ", @sprintf("Psphere: %.3f", psphere[n]), @sprintf(" at site [%.3f, %.3f, %.3f]", site[1], site[2], site[3]))
+            println("Site ", n, ": ", @sprintf("Psphere: %.3f", psphere[n]), @sprintf(" at site [%.3f, %.3f, %.3f]", site[n][1], site[n][2], site[n][3]))
         end
     end
     return a

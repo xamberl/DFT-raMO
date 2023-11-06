@@ -108,7 +108,9 @@ function loop_AO(ramostatus::raMOStatus)
         end
         cd("..")
         p = psphere_graph(psphere, ramostatus.num_raMO, run.rsphere); display(p)
-        low_psphere = psphere_eval(psphere, super, run.sites)
+        # convert sites into cartesian; filter out atomic sites
+        sites = [basis(super)*Electrum.BOHR2ANG*i.pos for i in PeriodicAtomList(super)][run.sites]
+        low_psphere = psphere_eval(psphere, sites)
         return (low_psphere, remainders, ramostatus.num_raMO+length(run.sites), ramostatus.num_electrons_left)
     end
 end
