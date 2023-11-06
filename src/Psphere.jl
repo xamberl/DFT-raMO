@@ -62,7 +62,7 @@ function psphere_eval(psphere::AbstractVector{<:Real}, super::Supercell, site_li
     return a
 end
 
-function psphere_eval(psphere::AbstractVector{<:Real}, super::Supercell, site::AbstractVector{AbstractVector{<:Real}})
+function psphere_eval(psphere::AbstractVector{<:Real}, site::AbstractVector{AbstractVector{<:Real}})
     m = maximum(psphere)
     a = findall(x->x<0.15*m, psphere)
     if !isempty(a)

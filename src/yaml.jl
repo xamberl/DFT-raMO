@@ -40,6 +40,11 @@ function dftramo_run(filename::AbstractString)
     while next!==nothing
         (r, state) = next
         ramostatus.num_run = state-1
+        # check to see if we have electrons left
+        if size(ramostatus.psi_previous)[2] == 0
+            @info "No more states in the basis set. Stopping DFT-raMO."
+            break
+        end
         # print run information
         println(crayon"bold", "Run: ", crayon"light_cyan", r.name, crayon"!bold default")
         if r.type in keys(AO_RUNS)
