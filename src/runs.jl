@@ -1,5 +1,5 @@
 """
-    loop_target_cluster_sp()
+loop_target_cluster_sp()
 
 Loops and runs DFT-raMO/Psphere analysis on a set of sp-based targets.
 """
@@ -23,6 +23,10 @@ function loop_target_cluster_sp(ramostatus::raMOStatus, sites)
         remainders = Array{ComplexF32,1}(undef, 0)
         iter = ProgressBar(1:length(sites), unit="raMOs")
         for i in iter
+            # check to see if we have electrons left
+            if size(ramostatus.psi_previous)[2] == 0
+                break
+            end
             target = make_target_cluster_sp(sites, run.radius, i, super)
             (psi_previous2, psi_up, e_up, num_electrons_left2) = reconstruct_targets_DFT(target, DFTRAMO_EHT_PARAMS, ramostatus)
             isosurf = raMO_to_density(ramostatus.occ_states, psi_up, kptmesh(raMODFTData(ramoinput)), length.(collect.(PlanewaveWavefunction(ramoinput).grange)))
@@ -75,6 +79,10 @@ function loop_AO(ramostatus::raMOStatus)
         remainders = Array{ComplexF32,1}(undef, 0) # TODO
         iter = ProgressBar(eachindex(run.sites), unit="raMOs")
         for i in iter
+            # check to see if we have electrons left
+            if size(ramostatus.psi_previous)[2] == 0
+                break
+            end
             target = make_target_AO(run.sites[i], get(AO_RUNS, run.type, 0), super)
             (psi_previous2, psi_up, e_up, num_electrons_left2) = reconstruct_targets_DFT(target, DFTRAMO_EHT_PARAMS, ramostatus)
             isosurf = raMO_to_density(ramostatus.occ_states, psi_up, kptmesh(raMODFTData(ramoinput)), length.(collect.(PlanewaveWavefunction(ramoinput).grange)))
@@ -106,7 +114,7 @@ function loop_AO(ramostatus::raMOStatus)
 end
 
 """
-    loop_LCAO()
+loop_LCAO()
 
 Loops and runs DFT-raMO/Psphere analysis on a set of LCAO targets.
 """
@@ -143,6 +151,10 @@ function loop_LCAO(ramostatus::raMOStatus)
         remainders = Array{ComplexF32,1}(undef, 0)
         iter = ProgressBar(1:length(site_list), unit="raMOs")
         for i in iter
+            # check to see if we have electrons left
+            if size(ramostatus.psi_previous)[2] == 0
+                break
+            end
             target = make_target_lcao(site_list[i], target_orbital, super)
             (psi_previous2, psi_up, e_up, num_electrons_left2) = reconstruct_targets_DFT(target, DFTRAMO_EHT_PARAMS, ramostatus)
             isosurf = raMO_to_density(ramostatus.occ_states, psi_up, kptmesh(raMODFTData(ramoinput)), length.(collect.(PlanewaveWavefunction(ramoinput).grange)))
@@ -166,7 +178,6 @@ function loop_LCAO(ramostatus::raMOStatus)
             end
             remainders = ramostatus.psi_previous
         end
-        cd("..")
         p = psphere_graph(psphere, ramostatus.num_raMO, run.rsphere); display(p)
         low_psphere = psphere_eval(psphere, super, site_list)
         return (low_psphere, remainders, ramostatus.num_raMO+length(site_list), ramostatus.num_electrons_left)
