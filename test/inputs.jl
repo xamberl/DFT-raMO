@@ -7,4 +7,7 @@
     end
 
     @test DFTraMO.parse_sites(["10", "10", "10:2:16"]) == [10, 12, 14, 16]
+
+    # Test a full run
+    @test DFTraMO.dftramo_run("ScAl3.yaml")
 end
