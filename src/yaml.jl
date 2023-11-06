@@ -329,7 +329,7 @@ function read_yaml(io::IO)
     discard::Bool = get(yaml, "discard", false)
     @info "Discard option is " * (discard ? "en" : "dis") * "abled."
     # Use automatic conversion/type assertion for error
-    auto_psphere::Bool = get(yaml, "auto_sphere", false)
+    auto_psphere::Bool = get(yaml, "auto_psphere", false)
     if discard
         @info "Auto Psphere will be ignored."
     else
