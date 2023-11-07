@@ -198,14 +198,15 @@ in dimensions, while kpt is `num_occupied_states` in length, and G is `num_occup
 """
 struct OccupiedStates <: DenseMatrix{ComplexF32}
     coeff::Matrix{ComplexF32}
-    kpt::Matrix{SVector{3, Float64}}
-    G::Matrix{SVector{3, Int64}}
+    skb::Vector{SpinKPointBand{3}}
+    G::Vector{SVector{3,Int}}
     function OccupiedStates(
         coeff::AbstractMatrix{<:Number},
-        kpt::AbstractMatrix{<:AbstractVector},
-        G::AbstractMatrix{<:AbstractVector}
+        skb::AbstractVector{SpinKPointBand{3}},
+        G::AbstractVector{<:AbstractVector}
     )
-        return new(coeff, kpt, G)
+        @assert size(coeff) === (length(G), length(skb)) "Incommensurate matrix dimensions"
+        return new(coeff, skb, G)
     end
 end
 
@@ -213,6 +214,20 @@ num_states(x::OccupiedStates) = size(x.coeff)[2]
 Base.size(o::OccupiedStates) = size(o.coeff)
 Base.getindex(o::OccupiedStates, i...) = getindex(o.coeff, i...)
 Base.setindex!(o::OccupiedStates, x, i...) = setindex!(o.coeff, x, i...)
+
+function OccupiedStates(wf::PlanewaveWavefunction; emin = min_energy(wf), emax = fermi(wf))
+    selected_states = findall(emin .<= wf.energies .<= emax)
+    # Find the range of occupied band/kpt/spin
+    occ_skb = [SpinKPointBand(wf.spins[s], wf.kpoints[k], b) for (b,k,s) in Tuple.(selected_states)]
+    # occ_bands = findall(!iszero, sum.(eachslice(selected_states, dims=1)))
+    # Find all possible occupied planewaves
+    occ_pw = findall(any.(!iszero, eachslice(wf.data, dims = 1)))
+    occ_gvecs = SVector.(Tuple.(FFTBins(wf)[occ_pw]))
+    coeff = @view(wf.data[occ_pw,:,:,:])[:,selected_states]
+    return OccupiedStates(coeff, occ_skb, occ_gvecs)
+end
+
+OccupiedStates(x::raMODFTData; emin, emax) = OccupiedStates(x.wave; emin, emax)
 
 """
     raMOInput
@@ -280,6 +295,7 @@ function raMOInput(
 end
 
 raMODFTData(x::raMOInput) = x.dftdata
+OccupiedStates(x::raMOInput) = OccupiedStates(x.dftdata; emin = x.emin, emax = x.emax)
 
 Electrum.Crystal(x::raMOInput) = x.dftdata.xtal
 Electrum.basis(x::raMOInput) = basis(x.dftdata.xtal)
