@@ -1,7 +1,7 @@
 checkpoint:
 auto_psphere: true
 emin: -100 eV
-emax: 0.25 Ha
+emax:
 software: vasp
 runs:
   - name: 1_Sc-Sc

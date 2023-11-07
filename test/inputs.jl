@@ -5,7 +5,7 @@
         ramoinput = read_yaml("ScAl3.yaml")
         @test length(ramoinput.runlist) == 5
         @test ramoinput.emin == -100*DFTraMO.Electrum.EV2HARTREE
-        @test ramoinput.emax == 0.25
+        @test ramoinput.emax == 0.26157800031408956
         # Test a full run
         @test DFTraMO.dftramo_run("ScAl3.yaml")
     end
