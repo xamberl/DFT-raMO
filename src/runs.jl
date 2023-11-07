@@ -51,7 +51,7 @@ function loop_target_cluster_sp(ramostatus::raMOStatus, sites)
         end
         cd("..")
         p = psphere_graph(psphere, ramostatus.num_raMO, run.rsphere); display(p)
-        low_psphere = psphere_eval(psphere, super, sites)
+        low_psphere = psphere_eval(psphere, sites)
         return (low_psphere, remainders, ramostatus.num_raMO+length(sites), ramostatus.num_electrons_left)
     end
 end
@@ -181,7 +181,7 @@ function loop_LCAO(ramostatus::raMOStatus)
             remainders = ramostatus.psi_previous
         end
         p = psphere_graph(psphere, ramostatus.num_raMO, run.rsphere); display(p)
-        low_psphere = psphere_eval(psphere, super, site_list)
+        low_psphere = psphere_eval(psphere, site_list)
         return (low_psphere, remainders, ramostatus.num_raMO+length(site_list), ramostatus.num_electrons_left)
     end
 end
