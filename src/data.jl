@@ -184,7 +184,7 @@ struct SpinKPointBand{D}
     band::Int
 end
 
-KPoint(skb::SpinKPointBand{D}) = skb.kpt
+Electrum.KPoint(skb::SpinKPointBand{D}) = skb.kpt
 
 """
     OccupiedStates{T<:Number} <: DenseMatrix{T}
