@@ -241,7 +241,7 @@ function OccupiedStates(wf::PlanewaveWavefunction; emin = min_energy(wf), emax =
     return OccupiedStates(coeff, occ_skb, occ_gvecs)
 end
 
-OccupiedStates(x::raMODFTData; emin, emax) = OccupiedStates(x.wave; emin, emax)
+OccupiedStates(x::raMODFTData; emin, emax=x.fermi) = OccupiedStates(x.wave; emin, emax)
 
 """
     raMOInput
