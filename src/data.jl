@@ -174,6 +174,19 @@ kptmesh(x::raMODFTData) = diag(x.xtal.transform)
 Electrum.supercell(x::raMODFTData) = supercell(x.xtal.atoms, kptmesh(x))
 
 """
+    SpinKPointBand{D}
+
+Stores a tuple of spin direction, k-point, and band in `D` dimensions.
+"""
+struct SpinKPointBand{D}
+    spin::SVector{D,Float64}
+    kpt::KPoint{D}
+    band::Int
+end
+
+KPoint(skb::SpinKPointBand{D}) = skb.kpt
+
+"""
     OccupiedStates(
         coeff::AbstractMatrix{<:Number},
         kpt::AbstractMatrix{<:AbstractVector},
