@@ -236,13 +236,14 @@ Constructs an `OccupiedStates` using the wavefunction states with energies betwe
 (inclusive).
 """
 function OccupiedStates(wf::PlanewaveWavefunction; emin = min_energy(wf), emax = fermi(wf))
+    # Find the range of occupied band/kpt/spin and collect that data
     selected_states = findall(emin .<= wf.energies .<= emax)
-    # Find the range of occupied band/kpt/spin
     occ_skb = [SpinKPointBand(wf.spins[s], wf.kpoints[k], b) for (b,k,s) in Tuple.(selected_states)]
     # occ_bands = findall(!iszero, sum.(eachslice(selected_states, dims=1)))
-    # Find all possible occupied planewaves
+    # Get indices for all G-vectors with nonzero coefficients and store the list of G-vectors
     occ_pw = findall(any.(!iszero, eachslice(wf.data, dims = 1)))
     occ_gvecs = SVector.(Tuple.(FFTBins(wf)[occ_pw]))
+    # Filter coefficients by valid G-vectors and states of interest
     coeff = @view(wf.data[occ_pw,:,:,:])[:,selected_states]
     return OccupiedStates(coeff, occ_skb, occ_gvecs)
 end
