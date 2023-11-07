@@ -1,4 +1,5 @@
 using Test
+using StaticArrays
 using Electrum
 using DFTraMO
 
