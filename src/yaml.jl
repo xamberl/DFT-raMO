@@ -16,7 +16,7 @@ function dftramo_run(filename::AbstractString)
         num_electrons_left = sum([get(E_DICT, n.atom.name, 0) for n in PeriodicAtomList(super)])
         if !isequal(num_electrons_left/2, num_states(occ_states))
             x = num_states(occ_states)
-            y = num_electrons_left/2
+            y = Int(num_electrons_left/2)
             @warn "The number of occupied states $x does not match with the number of electrons $num_electrons_left ($y states) calculated. Consider adjusting your energy range."
         end
         num_raMO = 0
@@ -40,6 +40,7 @@ function dftramo_run(filename::AbstractString)
     next = iterate(ramoinput)
     while next!==nothing
         (r, state) = next
+        ramobackup = copy(ramostatus)
         ramostatus.num_run = state-1
         # check to see if we have electrons left
         if size(ramostatus.psi_previous)[2] == 0
@@ -68,10 +69,10 @@ function dftramo_run(filename::AbstractString)
             end
             # set raMO analysis to where the first low psphere occurred
             # to prevent redundant raMO analysis
-            deleteat!(site_list, collect(1:low_psphere[1]-1))
-            e = num_electrons_left - (low_psphere[1]-1)*2
-            raMO = num_raMO + (low_psphere[1]-1)
-            (psi_previous, num_electrons_left, num_raMO) = import_checkpoint(string(r.name, "/", r.name, "_", raMO, "_", e, ".chkpt"))
+            #deleteat!(site_list, collect(1:low_psphere[1]-1))
+            e = ramostatus.num_electrons_left - (low_psphere[1]-1)*2
+            raMO = ramostatus.num_raMO + (low_psphere[1]-1)
+            (ramostatus.psi_previous, ramostatus.num_electrons_left, ramostatus.num_raMO) = import_checkpoint(string(r.name, "/", r.name, "_", raMO, "_", e, ".chkpt"))
             aps = ""
             # If the last raMOs were the only ones with low_psphere, no need to rerun
             isempty(site_list) ? next = iterate(ramoinput, state) : aps = "_aps"
@@ -79,6 +80,7 @@ function dftramo_run(filename::AbstractString)
             next = iterate(ramoinput, state)
             ramostatus.num_electrons_left = num_electrons_left2
             ramostatus.num_raMO = num_raMO2
+            ramostatus.psi_previous = psi_previous2
         end
     end
 end
