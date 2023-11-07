@@ -6,7 +6,7 @@
     # There shouldn't be more G-vectors than the wavefunction bounds permit
     @test size(occ_states, 1) <= prod(size(wf)[4:end])
     @test size(occ_states, 1) == length(occ_states.G)
-    for g in occ_states.g
+    for g in occ_states.G
         @test g in SVector.(Tuple.(FFTBins(wf)))
     end
     # Size of the second dimension depends on the energy range
