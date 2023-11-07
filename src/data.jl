@@ -210,10 +210,11 @@ struct OccupiedStates <: DenseMatrix{ComplexF32}
     end
 end
 
-num_states(x::OccupiedStates) = size(x.coeff)[2]
 Base.size(o::OccupiedStates) = size(o.coeff)
 Base.getindex(o::OccupiedStates, i...) = getindex(o.coeff, i...)
 Base.setindex!(o::OccupiedStates, x, i...) = setindex!(o.coeff, x, i...)
+
+num_states(o::OccupiedStates) = length(o.skb)
 
 function OccupiedStates(wf::PlanewaveWavefunction; emin = min_energy(wf), emax = fermi(wf))
     selected_states = findall(emin .<= wf.energies .<= emax)
