@@ -187,14 +187,12 @@ end
 KPoint(skb::SpinKPointBand{D}) = skb.kpt
 
 """
-    OccupiedStates(
-        coeff::AbstractMatrix{<:Number},
-        kpt::AbstractMatrix{<:AbstractVector},
-        G::AbstractMatrix{<:AbstractVector}
-    )
+    OccupiedStates{T<:Number} <: DenseMatrix{T}
 
-Returns an `OccupiedStates` struct. The coeff matrix is `num_occupied_states` by `num_occupied_pw`
-in dimensions, while kpt is `num_occupied_states` in length, and G is `num_occupied_pw` in length.
+Stores a representation of a wavefunction's states of interest. This representation is a matrix of
+coefficients, with the list of nonzero G-vectors `G` stored as a `Vector{SVector{3,Int}}` and the
+associated spin, k-point, and band data `skb` stored as a `Vector{DFTraMO.SpinKPointBand{3}}`. The 
+matrix has dimensions `length(G)` by `length(skb)` and can be indexed.
 """
 struct OccupiedStates{T<:Number} <: DenseMatrix{T}
     coeff::Matrix{T}
@@ -224,6 +222,13 @@ Base.setindex!(o::OccupiedStates, x, i...) = setindex!(o.coeff, x, i...)
 
 num_states(o::OccupiedStates) = length(o.skb)
 
+"""
+    OccupiedStates(wf::PlanewaveWavefunction; emin = min_energy(wf), emax = fermi(wf))
+    OccupiedStates(wf::raMODFTData; emin = min_energy(wf), emax = fermi(wf))
+
+Constructs an `OccupiedStates` using the wavefunction states with energies between `emin` and `emax`
+(inclusive).
+"""
 function OccupiedStates(wf::PlanewaveWavefunction; emin = min_energy(wf), emax = fermi(wf))
     selected_states = findall(emin .<= wf.energies .<= emax)
     # Find the range of occupied band/kpt/spin
