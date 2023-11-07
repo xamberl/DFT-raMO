@@ -203,7 +203,13 @@ struct OccupiedStates{T<:Number} <: DenseMatrix{T}
         skb::AbstractVector{SpinKPointBand{3}},
         G::AbstractVector{<:AbstractVector}
     ) where T
-        @assert size(coeff) === (length(G), length(skb)) "Incommensurate matrix dimensions"
+        @assert size(coeff, 1) == length(G) string(
+            "Number of G-vectors does not match the first dimension of the coefficient matrix."
+        )
+        @assert size(coeff, 2) == length(skb) string(
+            "Number of spins/kpoints/bands does not match the first dimension of the coefficient " *
+            "matrix."
+        )
         return new(coeff, skb, G)
     end
 end
