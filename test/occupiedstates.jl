@@ -1,6 +1,7 @@
 @testset "OccupiedStates" begin
     wf = readWAVECAR("input/WAVECAR")
     # Fermi energy is the maximum...obtain it separately
+    emin = min_energy(wf)
     emax = get_fermi("input/OUTCAR")[:fermi]
     occ_states = OccupiedStates(wf, emin = min_energy(wf), emax = emax)
     # There shouldn't be more G-vectors than the wavefunction bounds permit
