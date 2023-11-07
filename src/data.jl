@@ -196,18 +196,26 @@ KPoint(skb::SpinKPointBand{D}) = skb.kpt
 Returns an `OccupiedStates` struct. The coeff matrix is `num_occupied_states` by `num_occupied_pw`
 in dimensions, while kpt is `num_occupied_states` in length, and G is `num_occupied_pw` in length.
 """
-struct OccupiedStates <: DenseMatrix{ComplexF32}
-    coeff::Matrix{ComplexF32}
+struct OccupiedStates{T<:Number} <: DenseMatrix{T}
+    coeff::Matrix{T}
     skb::Vector{SpinKPointBand{3}}
     G::Vector{SVector{3,Int}}
-    function OccupiedStates(
-        coeff::AbstractMatrix{<:Number},
+    function OccupiedStates{T}(
+        coeff::AbstractMatrix,
         skb::AbstractVector{SpinKPointBand{3}},
         G::AbstractVector{<:AbstractVector}
-    )
+    ) where T
         @assert size(coeff) === (length(G), length(skb)) "Incommensurate matrix dimensions"
         return new(coeff, skb, G)
     end
+end
+
+function OccupiedStates(
+    coeff::AbstractMatrix{T},
+    skb::AbstractVector{SpinKPointBand{3}},
+    g::AbstractVector{<:AbstractVector}
+) where T
+    return OccupiedStates{T}(coeff, skb, g)
 end
 
 Base.size(o::OccupiedStates) = size(o.coeff)
