@@ -50,7 +50,7 @@ end
 Prints Psphere analysis to the terminal.
 """
 
-function psphere_eval(psphere::AbstractVector{<:Real}, site::AbstractVector{SVector{3, Float64}})
+function psphere_eval(psphere::AbstractVector{<:Real}, site::AbstractVector{<:AbstractVector{<:Real}})
     m = maximum(psphere)
     a = findall(x->x<0.15*m, psphere)
     if !isempty(a)
