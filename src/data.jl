@@ -263,21 +263,17 @@ struct raMOInput
     emin::Float64
     emax::Float64
     checkpoint::String  # TODO: should we use some sort of IO type? or checkpoint container?
-    auto_psphere::Bool
-    discard::Bool
+    mode::String
     function raMOInput(
         dftdata::raMODFTData,
         runlist,
         emin::Real,
         emax::Real,
         checkpoint::AbstractString,
-        auto_psphere,
-        discard
+        mode::AbstractString
     )
         @assert emin < emax "Minimum energy is not less than maximum energy"
-        isnothing(auto_psphere) && (auto_psphere = false)
-        isnothing(discard) && (discard = false)
-        return new(dftdata, collect(runlist), emin, emax, checkpoint, auto_psphere, discard)
+        return new(dftdata, collect(runlist), emin, emax, checkpoint, mode)
     end
 end
 
@@ -306,13 +302,12 @@ If `emax` is unset, then the value is automatically set to the Fermi energy of t
 function raMOInput(
     dftdata::raMODFTData,
     runlist;
-    auto_psphere = false,
-    discard = false,
-    checkpoint::AbstractString = "",
     emin::Real = minimum(dftdata.wave.energies),
-    emax::Real = fermi(dftdata)
+    emax::Real = fermi(dftdata),
+    checkpoint::AbstractString = "",
+    mode::AbstractString = ""
 )
-    return raMOInput(dftdata, runlist, emin, emax, checkpoint, auto_psphere, discard)
+    return raMOInput(dftdata, runlist, emin, emax, checkpoint, mode)
 end
 
 raMODFTData(x::raMOInput) = x.dftdata
