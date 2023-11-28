@@ -23,11 +23,11 @@ include("runs.jl")
 export loop_target_cluster_sp, loop_AO, loop_LCAO
 
 include("inputs.jl")
-export import_VASP, import_abinit,get_occupied_states, read_eht_params, read_site_list, 
+export import_VASP, import_abinit, get_occupied_states, read_eht_params, read_site_list, 
 import_checkpoint, import_raMO
 
 include("yaml.jl")
-export dftramo_run, parse_energy, parse_sites, read_yaml
+export dftramo_run, parse_energy, parse_sites, read_yaml, dftramo_run2
 
 include("outputs.jl")
 export write_to_XSF, raMO_to_density
