@@ -17,7 +17,7 @@ function make_overlap_mat(occ_states::OccupiedStates)
     S = occ_states.coeff'*occ_states.coeff
     
     # Get list of unique kpoints
-    kptlist = occ_states.kpt
+    kptlist = [skb.kpt for skb in occ_states.skb]
     u_kptlist = unique(kptlist)
 
     # Checks to see if kpoint matches for the occ_states matrix
