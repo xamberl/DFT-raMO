@@ -1,4 +1,93 @@
 """
+    dftramo_run2(filename::AbstractString)
+
+Automatically runs DFTraMO from a configuration yaml file.
+"""
+function dftramo_run2(filename::AbstractString)
+    ramoinput = read_yaml(filename)
+    occ_states = OccupiedStates(ramoinput)
+    super = Supercell(ramoinput, ORB_DICT)
+    S = make_overlap_mat(occ_states)
+    H = generate_H(super, DFTRAMO_EHT_PARAMS)
+    
+    if !isnothing(ramoinput.checkpoint) && length(ramoinput.checkpoint) > 0
+        (psi_previous, num_electrons_left, num_raMO) = import_checkpoint(ramoinput.checkpoint)
+    else
+        num_electrons_left = sum([get(E_DICT, n.atom.name, 0) for n in PeriodicAtomList(super)])
+        if !isequal(num_electrons_left/2, num_states(occ_states))
+            x = num_states(occ_states)
+            y = num_electrons_left/2
+            @warn "The number of occupied states $x does not match with the number of electrons $num_electrons_left ($y states) calculated. Consider adjusting your energy range."
+        end
+        num_raMO = 0
+        psi_previous = diagm(ones(size(occ_states.coeff)[2]))
+        psi_previous = ComplexF32.(repeat(psi_previous, 1, 1, 2)) #spin states to be implemented
+    end
+    
+    ramostatus = raMOStatus(
+        num_electrons_left,
+        num_raMO,
+        psi_previous,
+        0,
+        ramoinput,
+        occ_states,
+        H,
+        S
+    )
+
+    for r in ramostatus.ramo.runlist
+        # check to see if we have electrons left
+
+    end
+
+    low_psphere = Vector{Int}(undef, 0)
+    next = iterate(ramoinput)
+    while next!==nothing
+        (r, state) = next
+        ramostatus.num_run = state-1
+        # check to see if we have electrons left
+        if size(ramostatus.psi_previous)[2] == 0
+            @info "No more states in the basis set. Stopping DFT-raMO."
+            break
+        end
+        # print run information
+        println(crayon"bold", "Run: ", crayon"light_cyan", string(r.name, aps), crayon"!bold default")
+        if r.type in keys(AO_RUNS)
+            (low_psphere, psi_previous2, num_raMO2, num_electrons_left2) = loop_AO(ramostatus)
+            site_list = r.sites # necessary for auto_psphere
+        elseif r.type in CAGE_RUNS
+            site_list = read_site_list(r.site_file)
+            (low_psphere, psi_previous2, num_raMO2, num_electrons_left2) = loop_target_cluster_sp(ramostatus, site_list)
+        elseif r.type == "lcao"
+            (low_psphere, psi_previous2, num_raMO2, num_electrons_left2) = loop_LCAO(ramostatus)
+        end
+        ## If discard is enabled, print output files but discard functions and return to basis.
+        ## We looks like this must be implemented in the loop_fxn level.
+        
+        # If auto_psphere is enabled, rerun and use the new run
+        if !ramoinput.discard && ramoinput.auto_psphere && !isempty(low_psphere)
+            # delete targets with low pspheres
+            for i in reverse(low_psphere)
+                deleteat!(site_list, i)
+            end
+            # set raMO analysis to where the first low psphere occurred
+            # to prevent redundant raMO analysis
+            deleteat!(site_list, collect(1:low_psphere[1]-1))
+            e = num_electrons_left - (low_psphere[1]-1)*2
+            raMO = num_raMO + (low_psphere[1]-1)
+            (psi_previous, num_electrons_left, num_raMO) = import_checkpoint(string(r.name, "/", r.name, "_", raMO, "_", e, ".chkpt"))
+            aps = ""
+            # If the last raMOs were the only ones with low_psphere, no need to rerun
+            isempty(site_list) ? next = iterate(ramoinput, state) : aps = "_aps"
+        else
+            next = iterate(ramoinput, state)
+            ramostatus.num_electrons_left = num_electrons_left2
+            ramostatus.num_raMO = num_raMO2
+        end
+    end
+end
+
+"""
     dftramo_run(filename::AbstractString)
 
 Automatically runs DFTraMO from a configuration yaml file.
@@ -327,16 +416,9 @@ function read_yaml(io::IO)
     else
         @info "Restarting calculation using checkpoint file $checkpoint"
     end
-    # check for discard option
-    discard::Bool = get(yaml, "discard", false)
-    @info "Discard option is " * (discard ? "en" : "dis") * "abled."
-    # Use automatic conversion/type assertion for error
-    auto_psphere::Bool = get(yaml, "auto_psphere", false)
-    if discard
-        @info "Auto Psphere will be ignored."
-    else
-        @info "Auto Psphere is " * (auto_psphere ? "en" : "dis") * "abled"
-    end
+    # check for mode
+    mode = get(yaml, "mode", "default")
+    in(lowercase(mode), ["default", "discard", "auto_psphere"]) ? mode = lowercase(mode) : error("mode must be 'default', 'discard', or 'auto_psphere'.")
     # Get energy ranges (will need to perform unit inference)
     emin = get(yaml, "emin", nothing)
     emax = get(yaml, "emax", nothing)
@@ -362,7 +444,7 @@ function read_yaml(io::IO)
     runs = get(yaml, "runs", nothing)
     @info "Performing $(length(runs)) runs."
     runlist = parse_runs(runs, dftinfo)
-    return raMOInput(dftinfo, runlist, emin, emax, checkpoint, auto_psphere, discard)
+    return raMOInput(dftinfo, runlist, emin, emax, checkpoint, mode)
 end
 
 read_yaml(file) = open(read_yaml, file)
