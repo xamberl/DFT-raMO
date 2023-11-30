@@ -29,11 +29,11 @@ function raMO_to_density(
     kpt,
     grange,
 )
-    reduced_kpt = unique(occ_states.kpt)
+    reduced_kpt = unique([k for k in KPoint.(occ_states.skb)])
     pw_raMO = Array{ComplexF32}(undef,size(occ_states.coeff)[1],length(reduced_kpt))
     for k in eachindex(reduced_kpt)
-        m = findfirst(x->x == reduced_kpt[k], occ_states.kpt[1,:])
-        n = findlast(x->x == reduced_kpt[k], occ_states.kpt[1,:])
+        m = findfirst(x->x == reduced_kpt[k], KPoint.(occ_states.skb))
+        n = findlast(x->x == reduced_kpt[k], KPoint.(occ_states.skb))
         pw_raMO[:,k] = occ_states.coeff[:,m:n]*psi[m:n]
     end
     gridsize = grange
