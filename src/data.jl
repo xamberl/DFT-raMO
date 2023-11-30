@@ -383,3 +383,4 @@ mutable struct raMOStatus
 end
 
 Electrum.PeriodicAtomList(x::raMOStatus) = x.supercell.atomlist
+size_basis(x::raMOStatus) = size(x.psi_previous)[2]
