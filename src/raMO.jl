@@ -203,7 +203,7 @@ function calculate_overlap2(
     # Initialize secondary overlap container
     overlap = zeros(ComplexF32, num_planewaves*num_occ_states, num_target_orbitals)
     for i in 1:num_occ_states, j in 1:num_planewaves
-        direction = -(occ_states.G[j,i]+occ_states.kpt[j,i])
+        direction = -(occ_states.G[j]+KPoint(occ_states.skb[i]))
         # scaling factor is necessary, bc the STO is not necessarily at the origin
         scalingfactor = exp(2*im*pi*dot(direction, atom_pos_fract))
         d2 = direction'*reciprocal_lattice
