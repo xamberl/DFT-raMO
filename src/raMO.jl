@@ -23,7 +23,7 @@ function make_overlap_mat(occ_states::OccupiedStates)
     # Checks to see if kpoint matches for the occ_states matrix
     allowed_overlap = zeros(Int,size(S))
     for u_kpt in u_kptlist
-        check_kpt = [kpt == u_kpt for kpt in kptlist[1,:]]
+        check_kpt = [kpt == u_kpt for kpt in kptlist[:]]
         allowed_overlap = allowed_overlap .+ (check_kpt.*check_kpt')
     end
     S = S.*allowed_overlap
