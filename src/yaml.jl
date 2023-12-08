@@ -87,7 +87,7 @@ function dftramo_run(filename::AbstractString)
                 # set raMO analysis to where the first low psphere occurred
                 # to prevent redundant raMO analysis
                 deleteat!(psphere_sites, collect(1:low_psphere[1]-1))
-                e = num_electrons_left - (low_psphere[1]-1)*2
+                e = ramostatus.num_electrons_left - (low_psphere[1]-1)*2
                 raMO = num_raMO + (low_psphere[1]-1)
                 (ramostatus.psi_previous, ramostatus.num_electrons_left, ramostatus.num_raMO) = import_checkpoint(string(r.name, "/", r.name, "_", raMO, "_", e, ".chkpt"))
                 aps = ""
