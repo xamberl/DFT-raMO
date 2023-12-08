@@ -73,7 +73,7 @@ function dftramo_run(filename::AbstractString)
                     # update remainders and number of electrons left
                     ramostatus.psi_previous = psi_previous2
                     ramostatus.num_electrons_left = Int(num_electrons_left2)
-                    ramostatus.num_raMO += i
+                    ramostatus.num_raMO += 1
                     output_files(r.name, ramostatus.num_electrons_left, ramostatus.num_raMO, ramostatus.supercell, isosurf, ramostatus.psi_previous, psi_up)
                 end
             end
