@@ -1,175 +1,122 @@
 """
-    dftramo_run2(filename::AbstractString)
-
-Automatically runs DFTraMO from a configuration yaml file.
-"""
-function dftramo_run2(filename::AbstractString)
-    ramoinput = read_yaml(filename)
-    occ_states = OccupiedStates(ramoinput)
-    super = Supercell(ramoinput, ORB_DICT)
-    S = make_overlap_mat(occ_states)
-    H = generate_H(super, DFTRAMO_EHT_PARAMS)
-    
-    if !isnothing(ramoinput.checkpoint) && length(ramoinput.checkpoint) > 0
-        (psi_previous, num_electrons_left, num_raMO) = import_checkpoint(ramoinput.checkpoint)
-    else
-        num_electrons_left = sum([get(E_DICT, n.atom.name, 0) for n in PeriodicAtomList(super)])
-        if !isequal(num_electrons_left/2, num_states(occ_states))
-            x = num_states(occ_states)
-            y = num_electrons_left/2
-            @warn "The number of occupied states $x does not match with the number of electrons $num_electrons_left ($y states) calculated. Consider adjusting your energy range."
-        end
-        num_raMO = 0
-        psi_previous = diagm(ones(size(occ_states.coeff)[2]))
-        psi_previous = ComplexF32.(repeat(psi_previous, 1, 1, 2)) #spin states to be implemented
-    end
-    
-    ramostatus = raMOStatus(
-        num_electrons_left,
-        num_raMO,
-        psi_previous,
-        0,
-        ramoinput,
-        occ_states,
-        H,
-        S
-    )
-
-    for r in ramostatus.ramo.runlist
-        # check to see if we have electrons left
-
-    end
-
-    low_psphere = Vector{Int}(undef, 0)
-    next = iterate(ramoinput)
-    while next!==nothing
-        (r, state) = next
-        ramostatus.num_run = state-1
-        # check to see if we have electrons left
-        if size(ramostatus.psi_previous)[2] == 0
-            @info "No more states in the basis set. Stopping DFT-raMO."
-            break
-        end
-        # print run information
-        println(crayon"bold", "Run: ", crayon"light_cyan", string(r.name, aps), crayon"!bold default")
-        if r.type in keys(AO_RUNS)
-            (low_psphere, psi_previous2, num_raMO2, num_electrons_left2) = loop_AO(ramostatus)
-            site_list = r.sites # necessary for auto_psphere
-        elseif r.type in CAGE_RUNS
-            site_list = read_site_list(r.site_file)
-            (low_psphere, psi_previous2, num_raMO2, num_electrons_left2) = loop_target_cluster_sp(ramostatus, site_list)
-        elseif r.type == "lcao"
-            (low_psphere, psi_previous2, num_raMO2, num_electrons_left2) = loop_LCAO(ramostatus)
-        end
-        ## If discard is enabled, print output files but discard functions and return to basis.
-        ## We looks like this must be implemented in the loop_fxn level.
-        
-        # If auto_psphere is enabled, rerun and use the new run
-        if !ramoinput.discard && ramoinput.auto_psphere && !isempty(low_psphere)
-            # delete targets with low pspheres
-            for i in reverse(low_psphere)
-                deleteat!(site_list, i)
-            end
-            # set raMO analysis to where the first low psphere occurred
-            # to prevent redundant raMO analysis
-            deleteat!(site_list, collect(1:low_psphere[1]-1))
-            e = num_electrons_left - (low_psphere[1]-1)*2
-            raMO = num_raMO + (low_psphere[1]-1)
-            (psi_previous, num_electrons_left, num_raMO) = import_checkpoint(string(r.name, "/", r.name, "_", raMO, "_", e, ".chkpt"))
-            aps = ""
-            # If the last raMOs were the only ones with low_psphere, no need to rerun
-            isempty(site_list) ? next = iterate(ramoinput, state) : aps = "_aps"
-        else
-            next = iterate(ramoinput, state)
-            ramostatus.num_electrons_left = num_electrons_left2
-            ramostatus.num_raMO = num_raMO2
-        end
-    end
-end
-
-"""
     dftramo_run(filename::AbstractString)
 
 Automatically runs DFTraMO from a configuration yaml file.
 """
 function dftramo_run(filename::AbstractString)
+    # read inputs
     ramoinput = read_yaml(filename)
-    occ_states = get_occupied_states(ramoinput)
-    super = Supercell(ramoinput, ORB_DICT)
-    S = make_overlap_mat(occ_states)
-    H = generate_H(super, DFTRAMO_EHT_PARAMS)
+    # initialize data
+    ramostatus = raMOStatus(ramoinput)
     
-    if !isnothing(ramoinput.checkpoint) && length(ramoinput.checkpoint) > 0
-        (psi_previous, num_electrons_left, num_raMO) = import_checkpoint(ramoinput.checkpoint)
-    else
-        num_electrons_left = sum([get(E_DICT, n.atom.name, 0) for n in PeriodicAtomList(super)])
-        if !isequal(num_electrons_left/2, num_states(occ_states))
-            x = num_states(occ_states)
-            y = num_electrons_left/2
-            @warn "The number of occupied states $x does not match with the number of electrons $num_electrons_left ($y states) calculated. Consider adjusting your energy range."
-        end
-        num_raMO = 0
-        psi_previous = diagm(ones(size(occ_states.coeff)[2]))
-        psi_previous = ComplexF32.(repeat(psi_previous, 1, 1, 2)) #spin states to be implemented
-    end
-    
-    ramostatus = raMOStatus(
-        num_electrons_left,
-        num_raMO,
-        psi_previous,
-        0,
-        ramoinput,
-        occ_states,
-        H,
-        S
-    )
-
-    aps = ""
-    low_psphere = Vector{Int}(undef, 0)
     next = iterate(ramoinput)
     while next!==nothing
         (r, state) = next
         ramostatus.num_run = state-1
-        # check to see if we have electrons left
-        if size(ramostatus.psi_previous)[2] == 0
-            @info "No more states in the basis set. Stopping DFT-raMO."
-            break
-        end
+        # check to see if we have states left
+        size_basis(ramostatus) == 0 && info("No more states in the basis set. Stopping DFT-raMO.") && break
         # print run information
-        println(crayon"bold", "Run: ", crayon"light_cyan", string(r.name, aps), crayon"!bold default")
-        if r.type in keys(AO_RUNS)
-            (low_psphere, psi_previous2, num_raMO2, num_electrons_left2) = loop_AO(ramostatus)
-            site_list = r.sites # necessary for auto_psphere
-        elseif r.type in CAGE_RUNS
-            site_list = read_site_list(r.site_file)
-            (low_psphere, psi_previous2, num_raMO2, num_electrons_left2) = loop_target_cluster_sp(ramostatus, site_list)
-        elseif r.type == "lcao"
-            (low_psphere, psi_previous2, num_raMO2, num_electrons_left2) = loop_LCAO(ramostatus)
-        end
-        ## If discard is enabled, print output files but discard functions and return to basis.
-        ## We looks like this must be implemented in the loop_fxn level.
-        
-        # If auto_psphere is enabled, rerun and use the new run
-        if !ramoinput.discard && ramoinput.auto_psphere && !isempty(low_psphere)
-            # delete targets with low pspheres
-            for i in reverse(low_psphere)
-                deleteat!(site_list, i)
+        @info "Run: $(r.name)"
+
+        # go into directory
+        split(pwd(),'/')[end] != r.name && !isdir(r.name) && mkdir(r.name)
+        cd(r.name) do
+            if !isempty(readdir())
+                @warn "Directory is not empty. Files will be deleted/overwritten."
+                [rm(n, force=true) for n in readdir()]
             end
-            # set raMO analysis to where the first low psphere occurred
-            # to prevent redundant raMO analysis
-            deleteat!(site_list, collect(1:low_psphere[1]-1))
-            e = num_electrons_left - (low_psphere[1]-1)*2
-            raMO = num_raMO + (low_psphere[1]-1)
-            (psi_previous, num_electrons_left, num_raMO) = import_checkpoint(string(r.name, "/", r.name, "_", raMO, "_", e, ".chkpt"))
-            aps = ""
-            # If the last raMOs were the only ones with low_psphere, no need to rerun
-            isempty(site_list) ? next = iterate(ramoinput, state) : aps = "_aps"
-        else
-            next = iterate(ramoinput, state)
-            ramostatus.num_electrons_left = num_electrons_left2
-            ramostatus.num_raMO = num_raMO2
+            psphere = Vector{Float64}(undef, length(r.sites))
+            psphere_sites = Vector{SVector{3, Float64}}(undef, length(r.sites))
+            iter = ProgressBar(1:length(r.sites), unit="raMOs")
+            for i in iter
+                # check to see if we have electrons left
+                if size(ramostatus.psi_previous)[2] == 0
+                    # truncate psphere and psphere_sites
+                    if i == 1
+                        psphere = Vector{Float64}(undef, 0)
+                        psphere_sites = Vector{SVector{3, Float64}}(undef, 0)
+                    else
+                        psphere = psphere[1:i-1]
+                        psphere_sites = psphere_sites[1:i-1]
+                    end
+                    break
+                end
+                # generate target
+                if r.type in keys(AO_RUNS)
+                    target = make_target_AO(r.sites[i], get(AO_RUNS, r.type, 0), ramostatus.supercell)
+                    sites = basis(ramostatus.supercell)*Electrum.BOHR2ANG*PeriodicAtomList(ramostatus.supercell)[r.sites[i]].pos
+                elseif r.type in CAGE_RUNS # for now we only have one type
+                    sites = read_site_list(string("../", r.site_file))
+                    target = make_target_cluster_sp(sites, r.radius, i, ramostatus.supercell)
+                    sites = sites[i]
+                elseif r.type == "lcao"
+                    lcao_yaml = YAML.load_file(string("../", r.site_file))
+                    (target_orbital, site_list) = target_lcao(lcao_yaml)
+                    target = make_target_lcao(site_list[i], target_orbital, ramostatus.supercell)
+                    sites = basis(ramostatus.supercell)*mp_lcao(site_list[i], PeriodicAtomList(ramostatus.supercell))*Electrum.BOHR2ANG
+                end
+                (psi_previous2, psi_up, e_up, num_electrons_left2) = reconstruct_targets_DFT(target, DFTRAMO_EHT_PARAMS, ramostatus)
+                isosurf = raMO_to_density(ramostatus.occ_states, psi_up, kptmesh(raMODFTData(ramoinput)), length.(collect.(PlanewaveWavefunction(ramoinput).grange)))
+                (sphere, total, psphere[i]) = Psphere(RealDataGrid(real(isosurf), basis(ramostatus.supercell)), sites, r.rsphere)
+                psphere_sites[i] = sites
+                open(string(r.name, "_psphere_", r.rsphere, ".txt"), "a") do io
+                    print_psphere_terminal(iter, ramostatus.num_raMO+i, psphere[i], sites, io)
+                end
+                # Check if we are in discard ramo mode
+                if ramoinput.mode == "discard"
+                    # print out raMO but not checkpoint
+                    write_to_XSF(isosurf, PeriodicAtomList(ramostatus.supercell), string(r.name, "_", i, ".xsf"))
+                    open(string(r.name, "_", i, ".raMO"), "w") do io
+                        write(io, psi_up)
+                    end
+                else
+                    # update remainders and number of electrons left
+                    ramostatus.psi_previous = psi_previous2
+                    ramostatus.num_electrons_left = Int(num_electrons_left2)
+                    ramostatus.num_raMO += i
+                    output_files(r.name, ramostatus.num_electrons_left, ramostatus.num_raMO, ramostatus.supercell, isosurf, ramostatus.psi_previous, psi_up)
+                end
+            end
+            # If auto_psphere is enabled, rerun and use the new run
+            low_psphere = psphere_eval(psphere, psphere_sites)
+            if ramoinput.mode == "auto_psphere" && length(low_psphere)!=0
+                # delete targets with low pspheres
+                for i in reverse(low_psphere)
+                    deleteat!(psphere_sites, i)
+                end
+                # set raMO analysis to where the first low psphere occurred
+                # to prevent redundant raMO analysis
+                deleteat!(psphere_sites, collect(1:low_psphere[1]-1))
+                e = num_electrons_left - (low_psphere[1]-1)*2
+                raMO = num_raMO + (low_psphere[1]-1)
+                (ramostatus.psi_previous, ramostatus.num_electrons_left, ramostatus.num_raMO) = import_checkpoint(string(r.name, "/", r.name, "_", raMO, "_", e, ".chkpt"))
+                aps = ""
+                # If the last raMOs were the only ones with low_psphere, no need to rerun
+                isempty(psphere_sites) ? next = iterate(ramoinput, state) : aps = "_aps"
+            else
+                next = iterate(ramoinput, state)
+            end
         end
     end
+end
+
+"""
+    target_lcao(yaml::Dict) -> target_orbital
+"""
+function target_lcao(yaml::Dict)
+    target_orbital = get(yaml, "target", nothing)
+    isnothing(target_orbital) && error("Target cannot be blank for SALCs")
+    for t in target_orbital
+        !issubset(keys(t), keys(DFTraMO.AO_RUNS)) && error("Target does not contain atomic orbitals. Please check.")
+    end
+    site_list = get(yaml, "lcao", nothing)
+    if isa(site_list, Vector{Vector{Int}})
+        for n in site_list
+            # TODO check the num atoms in lcao list match num targets
+            length(n) != length(target_orbital) && error("Mismatch between length of LCAO ", n, " and specified target.")
+        end
+    end
+    return (target_orbital, site_list)
 end
 
 """
