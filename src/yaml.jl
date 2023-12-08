@@ -60,7 +60,7 @@ function dftramo_run(filename::AbstractString)
                 (sphere, total, psphere[i]) = Psphere(RealDataGrid(real(isosurf), basis(ramostatus.supercell)), sites, r.rsphere)
                 psphere_sites[i] = sites
                 open(string(r.name, "_psphere_", r.rsphere, ".txt"), "a") do io
-                    print_psphere_terminal(iter, ramostatus.num_raMO+i, psphere[i], sites, io)
+                    print_psphere_terminal(iter, ramostatus.num_raMO+1, psphere[i], sites, io)
                 end
                 # Check if we are in discard ramo mode
                 if ramoinput.mode == "discard"
