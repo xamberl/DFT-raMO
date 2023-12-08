@@ -1,0 +1,13 @@
+checkpoint:
+auto_psphere: true
+emin: -100 eV
+emax:
+software: vasp
+mode: discard
+runs:
+  - name: 1_Sc-Sc
+    type: sp
+    site_file: Sc-Sc_reordered.xyz
+    sites: all
+    radius: 2.2
+    rsphere: 2.2

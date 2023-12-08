@@ -7,4 +7,5 @@ using DFTraMO
     # Add your tests here, ideally as file includes.
     include("inputs.jl")
     include("occupiedstates.jl")
+    include("dftramo_run.jl")
 end
