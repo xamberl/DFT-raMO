@@ -90,7 +90,11 @@ function run_ramo(psphere, psphere_sites, r, ramoinput, ramostatus; low_psphere 
             target = make_target_AO(target_sites[i], get(AO_RUNS, r.type, 0), ramostatus.supercell)
             sites = basis(ramostatus.supercell)*Electrum.BOHR2ANG*PeriodicAtomList(ramostatus.supercell)[target_sites[i]].pos
         elseif r.type in CAGE_RUNS # for now we only have one type
-            sites = read_site_list(string("../", r.site_file))
+            if !isempty(low_psphere) && !isempty(r.site_file)
+                sites = read_site_list(string("../../", r.site_file))
+            else
+                sites = read_site_list(string("../", r.site_file))
+            end
             for n in reverse(low_psphere)
                 deleteat!(sites, n)
             end
@@ -98,7 +102,11 @@ function run_ramo(psphere, psphere_sites, r, ramoinput, ramostatus; low_psphere 
             target = make_target_cluster_sp(sites, r.radius, i, ramostatus.supercell)
             sites = sites[i]
         elseif r.type == "lcao"
-            lcao_yaml = YAML.load_file(string("../", r.site_file))
+            if !isempty(low_psphere) && !isempty(r.site_file)
+                lcao_yaml = YAML.load_file(string("../../", r.site_file))
+            else
+                lcao_yaml = YAML.load_file(string("../", r.site_file))
+            end
             (target_orbital, site_list) = target_lcao(lcao_yaml)
             for n in reverse(low_psphere)
                 deleteat!(site_list, n)
