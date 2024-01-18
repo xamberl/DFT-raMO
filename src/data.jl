@@ -133,7 +133,7 @@ struct raMOCheckpoint{T<:Number} <: AbstractArray{T,3}
     electrons_left::Int
     num_ramos::Int
     function raMOCheckpoint{T}(
-        coeff::AbstractArray{3},
+        coeff::AbstractArray{<:Any,3},
         electrons_left::Integer,
         num_ramos::Integer
     ) where T
