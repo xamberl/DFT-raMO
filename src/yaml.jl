@@ -95,6 +95,7 @@ function run_ramo(psphere, psphere_sites, r, ramoinput, ramostatus; low_psphere 
             else
                 sites = read_site_list(string("../", r.site_file))
             end
+            sites = sites[r.sites]
             for n in reverse(low_psphere)
                 deleteat!(sites, n)
             end
@@ -107,6 +108,7 @@ function run_ramo(psphere, psphere_sites, r, ramoinput, ramostatus; low_psphere 
             else
                 lcao_yaml = YAML.load_file(string("../", r.site_file))
             end
+            lcao_yaml = lcao_yaml[r.sites] # in case certain sites are specified in the yaml
             (target_orbital, site_list) = target_lcao(lcao_yaml)
             for n in reverse(low_psphere)
                 deleteat!(site_list, n)
