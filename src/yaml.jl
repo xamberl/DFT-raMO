@@ -108,11 +108,11 @@ function run_ramo(psphere, psphere_sites, r, ramoinput, ramostatus; low_psphere 
             else
                 lcao_yaml = YAML.load_file(string("../", r.site_file))
             end
-            lcao_yaml = lcao_yaml[r.sites] # in case certain sites are specified in the yaml
             (target_orbital, site_list) = target_lcao(lcao_yaml)
             for n in reverse(low_psphere)
                 deleteat!(site_list, n)
             end
+            site_list = site_list[r.sites]
             length(low_psphere) > 0 && deleteat!(site_list, collect(1:low_psphere[1]-1)) 
             target = make_target_lcao(site_list[i], target_orbital, ramostatus.supercell)
             sites = basis(ramostatus.supercell)*mp_lcao(site_list[i], PeriodicAtomList(ramostatus.supercell))*Electrum.BOHR2ANG
