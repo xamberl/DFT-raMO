@@ -1,5 +1,4 @@
 checkpoint:
-auto_psphere: true
 emin: -100 eV
 emax: 0.25 Ha
 mode: auto_psphere
@@ -33,5 +32,5 @@ runs:
     type: sp
     site_file: Al-Al_reordered.xyz
     sites: all
-    radius: 2.1
+    radius: 3.97 Bohr
     rsphere: 4.11
