@@ -154,11 +154,11 @@ function target_lcao(yaml::Dict)
 end
 
 """
-    parse_runs(runs::Vector{Dict{Any, Any}}) -> runlist::Vector{RunInfo}
+    parse_runs(runs::Vector{Dict{Any, Any}}, dftinfo::raMODFTData, origin::InputOrigin) -> runlist::Vector{RunInfo}
 
 Parse the run section of the input yaml file and returns Vector{RunInfo}.
 """
-function parse_runs(runs::Vector{Dict{Any, Any}}, dftinfo)
+function parse_runs(runs::Vector{Dict{Any, Any}}, dftinfo::raMODFTData, origin::InputOrigin)
     cr_b = crayon"light_cyan"
     cr_y = crayon"yellow"
     cr_d = crayon"default"
@@ -221,7 +221,7 @@ function parse_runs(runs::Vector{Dict{Any, Any}}, dftinfo)
         if in(type, keys(AO_RUNS))
             println("   Radius is ignored for atomic orbital type runs.")
         else
-            !isa(radius, Number) && error("Radius must be a number.")
+            radius = parse_yaml_length(radius, origin)
             println("   radius: ", cr_b, radius, " Å", cr_d)
         end
 
@@ -229,7 +229,7 @@ function parse_runs(runs::Vector{Dict{Any, Any}}, dftinfo)
             println(cr_y, "   rsphere was not specified. Default value of 3.0 Å is applied.", cr_d)
             return 3.0
         end
-        !isa(rsphere, Number) && error("rsphere must be a number.")
+        rsphere = parse_yaml_length(rsphere, origin)
         println("   rsphere: ", cr_b, rsphere, " Å", cr_d)
 
         runlist[n] = RunInfo(name, type, site_file, sites_final, radius, rsphere)
@@ -388,7 +388,7 @@ function read_yaml(io::IO)
     # Get runs
     runs = get(yaml, "runs", nothing)
     @info "Performing $(length(runs)) runs."
-    runlist = parse_runs(runs, dftinfo)
+    runlist = parse_runs(runs, dftinfo, origin)
     return raMOInput(dftinfo, runlist, emin, emax, checkpoint, mode, pwd())
 end
 
