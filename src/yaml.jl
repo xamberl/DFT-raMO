@@ -327,14 +327,14 @@ function parse_yaml_length(x::AbstractString, i::InputOrigin)
     isone(length(s)) && return parse_yaml_length(e, i)
     # Otherwise treat the units explicitly
     unit_str = s[2]
-    conversion = if isempty(unit_str) || occursin(r"^(bohr|a[0u])"i, unit_str)
+    conversion = if isempty(unit_str) || occursin(r"^(Å|[AÅ]ng|[AÅ]ngstrom)"i, unit_str)
         1
-    elseif occursin(r"^(Å|[AÅ]ng|[AÅ]ngstrom)"i, unit_str)
-        Electrum.ANG2BOHR
+    elseif occursin(r"^(bohr|a[0u])"i, unit_str)
+        Electrum.BOHR2ANG
     elseif unitstr == "nm"
-        Electrum.ANG2BOHR * 10
+        10
     elseif unitstr == "pm"
-        Electurm.ANG2BOHR / 100
+        0.01
     else
         error("Unit $unit_str was not recognized.")
     end
