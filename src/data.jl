@@ -264,32 +264,34 @@ struct raMOInput
     emax::Float64
     checkpoint::String  # TODO: should we use some sort of IO type? or checkpoint container?
     mode::String
+    wd::String
     function raMOInput(
         dftdata::raMODFTData,
         runlist,
         emin::Real,
         emax::Real,
         checkpoint::AbstractString,
-        mode::AbstractString
+        mode::AbstractString,
+        wd::AbstractString
     )
         @assert emin < emax "Minimum energy is not less than maximum energy"
-        return new(dftdata, collect(runlist), emin, emax, checkpoint, mode)
+        return new(dftdata, collect(runlist), emin, emax, checkpoint, mode, wd)
     end
 end
 
 """
-    raMOInput(
+    function raMOInput(
         dftdata::raMODFTData,
         runlist;
-        auto_psphere = false,
-        checkpoint = "",
-        emin = minimum(dftdata.wave.energies),
-        emax = fermi(dftdata)
+        emin::Real = minimum(dftdata.wave.energies),
+        emax::Real = fermi(dftdata),
+        checkpoint::AbstractString = "",
+        mode::AbstractString = ""
     )
 
 Constructs a `raMOInput` object with some assumptions implemented as keyword arguments.
 
-`auto_psphere` is set to false if not specified.
+`mode` is set to `discard` if not specified.
 
 If `checkpoint` is unset, the checkpoint path is the empty string, corresponding to no checkpoint
 file being used.
@@ -305,14 +307,16 @@ function raMOInput(
     emin::Real = minimum(dftdata.wave.energies),
     emax::Real = fermi(dftdata),
     checkpoint::AbstractString = "",
-    mode::AbstractString = ""
+    mode::AbstractString = "",
+    wd::AbstractString = pwd()
 )
-    return raMOInput(dftdata, runlist, emin, emax, checkpoint, mode)
+    return raMOInput(dftdata, runlist, emin, emax, checkpoint, mode, wd)
 end
 
 raMODFTData(x::raMOInput) = x.dftdata
 OccupiedStates(x::raMOInput) = OccupiedStates(x.dftdata; emin = x.emin, emax = x.emax)
 mode(x::raMOInput) = x.mode
+wd(x::raMOInput) = x.wd
 
 Electrum.Crystal(x::raMOInput) = x.dftdata.xtal
 Electrum.basis(x::raMOInput) = basis(x.dftdata.xtal)

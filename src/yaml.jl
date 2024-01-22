@@ -4,7 +4,6 @@
 Automatically runs DFTraMO from a configuration yaml file.
 """
 function dftramo_run(filename::AbstractString)
-    wd = pwd()
     # read inputs
     ramoinput = read_yaml(filename)
     # initialize data
@@ -20,7 +19,7 @@ function dftramo_run(filename::AbstractString)
         @info "Run: $(r.name)"
 
         # go into directory
-        split(wd,'/')[end] != r.name && !isdir(r.name) && mkdir(r.name)
+        split(wd(ramoinput),'/')[end] != r.name && !isdir(r.name) && mkdir(r.name)
         cd(r.name) do
             if !isempty(readdir())
                 @warn "Directory is not empty. Files will be deleted/overwritten."
@@ -28,7 +27,7 @@ function dftramo_run(filename::AbstractString)
             end
             psphere = Vector{Float64}(undef, length(r.sites))
             psphere_sites = Vector{SVector{3, Float64}}(undef, length(r.sites))
-            ramostatus = run_ramo(psphere, psphere_sites, r, ramostatus, wd=wd)
+            ramostatus = run_ramo(psphere, psphere_sites, r, ramostatus)
             # If auto_psphere is enabled, rerun and use the new run
             low_psphere = psphere_eval(psphere, psphere_sites)
             if mode(ramoinput) == "auto_psphere" && length(low_psphere)!=0
@@ -50,7 +49,7 @@ function dftramo_run(filename::AbstractString)
                     cd("aps") do 
                         psphere = Vector{Float64}(undef, length(psphere_sites))
                         psphere_sites = Vector{SVector{3, Float64}}(undef, length(psphere_sites))
-                        ramostatus = run_ramo(psphere, psphere_sites, r, ramostatus, low_psphere=low_psphere, wd=wd)
+                        ramostatus = run_ramo(psphere, psphere_sites, r, ramostatus, low_psphere=low_psphere)
                     end
                     next = iterate(ramoinput, state)
                 end
@@ -62,11 +61,11 @@ function dftramo_run(filename::AbstractString)
 end
 
 """
-    run_ramo(psphere, psphere_sites, r, ramostatus; low_psphere = Vector{Int}(undef, 0), wd::AbstractString=pwd())
+    run_ramo(psphere, psphere_sites, r, ramostatus; low_psphere = Vector{Int}(undef, 0))
 
 Runs the basic raMO code (necessary in a separate function for auto_psphere functionality)
 """
-function run_ramo(psphere, psphere_sites, r, ramostatus; low_psphere = Vector{Int}(undef, 0), wd::AbstractString=pwd())
+function run_ramo(psphere, psphere_sites, r, ramostatus; low_psphere = Vector{Int}(undef, 0))
     iter = ProgressBar(1:length(psphere), unit="raMOs")
     for i in iter
         # check to see if we have electrons left
@@ -91,7 +90,7 @@ function run_ramo(psphere, psphere_sites, r, ramostatus; low_psphere = Vector{In
             target = make_target_AO(target_sites[i], get(AO_RUNS, r.type, 0), ramostatus.supercell)
             sites = basis(ramostatus.supercell)*Electrum.BOHR2ANG*PeriodicAtomList(ramostatus.supercell)[target_sites[i]].pos
         elseif r.type in CAGE_RUNS # for now we only have one type
-            sites = read_site_list(joinpath(wd, r.site_file))
+            sites = read_site_list(joinpath(wd(raMOInput(ramostatus)), r.site_file))
             for n in reverse(low_psphere)
                 deleteat!(sites, n)
             end
@@ -99,7 +98,7 @@ function run_ramo(psphere, psphere_sites, r, ramostatus; low_psphere = Vector{In
             target = make_target_cluster_sp(sites, r.radius, i, ramostatus.supercell)
             sites = sites[i]
         elseif r.type == "lcao"
-            lcao_yaml = YAML.load_file(joinpath(wd, r.site_file))
+            lcao_yaml = YAML.load_file(joinpath(wd(raMOInput(ramostatus)), r.site_file))
             (target_orbital, site_list) = target_lcao(lcao_yaml)
             for n in reverse(low_psphere)
                 deleteat!(site_list, n)
@@ -426,7 +425,7 @@ function read_yaml(io::IO)
     runs = get(yaml, "runs", nothing)
     @info "Performing $(length(runs)) runs."
     runlist = parse_runs(runs, dftinfo)
-    return raMOInput(dftinfo, runlist, emin, emax, checkpoint, mode)
+    return raMOInput(dftinfo, runlist, emin, emax, checkpoint, mode, pwd())
 end
 
 read_yaml(file) = open(read_yaml, file)
