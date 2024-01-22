@@ -238,42 +238,6 @@ function parse_runs(runs::Vector{Dict{Any, Any}}, dftinfo)
 end
 
 """
-    parse_energy(software::AbstractString, energy::AbstractString) -> n::Float64
-
-Parse energy values of the input yaml files and returns energies in Ha.
-"""
-function parse_energy(software::AbstractString, energy::AbstractString)
-    # Get energy range. Need to convert to Hartree
-    ln = split(energy)
-    length(ln) > 2 && error("Check energy range.")
-    n = parse(Float64, ln[1])
-    if lowercase(ln[2]) == "ev"
-        n = n*Electrum.EV2HARTREE
-    elseif !(lowercase(ln[2]) == "ha")
-        error(ln[2], " is not a valid energy unit. Use Ha or eV.")
-    end
-    return n
-end
-
-"""
-    parse_energy(software::AbstractString, energy::Real) -> n::Float64
-
-Parse energy values of the input yaml files and returns energies in Ha.
-"""
-function parse_energy(software::AbstractString, energy::Real)
-    if software == "vasp"
-        e = Electrum.EV2HARTREE
-        units = "eV"
-    else
-        e = 1
-        units = "Ha"
-    end
-    warning("No energy units are specified. Defaulting to ", units, " (", software, ")")
-    n = energy*e
-    return n
-end
-
-"""
     parse_sites(sites::AbstractVector{<:AbstractString}) -> site_final::Vector{Int}
 
 Parses a portion of the "sites" lines in the yaml file to return a Vector{Int} with valid
