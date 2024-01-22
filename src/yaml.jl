@@ -28,7 +28,7 @@ function dftramo_run(filename::AbstractString)
             end
             psphere = Vector{Float64}(undef, length(r.sites))
             psphere_sites = Vector{SVector{3, Float64}}(undef, length(r.sites))
-            ramostatus = run_ramo(wd, psphere, psphere_sites, r, ramostatus)
+            ramostatus = run_ramo(psphere, psphere_sites, r, ramostatus, wd=wd)
             # If auto_psphere is enabled, rerun and use the new run
             low_psphere = psphere_eval(psphere, psphere_sites)
             if mode(ramoinput) == "auto_psphere" && length(low_psphere)!=0
@@ -50,7 +50,7 @@ function dftramo_run(filename::AbstractString)
                     cd("aps") do 
                         psphere = Vector{Float64}(undef, length(psphere_sites))
                         psphere_sites = Vector{SVector{3, Float64}}(undef, length(psphere_sites))
-                        ramostatus = run_ramo(wd, psphere, psphere_sites, r, ramostatus, low_psphere=low_psphere)
+                        ramostatus = run_ramo(psphere, psphere_sites, r, ramostatus, low_psphere=low_psphere, wd=wd)
                     end
                     next = iterate(ramoinput, state)
                 end
@@ -62,11 +62,11 @@ function dftramo_run(filename::AbstractString)
 end
 
 """
-    run_ramo(wd, psphere, psphere_sites, r, ramostatus; low_psphere = Vector{Int}(undef, 0))
+    run_ramo(psphere, psphere_sites, r, ramostatus; low_psphere = Vector{Int}(undef, 0), wd::AbstractString=pwd())
 
 Runs the basic raMO code (necessary in a separate function for auto_psphere functionality)
 """
-function run_ramo(wd::AbstractString, psphere, psphere_sites, r, ramostatus; low_psphere = Vector{Int}(undef, 0))
+function run_ramo(psphere, psphere_sites, r, ramostatus; low_psphere = Vector{Int}(undef, 0), wd::AbstractString=pwd())
     iter = ProgressBar(1:length(psphere), unit="raMOs")
     for i in iter
         # check to see if we have electrons left
