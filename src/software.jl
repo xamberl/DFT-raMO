@@ -43,7 +43,7 @@ Dispatch type for reading VASP calculation outputs (specifically, the `POSCAR`, 
 const FromVASP = InputOrigin{:vasp}
 # Default units for VASP are angstroms and electron-volts
 energy_conversion(::FromVASP) = Electrum.EV2HARTREE
-length_conversion(::FromVASP) = Electrum.ANG2BOHR
+length_conversion(::FromABINIT) = Electrum.BOHR2ANG
 
 function raMODFTData(io::IO, ::FromABINIT)
     h = Electrum.read_abinit_header(io)
