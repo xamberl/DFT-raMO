@@ -312,6 +312,7 @@ end
 
 raMODFTData(x::raMOInput) = x.dftdata
 OccupiedStates(x::raMOInput) = OccupiedStates(x.dftdata; emin = x.emin, emax = x.emax)
+mode(x::raMOInput) = x.mode
 
 Electrum.Crystal(x::raMOInput) = x.dftdata.xtal
 Electrum.basis(x::raMOInput) = basis(x.dftdata.xtal)
@@ -384,3 +385,6 @@ end
 
 Electrum.PeriodicAtomList(x::raMOStatus) = x.supercell.atomlist
 size_basis(x::raMOStatus) = size(x.psi_previous)[2]
+raMOInput(x::raMOStatus) = x.ramoinput
+raMODFTData(x::raMOStatus) = raMODFTData(raMOInput(x))
+OccupiedStates(x::raMOStatus) = x.occ_states

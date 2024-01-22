@@ -28,10 +28,10 @@ function dftramo_run(filename::AbstractString)
             end
             psphere = Vector{Float64}(undef, length(r.sites))
             psphere_sites = Vector{SVector{3, Float64}}(undef, length(r.sites))
-            ramostatus = run_ramo(wd, psphere, psphere_sites, r, ramoinput, ramostatus)
+            ramostatus = run_ramo(wd, psphere, psphere_sites, r, ramostatus)
             # If auto_psphere is enabled, rerun and use the new run
             low_psphere = psphere_eval(psphere, psphere_sites)
-            if ramoinput.mode == "auto_psphere" && length(low_psphere)!=0
+            if mode(ramoinput) == "auto_psphere" && length(low_psphere)!=0
                 # delete targets with low pspheres
                 for i in reverse(low_psphere)
                     deleteat!(psphere_sites, i)
@@ -50,7 +50,7 @@ function dftramo_run(filename::AbstractString)
                     cd("aps") do 
                         psphere = Vector{Float64}(undef, length(psphere_sites))
                         psphere_sites = Vector{SVector{3, Float64}}(undef, length(psphere_sites))
-                        ramostatus = run_ramo(wd, psphere, psphere_sites, r, ramoinput, ramostatus, low_psphere=low_psphere)
+                        ramostatus = run_ramo(wd, psphere, psphere_sites, r, ramostatus, low_psphere=low_psphere)
                     end
                     next = iterate(ramoinput, state)
                 end
@@ -62,11 +62,11 @@ function dftramo_run(filename::AbstractString)
 end
 
 """
-    run_ramo(psphere, psphere_sites, r, ramoinput, ramostatus; low_psphere = Vector{Int}(undef, 0))
+    run_ramo(wd, psphere, psphere_sites, r, ramostatus; low_psphere = Vector{Int}(undef, 0))
 
 Runs the basic raMO code (necessary in a separate function for auto_psphere functionality)
 """
-function run_ramo(wd, psphere, psphere_sites, r, ramoinput, ramostatus; low_psphere = Vector{Int}(undef, 0))
+function run_ramo(wd::AbstractString, psphere, psphere_sites, r, ramostatus; low_psphere = Vector{Int}(undef, 0))
     iter = ProgressBar(1:length(psphere), unit="raMOs")
     for i in iter
         # check to see if we have electrons left
@@ -109,14 +109,14 @@ function run_ramo(wd, psphere, psphere_sites, r, ramoinput, ramostatus; low_psph
             sites = basis(ramostatus.supercell)*mp_lcao(site_list[i], PeriodicAtomList(ramostatus.supercell))*Electrum.BOHR2ANG
         end
         (psi_previous2, psi_up, e_up, num_electrons_left2) = reconstruct_targets_DFT(target, DFTRAMO_EHT_PARAMS, ramostatus)
-        isosurf = raMO_to_density(ramostatus.occ_states, psi_up, kptmesh(raMODFTData(ramoinput)), length.(collect.(PlanewaveWavefunction(ramoinput).grange)))
+        isosurf = raMO_to_density(OccupiedStates(ramostatus), psi_up, kptmesh(raMODFTData(ramostatus)), length.(collect.(PlanewaveWavefunction(raMOInput(ramostatus)).grange)))
         (sphere, total, psphere[i]) = Psphere(RealDataGrid(real(isosurf), basis(ramostatus.supercell)), sites, r.rsphere)
         psphere_sites[i] = sites
         open(string(r.name, "_psphere_", r.rsphere, ".txt"), "a") do io
             print_psphere_terminal(iter, ramostatus.num_raMO+1, psphere[i], sites, io)
         end
         # Check if we are in discard ramo mode
-        if ramoinput.mode == "discard"
+        if mode(raMOInput(ramostatus)) == "discard"
             # print out raMO but not checkpoint
             write_to_XSF(isosurf, PeriodicAtomList(ramostatus.supercell), string(r.name, "_", i, ".xsf"))
             open(string(r.name, "_", i, ".raMO"), "w") do io
