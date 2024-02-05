@@ -344,7 +344,7 @@ end
 """
     DFTraMO.read_yaml(file)
 
-Reimplementation of `DFTraMO.read_run_yaml`.
+Reads an input yaml and returns an raMOInput object.
 """
 function read_yaml(io::IO)
     yaml = YAML.load(io)
