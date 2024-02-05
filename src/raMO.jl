@@ -106,7 +106,7 @@ function reconstruct_targets_DFT(
             # If psi_target is not empty for this atom
             if norm(psi_target[prev_orb+1:prev_orb+super.orbitals[j],i]) > 0
                 # Calculate overlap
-                (overlap, overlap_target_temp) = calculate_overlap2(
+                (overlap, overlap_target_temp) = calc_overlap(
                     num_spin_states,
                     num_spin_up,
                     num_spin_down,
@@ -187,7 +187,7 @@ Returns a constant of the planewave expansion, equal to `(im^l) * (4pi * (2l + 1
 N_L(l::Integer) = (im^l) * sqrt(4pi * (2l + 1))
 
 # TODO: docstring?
-function calculate_overlap2(
+function calc_overlap(
     num_spin_states::Integer,
     num_spin_up::Integer,
     num_spin_down::Integer,
