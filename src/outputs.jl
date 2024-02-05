@@ -105,11 +105,11 @@ function output_files(
 end
 
 """
-    function print_sc(xtal::AbstractAtomList{3}, filename::AbstractString)
+    function print_xtal(xtal::AbstractAtomList{3}, filename::AbstractString)
 
 Writes an xsf, POSCAR (.vasp), or xyz file of xtal.
 """
-function print_sc(xtal::AbstractAtomList{3}, filename::AbstractString)
+function print_xtal(xtal::AbstractAtomList{3}, filename::AbstractString)
     !contains(filename, ".") && @error "No file extension detected."
     xcrystal = Crystal(xtal, 1, SVector{3, Float64}(0,0,0))
 
