@@ -139,7 +139,7 @@ Parses the yaml file for LCAOs.
 """
 function target_lcao(yaml::Dict)
     target_orbital = get(yaml, "target", nothing)
-    isnothing(target_orbital) && error("Target cannot be blank for SALCs")
+    isnothing(target_orbital) && error("Target cannot be blank for LCAOs")
     for t in target_orbital
         !issubset(keys(t), keys(DFTraMO.AO_RUNS)) && error("Target does not contain atomic orbitals. Please check.")
     end
@@ -171,6 +171,13 @@ function parse_runs(runs::Vector{Dict{Any, Any}}, dftinfo::raMODFTData, origin::
 
         type = lowercase(get(runs[n], "type", ""))
         isempty(type) && error("type for run ", n, " is empty")
+        # check for displaced tag
+        if split(type)[1] == "displaced"
+            displaced = true
+            type = split(type)[2]
+        else
+            displaced = false
+        end
         !in(type, union(keys(AO_RUNS), CAGE_RUNS, ["lcao"])) && error("type ", type, " is an invalid entry.")
         println("   type: ", cr_b, type, cr_d)
 
@@ -180,6 +187,7 @@ function parse_runs(runs::Vector{Dict{Any, Any}}, dftinfo::raMODFTData, origin::
         if in(type, keys(AO_RUNS))
             println("   AO type run. site_file will be ignored.")
             site_file = ""
+            site_list = Electrum.supercell(dftinfo)
         else
             !isfile(site_file) && error(site_file, " does not exist. Check filename.")
             if in(type, CAGE_RUNS)
@@ -201,7 +209,7 @@ function parse_runs(runs::Vector{Dict{Any, Any}}, dftinfo::raMODFTData, origin::
             # Different requirements for different type of runs
             # If CAGE_RUNS, no element needs to be specified
             # If AO_RUNS, an element must be the first item in the list.
-            if in(type, keys(AO_RUNS))
+            if in(type, keys(AO_RUNS)) && !displaced
                 e = string(sites[1])
                 !in(e, Electrum.ELEMENTS) && error(e, " is not a valid element.")
                 valid_atoms = findall(x -> Electrum.name(x) == e, Electrum.supercell(dftinfo))
@@ -213,13 +221,30 @@ function parse_runs(runs::Vector{Dict{Any, Any}}, dftinfo::raMODFTData, origin::
             end
         end
         println("   sites: ", cr_b, get(runs[n], "sites", nothing), cr_d)
+
+        # get direction for displaced AOs
+        if displaced
+            direction = get(runs[n], "direction", [0,0,0])
+            direction == [0,0,0] && @error "Please specify a nonzero vector."
+            !(isa(direction, Vector{<:Number}) && length(direction) == 3) && @error "direction is not a valid 3-element vector."
+            direction = direction/norm(direction) # normalize direction
+        else
+            cart = true
+            direction = [0,0,0]
+        end
         
         radius = get(runs[n], "radius", 0.0)
         if isnothing(radius)
             radius = 0.0
         end
         if in(type, keys(AO_RUNS))
-            println("   Radius is ignored for atomic orbital type runs.")
+            if displaced
+                radius = parse_yaml_length(radius, origin)
+                iszero(radius) && @error "Please specify a nonzero radius."
+                println("   radius: ", cr_b, radius, " Å", cr_d)
+            else
+                println("   Radius is ignored for atomic orbital type runs.")
+            end
         else
             radius = parse_yaml_length(radius, origin)
             println("   radius: ", cr_b, radius, " Å", cr_d)
@@ -232,7 +257,7 @@ function parse_runs(runs::Vector{Dict{Any, Any}}, dftinfo::raMODFTData, origin::
         rsphere = parse_yaml_length(rsphere, origin)
         println("   rsphere: ", cr_b, rsphere, " Å", cr_d)
 
-        runlist[n] = RunInfo(name, type, site_file, sites_final, radius, rsphere)
+        runlist[n] = RunInfo(name, type, site_file, sites_final, direction, radius, rsphere)
     end
     return runlist
 end

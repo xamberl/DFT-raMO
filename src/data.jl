@@ -101,6 +101,7 @@ struct RunInfo
     type::String
     site_file::String
     sites::Vector{Int}
+    direction::Vector{Float64}
     radius::Float64
     rsphere::Float64
     function RunInfo(
@@ -108,13 +109,14 @@ struct RunInfo
         type::AbstractString,
         site_file::AbstractString,
         sites::AbstractVector{<:Integer},
+        direction::AbstractVector{<:Number},
         radius::Number,
         rsphere::Number
     )
         @assert all(sign.(sites) .> 0) "Some site values are not positive integers."
         @assert sign(radius) >= 0 "Radius is a negative value."
         @assert sign(rsphere) >= 0 "Rsphere is a negative value."
-        return new(name, type, site_file, sites, radius, rsphere)
+        return new(name, type, site_file, sites, direction, radius, rsphere)
     end
 end
 
