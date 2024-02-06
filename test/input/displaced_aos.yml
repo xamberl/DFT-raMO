@@ -1,0 +1,13 @@
+checkpoint:
+auto_psphere: true
+emin: -100 eV
+emax:
+software: vasp
+mode: discard
+runs:
+  - name: Sc_custom_dx2y2
+    type: displaced dx2y2
+    sites: 1, 3, 7, 8
+    direction: [0.5, 0.5, 0]
+    radius: 0.5
+    rsphere: 2.2
