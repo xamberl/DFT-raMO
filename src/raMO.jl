@@ -186,7 +186,12 @@ Returns a constant of the planewave expansion, equal to `(im^l) * (4pi * (2l + 1
 """
 N_L(l::Integer) = (im^l) * sqrt(4pi * (2l + 1))
 
-# TODO: docstring?
+"""
+    calc_overlap()
+
+Calculates the overlap between the target and the occupied crystal orbitals. Returns the
+raMO in terms of the crystal orbitals.
+"""
 function calc_overlap(
     num_spin_states::Integer,
     num_spin_up::Integer,
