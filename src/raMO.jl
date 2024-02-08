@@ -68,9 +68,10 @@ The guts of DFTraMO.
 function reconstruct_targets_DFT(
     psi_target::AbstractArray{<:Real},  # array dimensionality?
     ehtparams::ehtParams,
-    ramostatus::raMOStatus
+    ramostatus::raMOStatus,
+    displacement::AbstractVector{<:Real}
 )
-    ramoinput = ramostatus.ramoinput
+    ramoinput = raMOInput(ramostatus)
     super = Supercell(ramoinput, ORB_DICT)
     occ_states = ramostatus.occ_states
     cell = basis(ramoinput)
@@ -116,6 +117,7 @@ function reconstruct_targets_DFT(
                     # The current conversion is imprecise.
                     SVector(super.atomlist[j].pos.*kpt), #atom_pos_fract::Vector{Float64}
                     ReciprocalBasis(cell)/(2*pi)/Electrum.BOHR2ANG, #reciprocal_lattice::ReciprocalBasis{3},
+                    displacement,
                     get_eht_params(super.atomlist[j].atom.num, ehtparams)
                     )
                     for n in 1:super.orbitals[j]
@@ -200,6 +202,7 @@ function calc_overlap(
     occ_states::OccupiedStates,
     atom_pos_fract::AbstractVector{<:Number},
     reciprocal_lattice::AbstractMatrix{<:Real},
+    displacement::AbstractVector{<:Real},
     e::AbstractVector{OrbitalParams},
 )
     (num_planewaves, num_occ_states) = size(occ_states.coeff)
@@ -210,7 +213,7 @@ function calc_overlap(
     for i in 1:num_occ_states, j in 1:num_planewaves
         direction = -(occ_states.G[j]+KPoint(occ_states.skb[i]))
         # scaling factor is necessary, bc the STO is not necessarily at the origin
-        scalingfactor = exp(2*im*pi*dot(direction, atom_pos_fract))
+        scalingfactor = exp(2*im*pi*dot(direction, atom_pos_fract+displacement))
         d2 = direction'*reciprocal_lattice
         k_G = norm(d2)
         if num_target_orbitals >= 1

@@ -80,6 +80,7 @@ function run_ramo(psphere, psphere_sites, r, ramostatus; low_psphere = Vector{In
             end
             break
         end
+        displacement = [0,0,0]
         # generate target
         if r.type in keys(AO_RUNS)
             target_sites = copy(r.sites)
@@ -88,7 +89,11 @@ function run_ramo(psphere, psphere_sites, r, ramostatus; low_psphere = Vector{In
             end
             length(low_psphere) > 0 && deleteat!(target_sites, collect(1:low_psphere[1]-1)) 
             target = make_target_AO(target_sites[i], get(AO_RUNS, r.type, 0), ramostatus.supercell)
-            sites = basis(ramostatus.supercell)*Electrum.BOHR2ANG*PeriodicAtomList(ramostatus.supercell)[target_sites[i]].pos
+            if norm(r.direction) > 0
+                # displacement in fractional coordinates
+                displacement = inv(basis(raMODFTData(raMOInput(ramostatus))))*(r.direction * r.radius * Electrum.ANG2BOHR)
+            end
+            sites = basis(ramostatus.supercell)*Electrum.BOHR2ANG*PeriodicAtomList(ramostatus.supercell)[target_sites[i]].pos+(r.direction * r.radius)
         elseif r.type in CAGE_RUNS # for now we only have one type
             sites = read_site_list(joinpath(wd(raMOInput(ramostatus)), r.site_file))
             for n in reverse(low_psphere)
@@ -107,7 +112,7 @@ function run_ramo(psphere, psphere_sites, r, ramostatus; low_psphere = Vector{In
             target = make_target_lcao(site_list[i], target_orbital, ramostatus.supercell)
             sites = basis(ramostatus.supercell)*mp_lcao(site_list[i], PeriodicAtomList(ramostatus.supercell))*Electrum.BOHR2ANG
         end
-        (psi_previous2, psi_up, e_up, num_electrons_left2) = reconstruct_targets_DFT(target, DFTRAMO_EHT_PARAMS, ramostatus)
+        (psi_previous2, psi_up, e_up, num_electrons_left2) = reconstruct_targets_DFT(target, DFTRAMO_EHT_PARAMS, ramostatus, displacement)
         isosurf = raMO_to_density(OccupiedStates(ramostatus), psi_up, kptmesh(raMODFTData(ramostatus)), length.(collect.(PlanewaveWavefunction(raMOInput(ramostatus)).grange)))
         (sphere, total, psphere[i]) = Psphere(RealDataGrid(real(isosurf), basis(ramostatus.supercell)), sites, r.rsphere)
         psphere_sites[i] = sites
@@ -209,7 +214,7 @@ function parse_runs(runs::Vector{Dict{Any, Any}}, dftinfo::raMODFTData, origin::
             # Different requirements for different type of runs
             # If CAGE_RUNS, no element needs to be specified
             # If AO_RUNS, an element must be the first item in the list.
-            if in(type, keys(AO_RUNS)) && !displaced
+            if in(type, keys(AO_RUNS)) && !isdigit(sites[1][1])
                 e = string(sites[1])
                 !in(e, Electrum.ELEMENTS) && error(e, " is not a valid element.")
                 valid_atoms = findall(x -> Electrum.name(x) == e, Electrum.supercell(dftinfo))
