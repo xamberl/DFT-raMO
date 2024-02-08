@@ -1,9 +1,8 @@
 checkpoint:
-auto_psphere: true
 emin: -100 eV
 emax:
 software: vasp
-mode: discard
+mode: auto_psphere
 runs:
   - name: 1_Sc-Sc
     type: sp
