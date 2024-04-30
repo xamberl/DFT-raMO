@@ -20,8 +20,16 @@ function Psphere(
     lowerbound = (origin.-rsphere)*Electrum.ANG2BOHR
     upperbound = (origin.+rsphere)*Electrum.ANG2BOHR
     # Calculate indices of box in the voxel grid
-    lower_i = round.(Int, (lowerbound'/datagrid.basis)'.*size(datagrid))
-    upper_i = round.(Int, (upperbound'/datagrid.basis)'.*size(datagrid))
+    i1 = round.(Int, (lowerbound'/datagrid.basis)'.*size(datagrid))
+    i2 = round.(Int, (upperbound'/datagrid.basis)'.*size(datagrid))
+    # check whether i1 or i2 is the lower bound
+    if i1[1] < i2[1]
+        lower_i = i1
+        upper_i = i2
+    else
+        lower_i = i2
+        upper_i = i1
+    end
     sphere_sum = 0
     for x in lower_i[1]:upper_i[1], y in lower_i[2]:upper_i[2], z in lower_i[3]:upper_i[3]
         # Transform grid index into Cartesian (Å)
