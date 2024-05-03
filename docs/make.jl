@@ -10,7 +10,7 @@ makedocs(
     pages = [
         "Home"      => "index.md",
         "Theory"    => "theory.md",
-        "Usage"     => "usage.md",
+        "Usage"     => ["usage/index.md", "usage/in-yaml-keys.md"],
         "Tutorials"  => ["tutorials/IrIn3.md"],
         "API"       => ["api/index.md", "api/yaml.md"]
     ]
