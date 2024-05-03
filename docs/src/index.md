@@ -13,6 +13,22 @@ The original DFT-raMO was written in MATLAB, but for the sake of performance, re
 better software architecture, we've rewritten all of the functionality in Julia. You can find the
 original MATLAB version in our repository.
 
+# Installation
+DFT-raMO.jl requires installation of [Julia](https://julialang.org/downloads/) 1.8 or later, available on multiple platforms.
+After installation of Julia, the console window (REPL) can be opened via command line by typing the following:
+```
+julia
+```
+Next, open the package manager by typing `]`.
+This nows allows us to install DFT-raMO.jl with the command:
+```
+add https://github.com/xamberl/DFT-raMO
+```
+Wait for the package manager to finish installation, then exit the package manager with the `Backspace` key. If desired, we can exit the Julia REPL by typing:
+```
+exit()
+```
+
 # Publications
 
 Publications outlining the DFT- and Hückel-raMO concepts
