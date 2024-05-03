@@ -27,7 +27,7 @@ which will be provided in the future. This includes the following files:
 ## 1. Ir ``d_{x^2+y^2}`` orbitals
 ### Constructing the YAML input
 
-You'll find that `step1.yaml` is a blank template. The [Usage](../usage.md) section of the manual contains
+You'll find that `step1.yaml` is a blank template. The [Usage](../usage/index.md) section of the manual contains
 information on each of the keys and values in the file.
 
 Since we're starting from scratch, the `checkpoint` key should be blank. Leave `auto_psphere` as
@@ -230,7 +230,7 @@ lcao:
   - [113]
   - [114]
 ```
-As before, the description of the LCAO sites file is given in the [Usage](../usage.md) section.
+As before, the description of the LCAO sites file is given in the [Usage](../usage/index.md) section.
 
 Note that `lcao2.yaml` file contains reconstructions with different orientations (``p_x`` is positive).
 
