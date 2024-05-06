@@ -288,7 +288,7 @@ raMO functions more closely. For reference and throughness, it is recommended to
 functions directly preceding these (raMOs 280, 285).
 
 ```@raw html
-<br><center><p><img src="../assets/IrIn3_remainder_analysis.png" alt="From left to right: isosurfaces
+<br><center><p><img src="assets/IrIn3_remainder_analysis.png" alt="From left to right: isosurfaces
 of raMO 280, 281, 287, 288"></p>
 <p><i>From left to right: isosurfaces of raMO 280, 281, 287, 288</i></p></center><br>
 ```
