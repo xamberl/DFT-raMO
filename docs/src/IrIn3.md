@@ -183,7 +183,7 @@ found at `11_In-In/11_In-In_psphere_4.73.txt`:
 287     0.16723350141820606      at site [6.993, 0.000, 7.191]
 288     0.1572312564858335       at site [3.497, 3.497, 3.595]
 ```
-We find that ``Psphere`` drops precipitously at some points in this run. In order to complete the
+We find that ``P_{sphere}`` drops precipitously at some points in this run. In order to complete the
 analysis, we want to remove the orbitals from our total reconstruction and 
 We recommend that you manually inspect the orbitals to observe their
 character. When we do this, we find that orbitals 287 and 288 do not have the desired character, and
